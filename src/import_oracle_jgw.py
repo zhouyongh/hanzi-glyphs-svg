@@ -100,10 +100,11 @@ def read_csv(path: Path) -> dict[str, dict[str, str]]:
 
 
 def merge_provenance(path: Path, new_records: list[dict]) -> tuple[int, int]:
-    """把新记录并进 provenance.jsonl，替换同一书体目录下的旧记录。
+    """把新记录并进 provenance.jsonl，只替换本脚本负责的 layer="skeleton" 记录。
 
-    返回 (保留的旧记录数, 写入的总记录数)。这样将来 seal/bronze 的导入脚本
-    不会互相覆盖。
+    返回 (保留的旧记录数, 写入的总记录数)。这样 outline 之类的派生层
+    （由 src/outline_oracle.py 写，layer="outline"）不会被重跑导入时删掉，
+    将来 seal/bronze 的导入脚本也不会互相覆盖。
     """
     kept: list[dict] = []
     if path.exists():
@@ -115,10 +116,11 @@ def merge_provenance(path: Path, new_records: list[dict]) -> tuple[int, int]:
                 record = json.loads(line)
             except json.JSONDecodeError as exc:
                 raise SystemExit(f"{path}:{lineno} 不是合法 JSON：{exc}") from exc
-            same_script = record.get("script") == SCRIPT_NAME and str(
-                record.get("path", "")
-            ).startswith(f"glyphs/{SCRIPT_NAME}/")
-            if not same_script:
+            same_layer = (
+                record.get("script") == SCRIPT_NAME
+                and record.get("layer", "skeleton") == "skeleton"
+            )
+            if not same_layer:
                 kept.append(record)
 
     merged = kept + new_records
@@ -214,6 +216,7 @@ def main(argv: list[str] | None = None) -> int:
             "path": f"glyphs/{SCRIPT_NAME}/{name}",
             "sha256": dest_sha,
             "script": SCRIPT_NAME,
+            "layer": "skeleton",
             "glyph_id": int(glyph_id),
             "modern_char": label.get("modern_char", "").strip(),
             "unicode": unicode_hex,

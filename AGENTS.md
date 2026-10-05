@@ -45,13 +45,18 @@ hanzi-glyphs-svg/
   （已导入的 1,203 条甲骨文里，33 个现代字各对应 2 个条目），所以改用**条目号**做键。
 - 每个书体目录下放一份 `index.csv`，提供「现代字 / 码位 → 文件名」反查。
 - `glyphs/oracle/` 的文件是上游的**逐字节副本**：不重新编码、不归一化 viewBox。
+- 书体目录下可以有**派生层**子目录。目前有 `glyphs/oracle/outline/`：与骨架**同名、同 viewBox**
+  的可填充轮廓（把 `stroke` 换成真正的填充区域），由 `python src/outline_oracle.py` 生成。
+  **骨架是溯源锚点**（能逐字节对回上游），轮廓是给上层渲染用的派生件；改了骨架必须重跑生成。
 
 ## 硬规则
 
 1. **无出处，不入仓库**。说不清从哪来的，删除。
-2. 出处写在 `glyphs/provenance.jsonl`（一行一条，一个字形一条）：  
-   必填 `path`、`sha256`、`license`、`retrieved_at`，以及至少一个来源 URL；
-   另记 `script`、`glyph_id`、`source_path`、`source_sha256`、`source_doi`、`attribution`。  
+2. 出处写在 `glyphs/provenance.jsonl`（一行一条，一个文件一条）：  
+   必填 `path`、`sha256`、`license`，时间字段 `retrieved_at`（派生件用 `generated_at`），
+   以及至少一个来源 URL；另记 `script`、`layer`、`glyph_id`、`source_path`、
+   `source_sha256`、`source_doi`、`attribution`。  
+   派生件（`layer` 不是 `skeleton`）另记 `derived_from`、`derived_from_sha256`、`transform`、`tool`。  
    用 `python src/verify_provenance.py` 校验。
 3. **禁止编造链接**；网络来源须核实后再写入 provenance。
 4. 正式字形须**贴近原字形**；禁止卡通美化当正式字形。
@@ -71,8 +76,12 @@ hanzi-glyphs-svg/
   （DOI `10.5281/zenodo.22467946`，CC-BY-4.0），逐字 provenance 与 `index.csv` 已就位，
   且已与 Zenodo 原件逐文件对拍一致。
 - 其中 2 条没有对应现代汉字（`0380`、`0916`），1 条身份为 `provisional`（`1180` 妞）。
+- 同日生成派生层 `glyphs/oracle/outline/`（1,203 个可填充轮廓，2.08 MB）。骨架的 `stroke`
+  在多数渲染场景下只能当线条看，轮廓层解决「字形要能填充」的问题；几何自检见
+  `python src/outline_oracle.py --selftest`。
 - 金文 / 篆书 / 隶书仍为空。
-- 脚本：`src/import_oracle_jgw.py`（导入）、`src/verify_provenance.py`（校验）。
+- 脚本：`src/import_oracle_jgw.py`（导入骨架）、`src/outline_oracle.py`（骨架 → 轮廓）、
+  `src/verify_provenance.py`（校验出处）。
 
 ## 协作
 

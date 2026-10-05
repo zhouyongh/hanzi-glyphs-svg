@@ -9,8 +9,9 @@
 检查项:
 
 1. 每行都是合法 JSON，且 ``path`` 不重复；
-2. 必填字段齐全：``path`` / ``sha256`` / ``license`` / ``retrieved_at``
-   （AGENTS.md 第 2 条），以及至少一个来源 URL 字段；
+2. 必填字段齐全：``path`` / ``sha256`` / ``license``（AGENTS.md 第 2 条），
+   时间字段 ``retrieved_at`` 或 ``generated_at`` 至少一个（派生层用后者），
+   以及至少一个来源 URL 字段；
 3. ``path`` 指向的文件存在；
 4. 文件的 sha256 与记录一致（AGENTS.md 第 1 条：无出处不入库的机器可查版本）。
 
@@ -26,7 +27,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-REQUIRED_FIELDS = ("path", "sha256", "license", "retrieved_at")
+REQUIRED_FIELDS = ("path", "sha256", "license")
+TIME_FIELDS = ("retrieved_at", "generated_at")
 URL_FIELDS = ("source_url", "source_record_url", "source_artifact_url",
               "source_page_url", "mirror_url")
 
@@ -78,6 +80,10 @@ def main(argv: list[str] | None = None) -> int:
         for field in REQUIRED_FIELDS:
             if not record.get(field):
                 problems.append(f"{prov_path.name}:{lineno} 缺必填字段 {field}")
+        if not any(record.get(field) for field in TIME_FIELDS):
+            problems.append(
+                f"{prov_path.name}:{lineno} 缺时间字段（{'/'.join(TIME_FIELDS)} 至少要有一个）"
+            )
         if not any(record.get(field) for field in URL_FIELDS):
             problems.append(
                 f"{prov_path.name}:{lineno} 没有任何来源 URL 字段（{'/'.join(URL_FIELDS)}）"

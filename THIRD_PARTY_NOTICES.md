@@ -25,6 +25,15 @@
 > 字形来源：Li, Qing-sheng & Bian, Yu-lin (2026), *Oracle Bone Glyphs: Parametric Vector
 > Dataset (v0.3)*, doi:10.5281/zenodo.22467946, CC BY 4.0.
 
+### 派生层 `glyphs/oracle/outline/`
+
+- 由本仓库的 `src/outline_oracle.py` 从骨架生成，**不是上游文件**：把每个 `stroke` 路径换成由
+  其描边区域（round cap/join）构成的显式填充轮廓，与骨架同名、同 viewBox，几何上等同于
+  上游的描边渲染结果。上游数据本身**未被修改**。
+- 派生层沿用上游的 **CC BY 4.0** 与同一署名要求。
+- 每个派生文件的出处记在 `glyphs/provenance.jsonl`（`layer: "outline"`，含
+  `derived_from` 与 `derived_from_sha256` 指回骨架）。
+
 ### 相关论文
 
 Li, Qing-sheng and Bian, Yu-lin. *An Interpretable Parametric Representation and Open
