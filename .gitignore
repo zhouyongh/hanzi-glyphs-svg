@@ -1,0 +1,18 @@
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志与临时
+*.log
+tmp/
+temp/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 密钥
+.env
+.env.*

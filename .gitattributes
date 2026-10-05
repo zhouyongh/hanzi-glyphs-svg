@@ -1,0 +1,7 @@
+# 字形与出处记录必须与上游逐字节一致，禁止 git 做行尾转换。
+#
+# 原因：本仓库用 sha256 把每个字形文件对回上游（见 glyphs/provenance.jsonl）。
+# 在 core.autocrlf=true 的环境（Windows 默认）下，checkout 会把 LF 换成 CRLF，
+# 于是 `python src/verify_provenance.py` 会在别人机器上全线报 sha256 不符。
+# `-text` 表示不做任何行尾转换，存取原样字节；文本 diff 仍然正常。
+* -text
