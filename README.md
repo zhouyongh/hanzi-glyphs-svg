@@ -18,7 +18,7 @@
 
 ## 浏览
 
-- **在线预览**：仓库开启 GitHub Pages 后为 `https://<你的用户名>.github.io/hanzi-glyphs-svg/`
+- **在线预览**：https://zhouyongh.github.io/hanzi-glyphs-svg/ （仓库开启 GitHub Pages 后生效）
 - **本地预览**：直接双击 `viewer/index.html`（零依赖、无需服务器；数据已内联进页面）
 
 页面有四个书体 Tab。甲骨文 Tab 可预览全部 1,203 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
