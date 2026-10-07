@@ -18,7 +18,6 @@ hanzi-glyphs-svg/
   LICENSE-CODE       # MIT 全文（代码）
   LICENSE-DATA       # 数据许可说明
   THIRD_PARTY_NOTICES.md
-  docs/              # 文档（调研、路线）
   glyphs/            # 字形 SVG + 出处记录
     provenance.jsonl
     oracle/          # 骨架 + index.csv + outline/（派生层）
@@ -94,30 +93,24 @@ hanzi-glyphs-svg/
 
 ## 当前状态
 
-- 2026-10-05：导入甲骨文 **1,203** 个字形到 `glyphs/oracle/`。来源为公开数据集
-  （DOI `10.5281/zenodo.22467946`，CC-BY-4.0），逐字 provenance 与 `index.csv` 已就位，
-  且已与 Zenodo 原件逐文件对拍一致。
-- 其中 2 条没有对应现代汉字（`0380`、`0916`），1 条身份为 `provisional`（`1180` 妞）。
-- 同日生成派生层 `glyphs/oracle/outline/`（1,203 个可填充轮廓，2.08 MB）。骨架的 `stroke`
-  在多数渲染场景下只能当线条看，轮廓层解决「字形要能填充」的问题；几何自检见
-  `python src/outline_oracle.py --selftest`。
-- 金文 / 隶书仍为空。
-- 2026-10-07：篆书层**只做外部登记，不复制字形**。`glyphs/seal/external.csv` 把 Unicode 18.0
-  篆书区块 **11,328** 个码位指向上游 開元小篆（登记时 10,980 个已有文件，348 个尚无），
-  并带上现代字、540 部首与四个《说文》版本的流水号。之所以不直接引用上游字形：
-  上游授权语句只覆盖「output fonts」、其 `glyphs/**` 未被明确标记为受 OFL 约束，
-  且其 `OFL.txt` 正文与官方 OFL 1.1 不一致（详见 `THIRD_PARTY_NOTICES.md`）。
-  登记表不含上游内容，因此不受该状态影响；上游澄清后可用同一份表一次性导入。
-- 同日新增只读浏览页 `viewer/index.html`（4 个书体 Tab，甲骨文 Tab 预览全部 1,203 个字形，
-  可切骨架/轮廓、可搜索），由 `src/build_viewer.py` 生成，数据内联以便 `file://` 直开；
-  GitHub Pages 由 `.github/workflows/pages.yml` 部署。
-- 已补齐对外许可：根 `LICENSE`（CC BY 4.0 全文，逐字）、`LICENSE-CODE`（MIT 全文）、
-  `LICENSE-DATA`、`README.md`、`THIRD_PARTY_NOTICES.md`（含署名、改动声明、第三方权利保留）。
-- 已知残余风险：上游数据集未披露其字形所依据的 2012 年第三方字库/摹本，
-  已在 `THIRD_PARTY_NOTICES.md` 写明「第三方权利保留」与下架渠道。
-- 脚本：`src/import_oracle_jgw.py`（导入甲骨文骨架）、`src/outline_oracle.py`（骨架 → 轮廓）、
-  `src/build_seal_registry.py`（篆书外部登记表）、`src/verify_provenance.py`（校验出处）、
-  `src/build_viewer.py`（生成浏览页）。
+| 书体 | 状态 |
+|------|------|
+| 甲骨文 | **1,203** 骨架 + **1,203** 轮廓（CC BY 4.0，DOI `10.5281/zenodo.22467946`），provenance 与 `index.csv` 齐全 |
+| 篆书 | 外部登记表 `external.csv`：**11,328** 个码位指针，**无字形文件** |
+| 金文 / 隶书 | 尚未收录 |
+
+- 甲骨文特例：`0380`、`0916` 无对应现代汉字；`1180`（妞）身份为 `provisional`。
+- 已知残余风险（上游数据集未披露其字形所依据的第三方摹本来源）见 `THIRD_PARTY_NOTICES.md`。
+
+## 脚本
+
+| 脚本 | 作用 |
+|------|------|
+| `src/import_oracle_jgw.py` | 导入甲骨文骨架 |
+| `src/outline_oracle.py` | 骨架 → 可填充轮廓（`--selftest` 几何自检） |
+| `src/build_seal_registry.py` | 生成篆书外部登记表 |
+| `src/build_viewer.py` | 生成只读浏览页 |
+| `src/verify_provenance.py` | 校验 provenance 与文件 sha256 |
 
 ## 协作
 
