@@ -2,6 +2,10 @@
 
 汉字库：把汉字字形 **SVG** 建全，并保证 **出处可追溯**。
 
+## 通用技能库
+
+跨仓库技能统一在 `D:\yohan\skills\`（目录见其 `INDEX.md`）。执行通用任务（配图、发布、写规范/规格/方案文档等）时，先查技能库有无对应技能：有则读其 `SKILL.md` 并遵循，技能库是这些规范的唯一事实源；没有才用本仓库自带做法。仓库特有的事实（文章放哪、本仓库主题）仍以本文件为准。
+
 ## 用途
 
 - 收录汉字 SVG 字形（甲骨/金文/篆书/隶书等）
@@ -14,9 +18,10 @@
 ```
 hanzi-glyphs-svg/
   AGENTS.md / README.md
-  LICENSE            # CC BY 4.0 全文（数据与文档）
+  LICENSE            # CC BY 4.0 全文（数据）
   LICENSE-CODE       # MIT 全文（代码）
-  LICENSE-DATA       # 数据许可说明
+  LICENSE-DOCS       # CC0 1.0 全文（文档）
+  LICENSE-DATA       # 数据/文档/代码许可说明
   THIRD_PARTY_NOTICES.md
   glyphs/            # 字形 SVG + 出处记录
     provenance.jsonl
@@ -80,8 +85,9 @@ hanzi-glyphs-svg/
 - 目前 `glyphs/oracle/`（1,203 个字形）为 **CC-BY-4.0**。
 - **CC BY-ND / CC BY-NC / 无许可的来源不得作为字形来源入库**：矢量化与重绘都属于「改作」，
   ND 直接禁止；NC 与本库公开供引用的目的冲突。
-- **本仓库自身的对外许可**：数据与文档 **CC BY 4.0**（根 `LICENSE`），
-  代码 `src/**`、`viewer/**` 为 **MIT**（`LICENSE-CODE`）。完整地图在 `README.md`。
+- **本仓库自身的对外许可**：数据 **CC BY 4.0**（继承上游，根 `LICENSE`），
+  文档 **CC0 1.0**（`LICENSE-DOCS`，无义务），代码 `src/**`、`viewer/**` 为
+  **MIT**（`LICENSE-CODE`）。完整地图在 `README.md`。
 - 根 `LICENSE` 必须是 CC BY 4.0 的**逐字全文**：GitHub 的协议识别（Licensee）是把文件正文
   与已知协议做相似度比对，只写一句「本仓库采用 CC BY 4.0」的说明**不会被识别**，
   仓库会显示成 Unknown 或只显示 MIT（上游仓库就是这种情况）。

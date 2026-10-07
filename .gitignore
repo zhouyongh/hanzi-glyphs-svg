@@ -16,3 +16,4 @@ __pycache__/
 # 密钥
 .env
 .env.*
+.agents/skills/

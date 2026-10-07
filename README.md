@@ -54,9 +54,10 @@ hanzi-glyphs-svg/
   AGENTS.md                  本仓库的约定（改结构先改它）
   README.md                  本文件
   THIRD_PARTY_NOTICES.md     第三方署名、改动声明、权利保留
-  LICENSE                    CC BY 4.0 全文（数据与文档）
+  LICENSE                    CC BY 4.0 全文（数据）
   LICENSE-CODE               MIT 全文（代码）
-  LICENSE-DATA               数据许可说明
+  LICENSE-DOCS               CC0 1.0 全文（文档）
+  LICENSE-DATA               数据/文档/代码许可说明
   glyphs/
     provenance.jsonl         每个字形一条出处记录
     oracle/                  甲骨文骨架 + index.csv
@@ -104,7 +105,7 @@ python src/build_seal_registry.py
 | `glyphs/**`（字形、索引、出处记录） | **CC BY 4.0** |
 | `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
-| `README.md`、`AGENTS.md`、`THIRD_PARTY_NOTICES.md` | **CC BY 4.0** |
+| `README.md`、`AGENTS.md`、`THIRD_PARTY_NOTICES.md` | **CC0 1.0**（无义务，随便用） |
 | `src/**`、`viewer/**` | **MIT** |
 
 使用 `glyphs/` 下的数据**必须署名**，并注明是否做过修改——署名文字与改动声明见
