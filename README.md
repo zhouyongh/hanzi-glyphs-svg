@@ -64,7 +64,6 @@ hanzi-glyphs-svg/
     seal/                    篆书外部登记表 external.csv（无字形文件）
   src/                       脚本：导入 / 派生 / 校验 / 生成浏览页
   viewer/index.html          静态浏览页（生成的，勿手改）
-  docs/                      调研与路线
 ```
 
 ## 出处与校验
@@ -96,7 +95,7 @@ python src/build_viewer.py
 python src/build_seal_registry.py
 ```
 
-三个脚本都是可重跑的：导入只替换自己那一层（`layer="skeleton"`）的记录，不会动派生层。
+这些脚本都可重跑：导入只替换自己那一层（`layer="skeleton"`）的记录，不会动派生层。
 
 ## 许可
 
@@ -105,7 +104,7 @@ python src/build_seal_registry.py
 | `glyphs/**`（字形、索引、出处记录） | **CC BY 4.0** |
 | `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
-| `README.md`、`AGENTS.md`、`docs/**`、`THIRD_PARTY_NOTICES.md` | **CC BY 4.0** |
+| `README.md`、`AGENTS.md`、`THIRD_PARTY_NOTICES.md` | **CC BY 4.0** |
 | `src/**`、`viewer/**` | **MIT** |
 
 使用 `glyphs/` 下的数据**必须署名**，并注明是否做过修改——署名文字与改动声明见
