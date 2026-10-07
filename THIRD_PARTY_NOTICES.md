@@ -11,6 +11,9 @@
 | `glyphs/**`（字形 SVG、`index.csv`、`provenance.jsonl`） | CC BY 4.0 | 根 `LICENSE` |
 | `README.md`、`AGENTS.md`、`docs/**`、本文件 | CC BY 4.0 | 根 `LICENSE` |
 | `src/**`、`viewer/**` | MIT | `LICENSE-CODE` |
+| `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC BY 4.0 | 根 `LICENSE` |
+| `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
+| `glyphs/seal/external.csv` 的 `upstream_*` 列（指向上游） | **不适用**：本仓库未复制上游内容，只登记指针 | — |
 
 ---
 
@@ -73,6 +76,91 @@ npj Heritage Science (2026).
   属考古学上的分化，不是重复标注；身份请以 `glyph_id` 为准。
 - `0380`、`0916` 两条没有可对应的现代汉字（前者作者在殷契文渊查无、后者是旧库私用区
   U+E83B，仅作历史留痕）；`1180`（妞）的身份为 `provisional`。
+
+---
+
+## `glyphs/seal/` —— 篆书层：**只登记指针，不含字形文件**
+
+本目录**没有**篆书字形 SVG。`external.csv`（11,328 行）把每个 Unicode 篆书码位指向
+上游仓库里的字形文件，并记录其 git blob SHA-1；**不复制任何上游内容**，因此不构成
+对上游材料的分发。详见 `glyphs/seal/README.md`。
+
+| 项 | 内容 |
+|---|---|
+| 上游仓库 | [frankslin/kaiyuan-small-seal-font](https://github.com/frankslin/kaiyuan-small-seal-font)（開元小篆） |
+| 登记时钉住的 commit | 见 `glyphs/seal/external.meta.json` 的 `upstream_commit` |
+| 上游字形文件数 | 10,980（另有 348 个码位上游尚无字形） |
+| 上游声明的许可 | SIL Open Font License 1.1（但其正文与官方 OFL 1.1 不一致，见下） |
+| 本仓库的处理 | **不复制、不改作、不再分发**；只登记路径与 blob SHA |
+
+### 为什么没有直接引用上游字形
+
+登记时发现两处缺漏，均可在上游仓库复现：
+
+1. 上游的授权语句只覆盖「**output fonts**」（其 README 写「字型：SIL OFL 1.1」，
+   `AGENTS.md` 写 "Output fonts are released under the SIL Open Font License 1.1"），
+   而 `glyphs/` 被描述为流水线的生成物（"Generated, but committed so reviewers can
+   diff them"）。OFL 对 "Font Software" 的定义是「由版权人以本协议发布、并被
+   **明确标记为此**的一组文件」，而上游 `glyphs/` 下没有任何许可标记或目录级声明，
+   仓库根目录也没有 LICENSE 文件（只有 `OFL.txt`）。
+2. 上游 `OFL.txt` 的正文与其声明的 OFL 1.1 **不一致**：缺官方抬头
+   `SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007`、缺官方第 4 条与第 5 条
+   （第 5 条即「修改版或未修改版必须整体以本协议分发」）、缺 `Reserved Font Name`
+   定义段，并自订为 10 条条款。
+
+本仓库对此的处理是**只登记、不复制**，并欢迎上游澄清后升级为正式导入。
+若你是上游权利人并希望我们调整登记方式，请通过 Issue 或 <1279190619@qq.com> 联系。
+
+---
+
+## Unicode 数据（`SealSources.txt`）—— Unicode License v3
+
+`glyphs/seal/external.csv` 的 `ccz` / `dyc` / `qjz` / `thx` / `radical_*` / `unicode` /
+`modern_char` 列派生自 Unicode 18.0 的 `SealSources.txt`
+（<https://www.unicode.org/Public/18.0.0/ucd/SealSources.txt>，见 UAX #60）。按该协议
+条件 (b)，其版权与许可声明随本文件一并提供：
+
+```
+UNICODE LICENSE V3
+
+COPYRIGHT AND PERMISSION NOTICE
+
+Copyright © 1991-2026 Unicode, Inc.
+
+NOTICE TO USER: Carefully read the following legal agreement. BY
+DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING DATA FILES, AND/OR
+SOFTWARE, YOU UNEQUIVOCALLY ACCEPT, AND AGREE TO BE BOUND BY, ALL OF THE
+TERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT
+DOWNLOAD, INSTALL, COPY, DISTRIBUTE OR USE THE DATA FILES OR SOFTWARE.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of data files and any associated documentation (the "Data Files") or
+software and any associated documentation (the "Software") to deal in the
+Data Files or Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, and/or sell
+copies of the Data Files or Software, and to permit persons to whom the
+Data Files or Software are furnished to do so, provided that either (a)
+this copyright and permission notice appear with all copies of the Data
+Files or Software, or (b) this copyright and permission notice appear in
+associated Documentation.
+
+THE DATA FILES AND SOFTWARE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF
+THIRD PARTY RIGHTS.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE
+BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES,
+OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE DATA
+FILES OR SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder shall
+not be used in advertising or otherwise to promote the sale, use or other
+dealings in these Data Files or Software without prior written
+authorization of the copyright holder.
+```
 
 ---
 

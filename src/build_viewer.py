@@ -76,6 +76,13 @@ TEMPLATE = r"""<!DOCTYPE html>
   figcaption b { color:var(--fg); font-weight:600; }
   .empty { color:var(--muted); background:#fff; border:1px solid var(--line);
            border-radius:8px; padding:18px; max-width:60em; }
+  .extcard { background:#fff; border:1px solid var(--line); border-left:3px solid var(--accent);
+             border-radius:8px; padding:16px 20px; max-width:62em; }
+  .extcard p { margin:0 0 10px; }
+  .extcard ul { margin:0 0 10px; padding-left:20px; color:var(--muted); }
+  .extcard li { margin:3px 0; }
+  .extcard b { color:var(--fg); }
+  .extcard .why { color:var(--muted); font-size:12.5px; margin:0; }
   footer { padding:0 24px 28px; color:var(--muted); font-size:12px; }
   code { background:#f1f1f3; padding:1px 4px; border-radius:4px; }
 </style>
@@ -117,6 +124,13 @@ TEMPLATE = r"""<!DOCTYPE html>
     return '../glyphs/' + script + '/' + (layer === 'outline' ? 'outline/' : '') + file;
   }
 
+  function tabCount(script) {
+    var local = (DATA[script] || []).length;
+    if (local) { return String(local); }
+    var ext = DATA.__external && DATA.__external[script];
+    return ext ? ext.codepoint_count + ' 外链' : '0';
+  }
+
   function cellHTML(script, row, layer) {
     var url = svgURL(script, row.file, layer);
     var title = '#' + row.i + ' ' + (row.c || '（无对应现代汉字）') +
@@ -137,6 +151,28 @@ TEMPLATE = r"""<!DOCTYPE html>
     panel.setAttribute('role', 'tabpanel');
 
     if (!rows.length) {
+      var ex = DATA.__external && DATA.__external[script];
+      if (ex) {
+        panel.innerHTML =
+          '<div class="extcard">' +
+            '<p><b>' + esc(meta[1]) + '</b>（' + esc(meta[2]) + '）本层<b>未收录字形文件</b>，' +
+            '只登记指向上游的映射。本页不内嵌、不复制上游字形。</p>' +
+            '<ul>' +
+              '<li>Unicode 18.0 篆书区块码位：<b>' + ex.codepoint_count + '</b></li>' +
+              '<li>上游已有字形文件：<b>' + ex.codepoints_with_upstream + '</b>' +
+                  '（另有 ' + (ex.codepoint_count - ex.codepoints_with_upstream) + ' 个码位上游尚无字形）</li>' +
+              '<li>上游仓库：<a href="https://github.com/' + esc(ex.upstream_repo) + '" target="_blank" rel="noopener">' +
+                  esc(ex.upstream_repo) + '</a>（钉住 commit <code>' + esc(ex.upstream_commit.slice(0, 12)) + '</code>）</li>' +
+              '<li>登记表：<a href="../' + esc(ex.registry) + '">' + esc(ex.registry) + '</a>' +
+                  '　说明：<a href="../' + esc(ex.readme) + '">' + esc(ex.readme) + '</a></li>' +
+            '</ul>' +
+            '<p class="why">未收录的原因：上游的授权语句只覆盖「output fonts」，其 <code>glyphs/**</code> ' +
+            '未被明确标记为受 OFL 约束；且上游 <code>OFL.txt</code> 的正文与其声明的 OFL 1.1 不一致。' +
+            '详见 <a href="../THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES.md</a>。' +
+            '上游澄清后可用同一份登记表一次性导入。</p>' +
+          '</div>';
+        return panel;
+      }
       panel.innerHTML = '<p class="empty"><b>' + esc(meta[1]) + '</b>（' + esc(meta[2]) +
                         '）尚未收录。<br>' + esc(meta[3]) + '</p>';
       return panel;
@@ -197,7 +233,7 @@ TEMPLATE = r"""<!DOCTYPE html>
     btn.setAttribute('role', 'tab');
     btn.setAttribute('aria-selected', String(idx === 0));
     btn.setAttribute('aria-controls', 'panel-' + s[0]);
-    btn.innerHTML = esc(s[1]) + '<span class="n">' + ((DATA[s[0]] || []).length) + '</span>';
+    btn.innerHTML = esc(s[1]) + '<span class="n">' + tabCount(s[0]) + '</span>';
     btn.addEventListener('click', function () {
       Array.prototype.forEach.call(tabs.querySelectorAll('button'), function (b) {
         b.setAttribute('aria-selected', String(b === btn));
@@ -249,6 +285,7 @@ def main(argv=None) -> int:
 
     data: dict[str, list[dict]] = {}
     outline: dict[str, bool] = {}
+    external: dict[str, dict] = {}
     total = 0
 
     for script, zh, _en, _note in SCRIPTS:
@@ -256,6 +293,12 @@ def main(argv=None) -> int:
         if not index_path.is_file():
             data[script] = []
             outline[script] = False
+            meta_path = glyphs_root / script / "external.meta.json"
+            if meta_path.is_file():
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                meta["registry"] = f"glyphs/{script}/external.csv"
+                meta["readme"] = f"glyphs/{script}/README.md"
+                external[script] = meta
             continue
         rows = load_rows(index_path)
         expected = [str(n) for n in range(1, len(rows) + 1)]
@@ -271,6 +314,7 @@ def main(argv=None) -> int:
 
     payload_obj: dict[str, object] = dict(data)
     payload_obj["__outline"] = outline
+    payload_obj["__external"] = external
     payload = json.dumps(payload_obj, ensure_ascii=False, separators=(",", ":"))
     payload = payload.replace("<", "\\u003c")  # 数据里若出现 </script> 不会截断脚本
 

@@ -1,0 +1,11 @@
+{
+  "upstream_repo": "frankslin/kaiyuan-small-seal-font",
+  "upstream_branch": "main",
+  "upstream_commit": "97433695858330ec9fdb7de9c4604da2f635eba6",
+  "upstream_glyph_count": 10980,
+  "codepoint_count": 11328,
+  "codepoints_with_upstream": 10980,
+  "unsealed_sources_url": "https://www.unicode.org/Public/18.0.0/ucd/SealSources.txt",
+  "generated_at": "2026-10-07T07:54:31Z",
+  "note": "仅登记指针，未复制任何上游字形内容；许可状态见 THIRD_PARTY_NOTICES.md"
+}

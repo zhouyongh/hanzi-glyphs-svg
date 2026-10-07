@@ -22,7 +22,8 @@ hanzi-glyphs-svg/
   glyphs/            # 字形 SVG + 出处记录
     provenance.jsonl
     oracle/          # 骨架 + index.csv + outline/（派生层）
-    bronze/  seal/  clerical/
+    seal/            # external.csv 外部登记表（无字形文件）
+    bronze/  clerical/
   src/               # 脚本（导入/派生/校验/生成浏览页）
   viewer/            # 静态浏览页（生成的，勿手改）
   .github/workflows/ # GitHub Pages 部署
@@ -55,6 +56,10 @@ hanzi-glyphs-svg/
 - 书体目录下可以有**派生层**子目录。目前有 `glyphs/oracle/outline/`：与骨架**同名、同 viewBox**
   的可填充轮廓（把 `stroke` 换成真正的填充区域），由 `python src/outline_oracle.py` 生成。
   **骨架是溯源锚点**（能逐字节对回上游），轮廓是给上层渲染用的派生件；改了骨架必须重跑生成。
+- 书体目录下也可以**只有登记表、没有字形文件**：`glyphs/seal/external.csv` + `external.meta.json`
+  把每个码位指向上游仓库的文件（记 `upstream_path` 与 `upstream_blob_sha1`），**不复制内容**。
+  适用条件：上游许可未澄清、或不宜再分发时。登记表由 `python src/build_seal_registry.py` 生成，
+  字段说明见 `glyphs/seal/README.md`。**登记表里不放字形，所以它不受上游许可状态影响。**
 
 ## 硬规则
 
@@ -83,6 +88,9 @@ hanzi-glyphs-svg/
   仓库会显示成 Unknown 或只显示 MIT（上游仓库就是这种情况）。
 - **不得给下游附加额外限制**（例如「仅限非商业」「禁止再分发」）：既违反 CC BY 4.0
   §2(a)(5)(B)，也会让自己的授权失效。
+- **外部登记表**（如 `glyphs/seal/external.csv`）里派生于 Unicode `SealSources.txt` 的列
+  适用 **Unicode License v3**，其版权与许可声明已随 `THIRD_PARTY_NOTICES.md` 提供
+  （该协议条件 (b) 允许把声明放在关联文档里）。表里 `upstream_*` 列只是指针，不涉及授权。
 
 ## 当前状态
 
@@ -93,7 +101,13 @@ hanzi-glyphs-svg/
 - 同日生成派生层 `glyphs/oracle/outline/`（1,203 个可填充轮廓，2.08 MB）。骨架的 `stroke`
   在多数渲染场景下只能当线条看，轮廓层解决「字形要能填充」的问题；几何自检见
   `python src/outline_oracle.py --selftest`。
-- 金文 / 篆书 / 隶书仍为空。
+- 金文 / 隶书仍为空。
+- 2026-10-07：篆书层**只做外部登记，不复制字形**。`glyphs/seal/external.csv` 把 Unicode 18.0
+  篆书区块 **11,328** 个码位指向上游 開元小篆（登记时 10,980 个已有文件，348 个尚无），
+  并带上现代字、540 部首与四个《说文》版本的流水号。之所以不直接引用上游字形：
+  上游授权语句只覆盖「output fonts」、其 `glyphs/**` 未被明确标记为受 OFL 约束，
+  且其 `OFL.txt` 正文与官方 OFL 1.1 不一致（详见 `THIRD_PARTY_NOTICES.md`）。
+  登记表不含上游内容，因此不受该状态影响；上游澄清后可用同一份表一次性导入。
 - 同日新增只读浏览页 `viewer/index.html`（4 个书体 Tab，甲骨文 Tab 预览全部 1,203 个字形，
   可切骨架/轮廓、可搜索），由 `src/build_viewer.py` 生成，数据内联以便 `file://` 直开；
   GitHub Pages 由 `.github/workflows/pages.yml` 部署。
@@ -101,8 +115,9 @@ hanzi-glyphs-svg/
   `LICENSE-DATA`、`README.md`、`THIRD_PARTY_NOTICES.md`（含署名、改动声明、第三方权利保留）。
 - 已知残余风险：上游数据集未披露其字形所依据的 2012 年第三方字库/摹本，
   已在 `THIRD_PARTY_NOTICES.md` 写明「第三方权利保留」与下架渠道。
-- 脚本：`src/import_oracle_jgw.py`（导入骨架）、`src/outline_oracle.py`（骨架 → 轮廓）、
-  `src/verify_provenance.py`（校验出处）、`src/build_viewer.py`（生成浏览页）。
+- 脚本：`src/import_oracle_jgw.py`（导入甲骨文骨架）、`src/outline_oracle.py`（骨架 → 轮廓）、
+  `src/build_seal_registry.py`（篆书外部登记表）、`src/verify_provenance.py`（校验出处）、
+  `src/build_viewer.py`（生成浏览页）。
 
 ## 协作
 
