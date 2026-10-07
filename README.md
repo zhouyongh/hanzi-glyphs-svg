@@ -9,7 +9,7 @@
 |------|------|------|------|
 | 甲骨文 Oracle bone script | `glyphs/oracle/` | **1,203** 个骨架 + **1,203** 个轮廓 | CC BY 4.0 |
 | 金文 Bronze script | `glyphs/bronze/` | 尚未收录 | — |
-| 篆书 Seal script | `glyphs/seal/` | 尚未收录 | — |
+| 篆书 Seal script | `glyphs/seal/` | **外部登记**：11,328 个码位映射，**不含字形文件** | 见下 |
 | 隶书 Clerical script | `glyphs/clerical/` | 尚未收录 | — |
 
 甲骨文这批来自公开数据集 *Oracle Bone Glyphs: Parametric Vector Dataset (v0.3)*
@@ -34,6 +34,19 @@
 轮廓层是派生件，不是上游文件；改骨架后必须重跑 `src/outline_oracle.py` 重新生成。
 两者的几何一致性有自动校验（见下）。
 
+## 篆书层：只登记指针，**不含字形文件**
+
+`glyphs/seal/external.csv` 把 Unicode 18.0 篆书区块的 **11,328** 个码位指向上游
+[開元小篆](https://github.com/frankslin/kaiyuan-small-seal-font) 的字形文件（登记时
+10,980 个已有文件），并记录其 git blob SHA-1、对应的现代汉字、540 部首归属，以及该字在
+四个《说文》版本中的流水号（陈昌治 `C-#####`、段玉裁 `D-#####`、祁寯藻 `K-#####`、
+藤花榭 `TH-#####`）。**本仓库不复制上游的任何字形内容。**
+
+之所以这样处理：上游的授权语句只覆盖「output fonts」，其 `glyphs/**` 未被明确标记为受
+OFL 约束，且上游 `OFL.txt` 的正文与其声明的 OFL 1.1 不一致。**只登记指针不构成分发**，
+因此不受该状态影响；上游澄清后可用同一份表一次性导入。字段说明与 URL 拼接模板见
+[glyphs/seal/README.md](glyphs/seal/README.md)。
+
 ## 目录
 
 ```
@@ -48,6 +61,7 @@ hanzi-glyphs-svg/
     provenance.jsonl         每个字形一条出处记录
     oracle/                  甲骨文骨架 + index.csv
       outline/               甲骨文轮廓（派生）
+    seal/                    篆书外部登记表 external.csv（无字形文件）
   src/                       脚本：导入 / 派生 / 校验 / 生成浏览页
   viewer/index.html          静态浏览页（生成的，勿手改）
   docs/                      调研与路线
@@ -77,6 +91,9 @@ python src/outline_oracle.py
 
 # 3) 重新生成浏览页（数据变了才需要）
 python src/build_viewer.py
+
+# 4) 重建篆书外部登记表（只登记指针，不下载任何字形）
+python src/build_seal_registry.py
 ```
 
 三个脚本都是可重跑的：导入只替换自己那一层（`layer="skeleton"`）的记录，不会动派生层。
@@ -86,6 +103,8 @@ python src/build_viewer.py
 | 范围 | 许可 |
 |------|------|
 | `glyphs/**`（字形、索引、出处记录） | **CC BY 4.0** |
+| `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
+| `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
 | `README.md`、`AGENTS.md`、`docs/**`、`THIRD_PARTY_NOTICES.md` | **CC BY 4.0** |
 | `src/**`、`viewer/**` | **MIT** |
 
