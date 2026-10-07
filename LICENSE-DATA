@@ -1,0 +1,19 @@
+本仓库的**数据**（glyphs/ 下的字形 SVG、index.csv、provenance.jsonl）与**文档**
+（README.md、AGENTS.md、docs/、THIRD_PARTY_NOTICES.md）采用
+Creative Commons Attribution 4.0 International（CC BY 4.0）。
+
+协议全文见仓库根目录的 LICENSE 文件。
+协议主页：https://creativecommons.org/licenses/by/4.0/
+协议全文（官方）：https://creativecommons.org/licenses/by/4.0/legalcode
+
+使用这些数据时必须遵守 CC BY 4.0，包括：
+
+1. 署名（作者、来源、协议），见 THIRD_PARTY_NOTICES.md；
+2. 注明是否做过修改；
+3. 保留指向本协议的链接。
+
+本仓库**没有**对下游附加任何额外限制；也不得被附加（CC BY 4.0 §2(a)(5)(B)）。
+
+---
+
+代码（src/、viewer/ 下的脚本与页面）另以 MIT 授权，全文见 LICENSE-CODE。

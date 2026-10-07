@@ -1,0 +1,43 @@
+name: Deploy viewer to GitHub Pages
+
+# 为什么需要这个工作流：GitHub Pages 的「Deploy from a branch」只允许选仓库根目录或
+# /docs，选不了 viewer/。所以用 Actions 组装站点：浏览页放站点根，字形目录原样带上，
+# 这样页面里的相对路径 ../glyphs/... 在本地和线上都成立。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 组装站点
+        run: |
+          mkdir -p _site
+          cp viewer/index.html _site/index.html
+          cp -r glyphs _site/glyphs
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
