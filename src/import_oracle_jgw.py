@@ -13,7 +13,7 @@
     glyphs/oracle/index.csv            现代字/码位 → 文件 的反查表
     glyphs/provenance.jsonl            每个字形一条记录（合并写入，不覆盖其他书体）
 
-三个设计决定（理由见 docs/调研-古文字字形资源.md 与 AGENTS.md）:
+三个设计决定（理由见 AGENTS.md）:
 
 1. **文件键用 ``glyph_id``**（上游源字库条目号 1..1203）。甲骨文在 Unicode 里
    没有自己的码位，且 33 个现代字各对应两个条目，``glyphs/oracle/<Unicode>.svg``
