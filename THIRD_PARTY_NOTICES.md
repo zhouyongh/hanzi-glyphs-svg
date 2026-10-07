@@ -9,7 +9,7 @@
 | 范围 | 许可 | 全文 |
 |------|------|------|
 | `glyphs/**`（字形 SVG、`index.csv`、`provenance.jsonl`） | CC BY 4.0 | 根 `LICENSE` |
-| `README.md`、`AGENTS.md`、本文件 | CC BY 4.0 | 根 `LICENSE` |
+| `README.md`、`AGENTS.md`、本文件 | CC0 1.0（无义务） | `LICENSE-DOCS` |
 | `src/**`、`viewer/**` | MIT | `LICENSE-CODE` |
 | `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC BY 4.0 | 根 `LICENSE` |
 | `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
