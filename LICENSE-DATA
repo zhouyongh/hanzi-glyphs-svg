@@ -1,24 +1,37 @@
-本仓库的**数据**（glyphs/ 下的字形 SVG、index.csv、provenance.jsonl）采用
-Creative Commons Attribution 4.0 International（CC BY 4.0）——该署名义务继承自
-上游数据集的许可，不是本仓库自加的限制。
+本仓库的数据许可**逐层不同**，以 `glyphs/provenance/<书体>.jsonl` 每条记录的 `license` 字段为准。
 
-协议全文见仓库根目录的 LICENSE 文件。
+| 层 | 目录 | 许可 | 全文位置 |
+|---|---|---|---|
+| 甲骨文（JGW 骨架 + 派生轮廓） | `glyphs/oracle/*.svg`、`glyphs/oracle/outline/**` | **CC BY 4.0** | 根 `LICENSE` |
+| 篆书 | `glyphs/seal/**` 的字形与 `index.csv` | **CC0 1.0**（公有领域奉献） | `LICENSE-DOCS` |
+| 篆书全量码位登记表 | `glyphs/seal/external.csv` | 本仓库整理的部分 CC BY 4.0；派生于 Unicode `SealSources.txt` 的列 Unicode License v3；`upstream_*` 列只是指针 | 根 `LICENSE` / `THIRD_PARTY_NOTICES.md` |
+| 出处记录 | `glyphs/provenance/oracle.jsonl`、`glyphs/provenance/seal.jsonl` | **逐条记录**，按各条的 `license` 字段 | `THIRD_PARTY_NOTICES.md` |
+
+**只有上面这些在公开仓库里。** 甲骨层里来自汉典的拓片摹本，以及金文、隶书、楚文字、傳抄古文
+四层，已整理但**暂缓发布**：它们的底本是仍在版权期内的现代出版物，汉典的 CC0 只处置汉典自己的
+权利。理由与逐条链条见 `README.md`「暂缓发布的书体」与 `THIRD_PARTY_NOTICES.md`。
+
+**根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 骨架与派生轮廓，
+以及篆书登记表里本仓库整理的部分），**不覆盖** CC0 与 Unicode 授权的材料；
+下游须按各层许可分别使用。
+
+CC BY 4.0 那一层使用这些数据时须遵守 CC BY 4.0：署名（作者、来源、协议）、注明是否做过修改、
+保留指向本协议的链接。署名文字与协议全文见 `THIRD_PARTY_NOTICES.md` 与根 `LICENSE`，
 协议主页：https://creativecommons.org/licenses/by/4.0/
 
-使用这些数据时必须遵守 CC BY 4.0，包括：
-
-1. 署名（作者、来源、协议），见 THIRD_PARTY_NOTICES.md；
-2. 注明是否做过修改；
-3. 保留指向本协议的链接。
-
-本仓库**没有**对下游附加任何额外限制；也不得被附加（CC BY 4.0 §2(a)(5)(B)）。
+篆书层依汉典《服务条款》第四条以 **CC0 1.0** 释出。CC0 是**公有领域奉献**：不设任何义务，
+不署名、不注明改动也可以使用。本仓库**没有**对其附加任何限制，下游也不得附加
+（CC0 是放弃权利，不是许可别人加条件）。汉典的归公宣告原文与逐件出处见 `THIRD_PARTY_NOTICES.md`。
 
 ---
 
-本仓库自己的**文档**（README.md、AGENTS.md、THIRD_PARTY_NOTICES.md）采用
+本仓库自己的**文档**（`README.md`、`AGENTS.md`、`THIRD_PARTY_NOTICES.md`）采用
 **CC0 1.0**（公有领域奉献）：不署名、不注明改动、无任何义务，随便用。
 协议全文见 LICENSE-DOCS，主页：https://creativecommons.org/publicdomain/zero/1.0/
 
 ---
 
 代码（src/、viewer/ 下的脚本与页面）另以 MIT 授权，全文见 LICENSE-CODE。
+
+本仓库**没有**对下游附加任何额外限制；也不得被附加（CC BY 4.0 §2(a)(5)(B)）。
+对 CC0 材料同样不得附加限制——CC0 是放弃权利，不是许可别人加条件。

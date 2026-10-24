@@ -8,41 +8,49 @@
 
 ## 用途
 
-- 收录汉字 SVG 字形（甲骨/金文/篆书/隶书等）
+- 收录汉字 SVG 字形（甲骨/篆书，以及暂缓发布的金文、隶书、楚文字、傳抄古文）
 - 供上层项目引用；本仓库不做游戏、不做业务应用
 - 附一个**零构建的只读浏览页** `viewer/index.html`（由 `src/build_viewer.py` 生成，不是应用、
   不引入依赖、不复制字形文件），用于人工核验字形
+
+## 发布范围（改这里之前先读）
+
+**公开发布的只有两层**：甲骨 JGW 批（1,203 骨架 + 1,203 轮廓，CC BY 4.0）与篆书（10,591，CC0 1.0）。
+理由是**权利链是否闭合**：JGW 有明确 CC BY 授权；篆书的底本是《说文》刻本系统（公有领域），
+不存在「在版摹本汇编」这一环。其余书体的底本是仍在版权期内的现代出版物，
+**未获授权前不进公开仓库**——本地保留在同一仓库的 `backup/full-<日期>` 分支上，不进任何提交。
 
 ## 目录
 
 ```
 hanzi-glyphs-svg/
   AGENTS.md / README.md
-  LICENSE            # CC BY 4.0 全文（数据）
+  LICENSE            # CC BY 4.0 全文（只覆盖 CC BY 那一层）
   LICENSE-CODE       # MIT 全文（代码）
-  LICENSE-DOCS       # CC0 1.0 全文（文档）
+  LICENSE-DOCS       # CC0 1.0 全文（文档；篆书层的 CC0 也引这一份）
   LICENSE-DATA       # 数据/文档/代码许可说明
   THIRD_PARTY_NOTICES.md
   glyphs/            # 字形 SVG + 出处记录
-    provenance.jsonl
+    provenance/      # 出处记录，一层一个文件：oracle.jsonl / seal.jsonl
     oracle/          # 骨架 + index.csv + outline/（派生层）
-    seal/            # external.csv 外部登记表（无字形文件）
-    bronze/  clerical/
+    seal/            # 篆书字形 + index.csv + external.csv（全量码位登记表）+ README.md
   src/               # 脚本（导入/派生/校验/生成浏览页）
   viewer/            # 静态浏览页（生成的，勿手改）
-  .github/workflows/ # GitHub Pages 部署
+  .github/workflows/ # GitHub Pages 部署 + CI 校验
 ```
 
 保持精简，勿随意增加顶层目录。
 
 ## 书体目录名
 
-| 目录 | 中文 | 英文（学术/国际常用） |
-|------|------|----------------------|
-| `glyphs/oracle/` | 甲骨文 | Oracle bone script |
-| `glyphs/bronze/` | 金文 | Bronze script |
-| `glyphs/seal/` | 篆书 | Seal script |
-| `glyphs/clerical/` | 隶书 | Clerical script |
+| 目录 | 中文 | 英文（学术/国际常用） | 状态 |
+|------|------|----------------------|------|
+| `glyphs/oracle/` | 甲骨文 | Oracle bone script | **已发布**（仅 JGW 批） |
+| `glyphs/seal/` | 篆书 | Seal script | **已发布** |
+| `glyphs/bronze/` | 金文 | Bronze script | 暂缓 |
+| `glyphs/clerical/` | 隶书 | Clerical script | 暂缓 |
+| `glyphs/chu/` | 楚文字 | Chu script | 暂缓 |
+| `glyphs/chuanchao/` | 傳抄古文 | Transmitted ancient script | 暂缓 |
 
 ## 字形文件
 
@@ -50,63 +58,99 @@ hanzi-glyphs-svg/
 
 | 书体 | 文件名 | 键 |
 |------|--------|----|
-| `glyphs/seal/` | `<Unicode>.svg` | 现代汉字码位，**6 位大写十六进制**，如 `0065E5.svg` = 日 |
-| `glyphs/oracle/` | `<glyph_id>.svg` | 源字库条目号，**4 位十进制**，如 `0001.svg` |
+| `glyphs/seal/` | `<Unicode>.svg` | 篆书区块码位，**5 位大写十六进制**，如 `3D000.svg` = U+3D000（一） |
+| `glyphs/oracle/` | `<glyph_id>.svg` | 源字库条目号，**4 位十进制**，如 `0001.svg`（暂缓层同用条目号） |
 
-- **甲骨文/金文没有自己的 Unicode 码位**，`<Unicode>.svg` 表达不了它们；而且一字多形是常态
-  （已导入的 1,203 条甲骨文里，33 个现代字各对应 2 个条目），所以改用**条目号**做键。
+- **甲骨文在 Unicode 里没有自己的码位**，`<Unicode>.svg` 表达不了它；而且一字多形是常态
+  （JGW 那批 1,203 条里，33 个现代字各对应 2 个条目），所以改用**条目号**做键。
+- **篆书用篆书区块自己的码位做键**（U+3D000–U+3FC3F），不是现代字码位：同一个现代字在
+  篆书区块里有多个码位（正篆 + 重文），篆书区块 **11,328** 个码位只对应 **11,231** 个现代字，
+  其中 **93 个现代字对应多个码位**（89 个 ×2、4 个 ×3，共多出 96 个码位），
+  按现代字命名会撞车。现代字码位放在 `index.csv` 里反查。
+- **现代字码位一律写成 6 位大写十六进制**（`004E04`），**篆书码位一律写成 5 位**
+  （`3D000`）。抓取脚本按 `ord(char)` 的十六进制给文件命名，宽度不统一
+  （`4E04` 与 `0053E1` 都出现过），合并清单时必须先归一，否则同一个字会出现两条记录。
 - 每个书体目录下放一份 `index.csv`，提供「现代字 / 码位 → 文件名」反查。
 - `glyphs/oracle/` 的文件是上游的**逐字节副本**：不重新编码、不归一化 viewBox。
 - 书体目录下可以有**派生层**子目录。目前有 `glyphs/oracle/outline/`：与骨架**同名、同 viewBox**
   的可填充轮廓（把 `stroke` 换成真正的填充区域），由 `python src/outline_oracle.py` 生成。
   **骨架是溯源锚点**（能逐字节对回上游），轮廓是给上层渲染用的派生件；改了骨架必须重跑生成。
-- 书体目录下也可以**只有登记表、没有字形文件**：`glyphs/seal/external.csv` + `external.meta.json`
-  把每个码位指向上游仓库的文件（记 `upstream_path` 与 `upstream_blob_sha1`），**不复制内容**。
-  适用条件：上游许可未澄清、或不宜再分发时。登记表由 `python src/build_seal_registry.py` 生成，
-  字段说明见 `glyphs/seal/README.md`。**登记表里不放字形，所以它不受上游许可状态影响。**
+- **登记表可以与字形并存**：`glyphs/seal/external.csv` 登记 Unicode 篆书区块**全部** 11,328 个
+  码位的身份（现代字、部首、四本《说文》流水号）与上游文件指针，
+  由 `python src/build_seal_registry.py` 生成，字段说明见 `glyphs/seal/README.md`。
+  它的 `upstream_*` 列只是指针，**不构成分发**，因此不受上游许可状态影响；
+  本地字形的出处以 `glyphs/provenance/seal.jsonl` 为准，两者按 `codepoint` 关联。
+
+### 暂缓层将来入库时的约定（先记在这里，别丢）
+
+- 条目号由**确定性规则**给出，不能按「抓取完成顺序」编号：同一份字表跑两次若网络抖动不同，
+  编号就会漂移。规则：按「现代字码位 → 来源编号 → 文件名」排序后重排为 1..N。
+- 条目号是**整层内容的函数**：层里增删字形后编号会整体重排。下游要引用某个字形请按
+  `index.csv` 解析，**不要硬编 `NNNN.svg` 文件名**。
+- 金文/隶书层有意收「一字多形」：每个时代最多取 1 个实例（`--max-per-era 1`），
+  合并清单要用 `--keep-multi`（键 = 现代字码位 + 来源编号）。
+- 楚文字与傳抄古文没有时代维度：前者按**出土文献**、后者按**源书代号**分类；
+  傳抄古文用 `--max-per-book 1`（每个源书代号最多 1 个实例）。
+- 这两层的字表是「说文登记表 ∪ CJK 基本区」（`src/build_char_table.py` 生成），
+  且一份上游原件会挂在几个现代字名下——**记录条数与不同上游原件数是两个数**，
+  去重依据 `index.csv` 的 `source_id` 列。
 
 ## 硬规则
 
 1. **无出处，不入仓库**。说不清从哪来的，删除。
-2. 出处写在 `glyphs/provenance.jsonl`（一行一条，一个文件一条）：  
+2. 出处写在 `glyphs/provenance/<书体>.jsonl`（一行一条，一个文件一条；文件名必须等于书体名）：  
    必填 `path`、`sha256`、`license`，时间字段 `retrieved_at`（派生件用 `generated_at`），
    以及至少一个来源 URL；另记 `script`、`layer`、`glyph_id`、`source_path`、
-   `source_sha256`、`source_doi`、`attribution`。  
+   `source_sha256`、`attribution`。  
+   `retrieved_at` 记的是**从上游取回的时刻**：优先用抓取清单里逐字形的值，
+   清单没记才用入库时刻——**重新导入一遍不等于重新从上游取一次**。  
+   `source_doi` **上游有 DOI 才记**——汉典没有 DOI，JGW 批次有 DOI。  
    派生件（`layer` 不是 `skeleton`）另记 `derived_from`、`derived_from_sha256`、`transform`、`tool`。  
-   用 `python src/verify_provenance.py` 校验。
+   用 `python src/verify_provenance.py` 校验（它同时查许可白名单与「文件名 = 书体名」）。
 3. **禁止编造链接**；网络来源须核实后再写入 provenance。
 4. 正式字形须**贴近原字形**；禁止卡通美化当正式字形。
 5. 未获原作者同意时，**如实写来源**，不冒充原创或隐瞒出处。
+6. **一层一个 provenance 文件**：不要把别的书体的记录并进来。这样某一层的授权状态变化时，
+   整层（字形 + 索引 + 出处）可以一起加入或一起移除，不必在一份全量文件里做手术。
 
 ## 许可
 
-- 字形 SVG 的许可**逐书体**不同，以 `provenance.jsonl` 每条的 `license` 为准；
+- 字形 SVG 的许可**逐书体**不同，以 `glyphs/provenance/<书体>.jsonl` 每条的 `license` 为准；
   使用方须按该许可署名，署名文字在 `attribution` 字段与 `THIRD_PARTY_NOTICES.md`。
-- 目前 `glyphs/oracle/`（1,203 个字形）为 **CC-BY-4.0**。
+- 目前 `glyphs/oracle/`（1,203 骨架 + 1,203 轮廓）为 **CC-BY-4.0**；
+  `glyphs/seal/` 为 **CC0-1.0**。
+- **根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**，不覆盖 CC0 与 Unicode 授权的材料；
+  完整地图在 `README.md` 的「许可」一节与 `THIRD_PARTY_NOTICES.md`。
+- **暂缓发布的五批字形不得随仓库发布**（无论它们在上游声明的是什么许可）：
+  它们的底本是仍在版权期内的现代出版物，汉典的 CC0 只处置汉典自己的权利
+  （详见 `README.md`「暂缓发布的书体」与 `THIRD_PARTY_NOTICES.md`）。
 - **CC BY-ND / CC BY-NC / 无许可的来源不得作为字形来源入库**：矢量化与重绘都属于「改作」，
   ND 直接禁止；NC 与本库公开供引用的目的冲突。
-- **本仓库自身的对外许可**：数据 **CC BY 4.0**（继承上游，根 `LICENSE`），
-  文档 **CC0 1.0**（`LICENSE-DOCS`，无义务），代码 `src/**`、`viewer/**` 为
-  **MIT**（`LICENSE-CODE`）。完整地图在 `README.md`。
+- **本仓库自身的对外许可**：文档 **CC0 1.0**（`LICENSE-DOCS`，无义务），
+  代码 `src/**`、`viewer/**` 为 **MIT**（`LICENSE-CODE`）；数据逐层不同，见上。
 - 根 `LICENSE` 必须是 CC BY 4.0 的**逐字全文**：GitHub 的协议识别（Licensee）是把文件正文
-  与已知协议做相似度比对，只写一句「本仓库采用 CC BY 4.0」的说明**不会被识别**，
-  仓库会显示成 Unknown 或只显示 MIT（上游仓库就是这种情况）。
+  与已知协议做相似度比对，只写一句「本仓库采用 CC BY 4.0」的说明**不会被识别**。
 - **不得给下游附加额外限制**（例如「仅限非商业」「禁止再分发」）：既违反 CC BY 4.0
-  §2(a)(5)(B)，也会让自己的授权失效。
+  §2(a)(5)(B)，也会让自己的授权失效；对 CC0 材料同样不得附加。
 - **外部登记表**（如 `glyphs/seal/external.csv`）里派生于 Unicode `SealSources.txt` 的列
   适用 **Unicode License v3**，其版权与许可声明已随 `THIRD_PARTY_NOTICES.md` 提供
-  （该协议条件 (b) 允许把声明放在关联文档里）。表里 `upstream_*` 列只是指针，不涉及授权。
+  （该协议条件 (b) 允许把声明放在关联文档里）。
 
 ## 当前状态
 
 | 书体 | 状态 |
 |------|------|
-| 甲骨文 | **1,203** 骨架 + **1,203** 轮廓（CC BY 4.0，DOI `10.5281/zenodo.22467946`），provenance 与 `index.csv` 齐全 |
-| 篆书 | 外部登记表 `external.csv`：**11,328** 个码位指针，**无字形文件** |
-| 金文 / 隶书 | 尚未收录 |
+| 甲骨文（JGW 批） | **1,203** 骨架 + **1,203** 轮廓（CC BY 4.0），provenance 与 `index.csv` 齐全 |
+| 篆书 | **10,591** 字形（CC0 1.0），键 = 篆书区块码位，覆盖 **10,591 / 11,328**（93.5%）；另有 `external.csv` 登记全量 11,328 个码位 |
+| 甲骨文（汉典拓片摹本）、金文、隶书、楚文字、傳抄古文 | **暂缓发布**，本地保存在 `backup/full-<日期>` 分支 |
 
+- `glyphs/provenance/` 现为 **12,997 条**（oracle 2,406 + seal 10,591）；
+  `verify_provenance.py` 机读校验 **0 问题**，`check_glyphs.py` 各层 **0 问题**。
 - 甲骨文特例：`0380`、`0916` 无对应现代汉字；`1180`（妞）身份为 `provisional`。
-- 已知残余风险（上游数据集未披露其字形所依据的第三方摹本来源）见 `THIRD_PARTY_NOTICES.md`。
+- 篆书层的键、覆盖率、正篆/重文的取舍规则，以及一处对 Unicode `SealSources.txt`
+  的偏差修正（U+3D06D 归「玉」而非「王」）见 `glyphs/seal/README.md`。
+- JGW 上游未披露其字形所依据的第三方来源；篆书层底本为《说文》刻本。
+  两处残余风险都写在 `THIRD_PARTY_NOTICES.md`。
 
 ## 脚本
 
@@ -114,9 +158,20 @@ hanzi-glyphs-svg/
 |------|------|
 | `src/import_oracle_jgw.py` | 导入甲骨文骨架 |
 | `src/outline_oracle.py` | 骨架 → 可填充轮廓（`--selftest` 几何自检） |
-| `src/build_seal_registry.py` | 生成篆书外部登记表 |
-| `src/build_viewer.py` | 生成只读浏览页 |
+| `src/fetch_zdic_glyphs.py` | 抓汉典「书法」字形实例，出 `manifest.json`；题记按书体分派解析器 |
+| `src/build_char_table.py` | 生成抓取用的字表（说文登记表 ∪ CJK 基本区/扩展 A 区） |
+| `src/clean_zdic_glyphs.py` | 洗掉汉典字形里的近白水印层，产出可入库的字形与清单 |
+| `src/merge_glyph_manifests.py` | 合并多批清单（`--keep-multi` 保留一字多形） |
+| `src/build_seal_zheng_table.py` | 生成「现代字 → 正篆码位」反查表（含 93/93 交叉验证） |
+| `src/assign_seal_codepoints.py` | 给小篆字形指派篆书区块码位（正篆/重文取舍） |
+| `src/import_glyph_layer.py` | 按清单导入任一书体层（许可闸门 + provenance + index.csv + 孤儿体检） |
+| `src/import_seal_kaiyuan.py` | 開元小篆导入（`--verify-tree` 只对账 blob SHA-1；许可闸门挡在落盘之前） |
+| `src/build_seal_registry.py` | 生成篆书全量码位登记表（含玉/王偏差修正） |
+| `src/build_viewer.py` | 生成只读浏览页（只给仓里真有的层出 Tab） |
+| `src/check_glyphs.py` | 字形体检（XML 合法、viewBox、路径 bbox、退化检测） |
+| `src/glyph_stats.py` | 字形库统计汇总（只读，`--json` 机读） |
 | `src/verify_provenance.py` | 校验 provenance 与文件 sha256 |
+| `src/fetch_seal_upstream.py` | 把開元小篆上游拉到本地查看（`fetch_kaiyuan.bat` 调它），只看不入库 |
 
 ## 协作
 
