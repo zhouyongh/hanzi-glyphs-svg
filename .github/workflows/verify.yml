@@ -1,0 +1,65 @@
+name: Verify
+
+# 为什么需要这个工作流：`AGENTS.md` 的硬规则是「无出处，不入仓库」，而出处记录的可查性
+# 必须由机器保证。pages.yml 只组装站点，不做任何校验；这里补上校验这一环。
+#
+# 两条校验互不依赖：
+# - verify_provenance.py 只用标准库，任何时候都必须通过；
+# - outline_oracle.py --selftest 需要 numpy + Pillow 做光栅化对比（脚本里已按缺库降级）。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify
+  cancel-in-progress: true
+
+jobs:
+  provenance:
+    name: 校验出处记录
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: provenance 与文件 sha256 对账
+        run: python src/verify_provenance.py --quiet
+
+  outline:
+    name: 轮廓层几何自检
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 安装光栅化依赖
+        run: python -m pip install --quiet --disable-pip-version-check numpy Pillow
+      - name: 轮廓几何自检
+        run: python src/outline_oracle.py --selftest
+
+  glyphs:
+    name: 字形体检
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 体检守的是「本库只收矢量字形」这条规则：汉典个别实例是 base64 PNG 套壳，
+      # 清洗时已剔除，这里再查一遍，防止以后有字形绕过清洗直接入库。
+      # 只体检仓里真有的层：没发布的层没有目录，写死层名会让 CI 直接红，
+      # 而「红」会被当成代码坏了，反而遮蔽真问题。
+      - name: 逐层体检（XML 合法、viewBox、路径 bbox、退化检测）
+        run: |
+          for d in glyphs/*/; do
+            [ -f "$d/index.csv" ] || continue
+            python src/check_glyphs.py "$d"
+          done

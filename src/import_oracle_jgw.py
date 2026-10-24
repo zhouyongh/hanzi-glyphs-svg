@@ -11,7 +11,7 @@
 
     glyphs/oracle/<glyph_id:04d>.svg   与上游逐字节一致的副本
     glyphs/oracle/index.csv            现代字/码位 → 文件 的反查表
-    glyphs/provenance.jsonl            每个字形一条记录（合并写入，不覆盖其他书体）
+    glyphs/provenance/<书体>.jsonl      每个字形一条记录（合并写入，不覆盖其他书体）
 
 三个设计决定（理由见 AGENTS.md）:
 
@@ -174,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"{zenodo_dir} 下找不到 {SOURCE_SUBDIR}")
 
     out_dir = repo_root / "glyphs" / SCRIPT_NAME
-    prov_path = repo_root / "glyphs" / "provenance.jsonl"
+    prov_path = repo_root / "glyphs" / "provenance" / f"{SCRIPT_NAME}.jsonl"
     retrieved_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     records: list[dict] = []
