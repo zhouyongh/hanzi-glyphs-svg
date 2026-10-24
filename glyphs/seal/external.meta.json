@@ -6,6 +6,15 @@
   "codepoint_count": 11328,
   "codepoints_with_upstream": 10980,
   "unsealed_sources_url": "https://www.unicode.org/Public/18.0.0/ucd/SealSources.txt",
-  "generated_at": "2026-10-07T07:54:31Z",
-  "note": "仅登记指针，未复制任何上游字形内容；许可状态见 THIRD_PARTY_NOTICES.md"
+  "generated_at": "2026-10-23T01:48:03Z",
+  "note": "仅登记指针，未复制任何上游字形内容；许可状态见 THIRD_PARTY_NOTICES.md",
+  "deviations": [
+    {
+      "codepoint": "U+3D06D",
+      "was_unicode": "00738B",
+      "now_unicode": "007389",
+      "now_char": "玉",
+      "reason": "kSEAL_Rad=6.3D06D 表明此码位是「玉」部（说文第 6 部）部首字，与 kSEAL_MCJK=738B（王）矛盾；OpenCC SealCharacters.txt 亦记作「玉」"
+    }
+  ]
 }

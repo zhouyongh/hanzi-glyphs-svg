@@ -9,7 +9,7 @@
 产出::
 
     glyphs/oracle/outline/<glyph_id>.svg   与骨架同名、同 viewBox 的填充轮廓
-    glyphs/provenance.jsonl                追加 layer="outline" 的派生记录
+    glyphs/provenance/oracle.jsonl         追加 layer="outline" 的派生记录
 
 为什么不用第三方库：本机只有 PIL / numpy / lxml。上游骨架的 ``d`` 只含 ``M``/``L``
 （直线段），所以描边区域可以精确拆成**每段一个「体育场」轮廓**（线段两侧平行边 +
@@ -402,7 +402,7 @@ def main(argv=None) -> int:
     repo_root: Path = args.repo_root.resolve()
     src_dir = repo_root / "glyphs" / "oracle"
     out_dir = src_dir / "outline"
-    prov_path = repo_root / "glyphs" / "provenance.jsonl"
+    prov_path = repo_root / "glyphs" / "provenance" / "oracle.jsonl"
 
     with (src_dir / "index.csv").open("r", encoding="utf-8", newline="") as handle:
         index = {row["glyph_id"]: row for row in csv.DictReader(handle)}
@@ -415,6 +415,10 @@ def main(argv=None) -> int:
 
     for glyph_id in sorted(index, key=int):
         row = index[glyph_id]
+        # 轮廓层是 JGW 参数化矢量的派生件：它靠骨架的 polyline 结构生成可填充轮廓。
+        # 同层里别的来源（汉典拓片摹本）没有这套结构，跳过。
+        if not (row.get("char_form") or "").strip():
+            continue
         src = src_dir / row["file"]
         viewbox, strokes = parse_skeleton(src)
         d, (x0, y0, x1, y1) = build_outline(strokes, viewbox, args.precision)
