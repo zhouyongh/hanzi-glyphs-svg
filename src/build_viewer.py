@@ -118,8 +118,7 @@ TEMPLATE = r"""<!DOCTYPE html>
     使用：骨架与上游逐字节一致、未改动几何，轮廓层由本仓库脚本派生（同一许可）。
     篆书字形来自汉典（zdic.net）「书法」小篆实例，依其《服务条款》第四条以
     <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>
-    释出。其余书体（金文、隶书、楚文字、傳抄古文）已整理，因底本授权待确认暂缓发布；
-    完整署名与改动声明见仓库 <code>THIRD_PARTY_NOTICES.md</code>。
+    释出。完整署名与改动声明见仓库 <code>THIRD_PARTY_NOTICES.md</code>。
   </p>
 </header>
 <nav id="tabs" role="tablist"></nav>
