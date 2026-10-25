@@ -12,6 +12,10 @@
 - 供上层项目引用；本仓库不做游戏、不做业务应用
 - 附一个**零构建的只读浏览页** `viewer/index.html`（由 `src/build_viewer.py` 生成，不是应用、
   不引入依赖、不复制字形文件），用于人工核验字形
+- 浏览页的字形**按需从 CDN 取**（部署到 Pages 时 `glyphs/` 不随站点发布）。
+  **取字必须有兜底链**：单一 CDN 的一次失败就会留一个空白格，兜底链见
+  `src/build_viewer.py` 的 `retryPlan()`；全试完还不行就把格子标成「取不到」，
+  别让「取不到」看起来像「这个字形是空的」
 
 ## 目录
 
@@ -55,8 +59,10 @@ hanzi-glyphs-svg/
 | `glyphs/heiti-hk/` | 黑体（港版） | Sans, Hong Kong |
 
 > **两个宋体层**：同一书体的**地区变体**，键都是现代字 Unicode 码位，所以**码位会重叠**——
-> 两层各自独立，`index.csv` 分开列。差异主要在**扩展 B 区的繁体异体码位**
-> （`songti` 52 个，`songti-tc` 1,705 个）。下游要「简体优先」用 `songti`，要繁体异体用 `songti-tc`。
+> 两层各自独立，`index.csv` 分开列。共有 15,975 个码位里，路径串逐字节相同的 **8,170** 个、
+> 渲染后差异明显的 **7,802** 个（大陆规范 vs 台湾规范）。码位集合差异主要在**扩展 B 区的
+> 繁体异体码位**（`songti` 52 个，`songti-tc` 1,705 个）。
+> 下游要「简体优先」用 `songti`，要繁体异体用 `songti-tc`。
 >
 > **黑体·港**是**香港標準字形**（Chiron Hei HK），与大陆写法在约两千字上不同——
 > 它不是「同一字形的另一种写法」，不能当大陆字形用。
@@ -198,6 +204,9 @@ hanzi-glyphs-svg/
   的偏差修正（U+3D06D 归「玉」而非「王」）见 `glyphs/seal/README.md`。
 - 字体六层的来源、许可证据与取舍见各层 `SOURCE.md`；逐条款证据汇总在
   `glyphs/font-license-evidence.md`（由 `src/build_font_license_evidence.py` 生成）。
+- **六个字体层在收字区块内漏收为 0**（`python src/audit_font_coverage.py --font-dir <字体目录>` 可复跑）。
+  收字区块之外另有 403 个 CJK 相关码位（康熙部首 214、CJK 部首补充 115、带圈表意补充 58、
+  迭代记号 3、杭州数字 13），不算漏收——收字区块本来就不含它们。
 
 ## 脚本
 
@@ -207,6 +216,8 @@ hanzi-glyphs-svg/
 | `src/outline_oracle.py` | 骨架 → 可填充轮廓（`--selftest` 几何自检） |
 | `src/extract_font_glyphs.py` | 从 OFL 字体提取汉字轮廓为 SVG（fontTools → path；画布取墨迹并集） |
 | `src/verify_font_licenses.py` | 逐条款核验 OFL 许可文本（正文比对 + RFN + 版权行）；加 `--font` 会连字体 name 表一起查 |
+| `src/verify_songti_variants.py` | 核验「宋体·简 / 宋体·繁」两层的性质：层里装的是简繁**码位**（不是筛过的字符集）、共有码位里多少字形不同（**比像素**，不能比 SVG 字节）、层是否忠实于源字体（加 `--font-sc/--font-tc` 比路径串）；`--charset-only` 只用标准库，可进 CI |
+| `src/audit_font_coverage.py` | **字体层漏收审计**：层里的码位集合与源字体 cmap 逐块对照，报漏收 / 多收 / 有意不收 / 收字区块外的 CJK 码位；收字区块直接 import 抽取器的 `BLOCKS`，不另抄一份 |
 | `src/build_font_license_evidence.py` | 汇总各字体层的 OFL 1.1 逐条款证据成 `glyphs/font-license-evidence.md` |
 | `src/eval_candidate.py` | 候选字体的**净增量评测**：相对已覆盖码位算还能补多少（扣掉兼容区块） |
 | `src/license_audit.py` | **发布安全审计**：逐层「能不能安全发布」，出 `glyphs/publish-license-audit.md` + `.json` |

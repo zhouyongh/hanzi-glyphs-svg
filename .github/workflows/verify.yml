@@ -100,3 +100,18 @@ jobs:
       # 只用标准库，不依赖字体原件。
       - name: 逐层核验随附义务是否已履行
         run: python src/license_audit.py --check
+
+  songtivariants:
+    name: 宋体两层的性质核验
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 守的是「宋体·简 / 宋体·繁 是**地区变体**，不是字符集筛选」这条事实：
+      # 简体层装的是整个 CJK 基本区，所以常用繁体专属字与对应的简体字**都必须在**。
+      # 少了就说明这层被当成了「简体字集合」——那正是要防住的误解。
+      # 只读两个 index.csv，不用字体原件，秒级。
+      - name: 核验两层的字符集事实
+        run: python src/verify_songti_variants.py --charset-only
