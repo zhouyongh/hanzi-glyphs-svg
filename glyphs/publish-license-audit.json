@@ -1,5 +1,58 @@
 {
  "layers": {
+  "bronze": {
+   "records": 8290,
+   "licenses": {
+    "CC0-1.0": 8290
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "删除汉典近白水印": 8290
+   },
+   "source_book_records": 8290,
+   "source_books_top": [
+    [
+     "中山王昔鼎",
+     265
+    ],
+    [
+     "中山王昔壺",
+     147
+    ],
+    [
+     "毛公鼎",
+     117
+    ],
+    [
+     "𦅫鎛",
+     110
+    ],
+    [
+     "𤼈鐘",
+     103
+    ],
+    [
+     "秦公簋",
+     101
+    ]
+   ],
+   "source_references_records": 0,
+   "has_license_copy": false,
+   "license_copy_path": "",
+   "license_copy_sha256": "",
+   "has_source_md": false,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "汉典「书法」字形是**摹本 + 矢量化**产物，底本为《殷周金文集成》等出版物。",
+   "verdict": "⚠️ 可发布（有残余风险，须随附底本说明）",
+   "must_include": [
+    "**不得**因此追加使用限制（CC0 是放弃权利，不是许可别人加条件）",
+    "无强制署名义务（CC0 放弃权利而非授予许可）"
+   ],
+   "ofl": {}
+  },
   "caoshu": {
    "records": 6763,
    "licenses": {
@@ -35,6 +88,59 @@
     "body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2",
     "layer_body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2"
    }
+  },
+  "clerical": {
+   "records": 11947,
+   "licenses": {
+    "CC0-1.0": 11947
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "未改动（逐字节副本）": 11947
+   },
+   "source_book_records": 11947,
+   "source_books_top": [
+    [
+     "漢印徵",
+     1883
+    ],
+    [
+     "晉辟雍碑陰",
+     139
+    ],
+    [
+     "史晨碑",
+     133
+    ],
+    [
+     "北海相景君銘",
+     104
+    ],
+    [
+     "漢印徵補",
+     100
+    ],
+    [
+     "華山廟碑",
+     100
+    ]
+   ],
+   "source_references_records": 0,
+   "has_license_copy": false,
+   "license_copy_path": "",
+   "license_copy_sha256": "",
+   "has_source_md": false,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "同上，底本为《睡虎地秦简文字编》《秦汉魏晋篆隶字形表》等。",
+   "verdict": "⚠️ 可发布（有残余风险，须随附底本说明）",
+   "must_include": [
+    "**不得**因此追加使用限制（CC0 是放弃权利，不是许可别人加条件）",
+    "无强制署名义务（CC0 放弃权利而非授予许可）"
+   ],
+   "ofl": {}
   },
   "heiti-hk": {
    "records": 31598,
@@ -109,19 +215,46 @@
    }
   },
   "oracle": {
-   "records": 2406,
+   "records": 12619,
    "licenses": {
-    "CC-BY-4.0": 2406
+    "CC-BY-4.0": 2406,
+    "CC0-1.0": 10213
    },
    "attribution_missing": 0,
-   "attribution_variants": 1,
+   "attribution_variants": 2,
    "modifications_missing": 0,
    "modification_kinds": {
     "未改动（逐字节副本）": 1203,
+    "删除汉典近白水印": 10213,
     "骨架 → 可填充轮廓（派生层）": 1203
    },
-   "source_book_records": 0,
-   "source_books_top": [],
+   "source_book_records": 10213,
+   "source_books_top": [
+    [
+     "菁3.1 賓組",
+     18
+    ],
+    [
+     "甲2121 賓組",
+     15
+    ],
+    [
+     "菁5.1 賓組",
+     14
+    ],
+    [
+     "乙8896 子組",
+     12
+    ],
+    [
+     "乙7795 賓組",
+     10
+    ],
+    [
+     "甲903 歷組",
+     10
+    ]
+   ],
    "source_references_records": 0,
    "has_license_copy": false,
    "license_copy_path": "",
@@ -130,9 +263,11 @@
    "has_readme": false,
    "notices_mentions_layer": true,
    "risk_note": "两批两许可：JGW 批次（CC BY 4.0，骨架逐字节副本）+ 汉典拓片摹本批次（CC0 1.0）。汉典批次是**摹本**，《甲骨文合集》的底本著作权不消灭。",
-   "verdict": "✅ 可安全发布",
+   "verdict": "⚠️ 可发布（有残余风险，须随附底本说明）",
    "must_include": [
+    "**不得**因此追加使用限制（CC0 是放弃权利，不是许可别人加条件）",
     "不得施加额外限制（§2(a)(5)(B)）",
+    "无强制署名义务（CC0 放弃权利而非授予许可）",
     "署名：作者、来源、许可、**并说明是否修改过**（§3(a)(1)）",
     "衍生作品须以**同一许可**（CC BY 4.0）分发（§3(a)(5)(B)）"
    ],
