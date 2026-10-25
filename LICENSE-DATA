@@ -2,7 +2,10 @@
 
 | 层 | 目录 | 许可 | 全文位置 |
 |---|---|---|---|
-| 甲骨文（JGW 骨架 + 派生轮廓） | `glyphs/oracle/*.svg`、`glyphs/oracle/outline/**` | **CC BY 4.0** | 根 `LICENSE` |
+| 甲骨文（JGW 骨架 + 派生轮廓） | `glyphs/oracle/*.svg`（`char_form` 有值的 1,203 条）、`glyphs/oracle/outline/**` | **CC BY 4.0** | 根 `LICENSE` |
+| 甲骨文（汉典拓片摹本） | `glyphs/oracle/*.svg`（其余 10,213 条） | **CC0 1.0** | `LICENSE-DOCS` |
+| 金文 | `glyphs/bronze/**` | **CC0 1.0** | `LICENSE-DOCS` |
+| 隶书 | `glyphs/clerical/**` | **CC0 1.0** | `LICENSE-DOCS` |
 | 篆书 | `glyphs/seal/**` 的字形与 `index.csv` | **CC0 1.0**（公有领域奉献） | `LICENSE-DOCS` |
 | 现代书体六层（楷/行/草/宋简/宋繁/黑港） | `glyphs/kaishu/` `xingshu/` `caoshu/` `songti/` `songti-tc/` `heiti-hk/` 的字形与 `index.csv` | **SIL OFL 1.1**（从 OFL 开源字体提取的轮廓） | 各层目录的 `OFL.txt` |
 | 篆书全量码位登记表 | `glyphs/seal/external.csv` | 本仓库整理的部分 **CC0 1.0**；派生于 Unicode `SealSources.txt` 的列 Unicode License v3；`upstream_*` 列只是指针 | `LICENSE-DOCS` / `THIRD_PARTY_NOTICES.md` |
