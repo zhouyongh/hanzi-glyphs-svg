@@ -56,11 +56,15 @@ SCRIPTS = [
     ("caoshu", "草书", "Cursive script",
      "已收录 {n} 个字形，从 Liu Jian Mao Cao 字体（OFL 1.1）提取轮廓；"
      "键为现代字的 Unicode 码位。"),
-    ("songti", "宋体·简", "Song / Ming script, Simplified",
+    ("songti", "宋体·简", "Song / Ming script, Simplified Chinese (mainland)",
      "已收录 {n} 个字形，从 Noto Serif SC 字体（OFL 1.1）提取轮廓；"
-     "基本区 20,992 个码位全覆盖，简体与繁体字形都在里面。"),
-    ("songti-tc", "宋体·繁", "Song / Ming script, Traditional",
+     "**中国大陆（简体地区）字形规范**。层名里的「简」说的是**地区规范**，"
+     "不是「这一层只收简体字」——简体与繁体是不同码位，两种**都在这一层**"
+     "（愛 U+611B 与 爱 U+7231），所以看到繁体字是正常的；"
+     "凡大陆与港台字形有出入的地方，一律取**大陆**字形。"),
+    ("songti-tc", "宋体·繁", "Song / Ming script, Traditional Chinese (TW / HK / MO)",
      "已收录 {n} 个字形，从 Noto Serif TC 字体（OFL 1.1）提取轮廓；"
+     "**台湾、香港、澳门（繁体地区）字形规范**；"
      "扩展 B 区有 1,705 个简体层没有的繁体异体码位。"),
     ("heiti-hk", "黑体·港", "Sans script, Hong Kong",
      "已收录 {n} 个字形，从 Chiron Hei HK 字体（OFL 1.1）提取轮廓；"
@@ -71,9 +75,19 @@ SCRIPTS = [
 DEFAULT_REPO_SLUG = "zhouyongh/hanzi-glyphs-svg"
 
 # 部署到 GitHub Pages 时，站点**不带上** glyphs/（已 1.1 GB、19.2 万个文件，
-# Pages 装不下），字形改从 CDN 按需取。两条兜底：jsDelivr 快，raw 稳。
+# Pages 装不下），字形改从 CDN 按需取。
+#
+# **要几个源，不是一个。** 2026-10-25 实测：线上偶有字形取不到（隶书里三格
+# 空白），查下来文件本身完好、CDN 也正常——是**某一次请求**失败，而当时的兜底链
+# 只有「相对路径 → raw.githubusercontent」两条：前者部署到站点根必然 404，
+# 后者在国内常常连不上，等于没有兜底，那格就永久空白。
+#
+# jsDelivr 有三个独立的主机名（cdn / fastly / gcore），分属不同网络：
+# 某个边缘节点缓存了坏响应时，换一个节点就能拿到。三个都留着，再加 raw 兜底。
 DEFAULT_CDN_BASES = (
     "https://cdn.jsdelivr.net/gh/{slug}@main/glyphs/",
+    "https://fastly.jsdelivr.net/gh/{slug}@main/glyphs/",
+    "https://gcore.jsdelivr.net/gh/{slug}@main/glyphs/",
     "https://raw.githubusercontent.com/{slug}/main/glyphs/",
 )
 
@@ -84,71 +98,100 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>汉字字形库 · 浏览</title>
 <style>
-  :root { --fg:#1c1c1e; --muted:#6b7280; --line:#e5e7eb; --bg:#fbfbfc; --accent:#8a1c1c; }
+  /* 视觉语言与兄弟仓库 hanzi-relations 保持一致：纸色底、墨色字、赭色强调。
+     设计 token 直接沿用那边的 :root，两个页面看着像一套东西。 */
+  :root { --bg:#fbfaf7; --panel:#fff; --ink:#1c1b18; --mute:#6b6862; --line:#e3ded4;
+          --accent:#8a6d3b; --accent2:#3f5d52; --warn:#a1442f; }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg);
-         font:14px/1.55 system-ui, -apple-system, "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
-  header { padding:22px 24px 0; }
-  h1 { font-size:20px; margin:0 0 6px; }
-  .lede { color:var(--muted); margin:0 0 14px; max-width:70em; }
-  .lede a { color:var(--accent); }
-  nav { display:flex; gap:4px; border-bottom:1px solid var(--line); padding:0 24px; flex-wrap:wrap; }
-  nav button { appearance:none; border:0; background:none; padding:9px 14px; cursor:pointer;
-               font:inherit; color:var(--muted); border-bottom:2px solid transparent; }
-  nav button[aria-selected="true"] { color:var(--fg); border-bottom-color:var(--accent); font-weight:600; }
-  nav button .n { color:var(--muted); font-weight:400; font-size:12px; margin-left:5px; }
-  main { padding:16px 24px 40px; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:15px/1.7 "Noto Serif CJK SC","Source Han Serif SC","Songti SC",Georgia,serif; }
+  a { color:var(--accent2); }
+
+  header { background:var(--panel); border-bottom:1px solid var(--line);
+           padding:20px 24px 18px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+  h1 { margin:0 0 4px; font-size:24px; letter-spacing:.02em; }
+  h1 .latin { color:var(--mute); font-size:.72em; letter-spacing:.04em; }
+  .sub { color:var(--mute); font-size:13px; margin:0 0 10px; }
+  .lede { color:var(--mute); margin:0; max-width:76em; font-size:13.5px; line-height:1.85; }
+
+  nav { display:flex; gap:8px; flex-wrap:wrap; padding:12px 24px; position:sticky; top:0; z-index:10;
+        background:var(--panel); border-bottom:1px solid var(--line);
+        box-shadow:0 1px 3px rgba(0,0,0,.04); }
+  nav button { appearance:none; border:1px solid var(--line); border-radius:6px;
+               background:var(--panel); padding:7px 13px; cursor:pointer;
+               font:inherit; font-size:14px; color:var(--mute); }
+  nav button:hover { border-color:var(--accent); color:var(--accent); }
+  nav button[aria-selected="true"] { background:var(--accent); color:#fff;
+               border-color:var(--accent); font-weight:600; }
+  nav button .n { font-weight:400; font-size:12px; margin-left:5px; opacity:.7; }
+
+  main { padding:20px 24px 40px; }
   .panel[hidden] { display:none; }
-  .toolbar { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
-  .seg { display:inline-flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; background:#fff; }
-  .seg button { appearance:none; border:0; background:none; padding:6px 12px; cursor:pointer;
-                font:inherit; color:var(--muted); }
-  .seg button[aria-pressed="true"] { background:#f0eeee; color:var(--fg); font-weight:600; }
-  input[type=search] { padding:6px 10px; border:1px solid var(--line); border-radius:7px;
-                       font:inherit; background:#fff; min-width:210px; }
-  select.era { padding:6px 10px; border:1px solid var(--line); border-radius:7px;
-               font:inherit; background:#fff; color:var(--fg); }
-  label.chk { display:inline-flex; gap:6px; align-items:center; color:var(--muted); cursor:pointer; }
-  .count { color:var(--muted); margin-left:auto; }
-  .layer-note { color:var(--muted); font-size:13px; margin:0 0 10px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(78px, 1fr)); gap:7px; }
-  figure { margin:0; background:#fff; border:1px solid var(--line); border-radius:8px;
-           padding:6px 5px 4px; text-align:center; }
-  figure.flag { border-color:#d9a300; background:#fffdf4; }
+  .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:6px; overflow:hidden;
+         background:var(--panel); }
+  .seg button { appearance:none; border:0; background:none; padding:8px 14px; cursor:pointer;
+                font:inherit; font-size:14px; color:var(--mute); }
+  .seg button:hover { color:var(--accent); }
+  .seg button[aria-pressed="true"] { background:var(--accent); color:#fff; font-weight:600; }
+  input[type=search] { flex:1; min-width:230px; padding:9px 12px; border:1px solid var(--line);
+                       border-radius:6px; font:inherit; font-size:15px;
+                       background:var(--panel); color:var(--ink); }
+  input[type=search]:focus { outline:2px solid var(--accent); outline-offset:-1px; }
+  select.era { padding:8px 12px; border:1px solid var(--line); border-radius:6px; font:inherit;
+               font-size:14px; background:var(--panel); color:var(--ink); cursor:pointer; }
+  select.era:hover { border-color:var(--accent); }
+  label.chk { display:inline-flex; gap:6px; align-items:center; color:var(--mute);
+              cursor:pointer; font-size:14px; }
+  .count { color:var(--mute); font-size:12.5px; margin-left:auto; }
+  .layer-note { color:var(--mute); font-size:13.5px; margin:0 0 14px; max-width:76em; line-height:1.85; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(82px, 1fr)); gap:9px; }
+  figure { margin:0; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+           padding:8px 6px 6px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,.03); }
+  figure:hover { border-color:var(--accent); box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  figure.flag { border-color:#d9c08a; background:#fdfaf2; }
+  /* 所有源都取不到：红框 + 角标。别让「取不到」看起来像「这个字形是空的」。 */
+  figure.failed { border-color:var(--warn); background:#fdf3f0; }
+  .fail-note { color:var(--warn); font-size:10px; margin-top:2px; }
   figure a { display:block; }
-  figure img { width:100%; height:62px; object-fit:contain; display:block; }
-  figcaption { font-size:11px; color:var(--muted); margin-top:3px; white-space:nowrap;
+  figure img { width:100%; height:64px; object-fit:contain; display:block; }
+  figcaption { font-size:11.5px; color:var(--mute); margin-top:4px; white-space:nowrap;
                overflow:hidden; text-overflow:ellipsis; }
-  figcaption b { color:var(--fg); font-weight:600; }
-  figcaption i { font-style:normal; color:#8a1c8a; }
-  .empty { color:var(--muted); background:#fff; border:1px solid var(--line);
-           border-radius:8px; padding:18px; max-width:60em; }
-  .more { display:block; margin:16px auto; padding:8px 20px; border:1px solid var(--line);
-          border-radius:8px; background:#fff; color:var(--muted); cursor:pointer; font:inherit; }
-  .more:hover { color:var(--fg); border-color:#c9ccd2; }
+  figcaption b { color:var(--ink); font-weight:600; }
+  figcaption i { font-style:normal; color:var(--accent2); }
+  .empty { color:var(--mute); background:var(--panel); border:1px solid var(--line);
+           border-radius:8px; padding:20px; max-width:60em; }
+  .more { display:block; margin:18px auto; padding:9px 22px; border:1px solid var(--line);
+          border-radius:6px; background:var(--panel); color:var(--mute); cursor:pointer;
+          font:inherit; font-size:14px; }
+  .more:hover { color:var(--accent); border-color:var(--accent); }
   .more[hidden] { display:none; }
-  .boot { color:var(--muted); padding:30px 0; }
-  .extcard { background:#fff; border:1px solid var(--line); border-left:3px solid var(--accent);
-             border-radius:8px; padding:16px 20px; max-width:62em; }
+  .boot { color:var(--mute); padding:30px 0; }
+  .extcard { background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent);
+             border-radius:8px; padding:18px 22px; max-width:62em;
+             box-shadow:0 1px 2px rgba(0,0,0,.03); }
   .extcard p { margin:0 0 10px; }
-  .extcard ul { margin:0 0 10px; padding-left:20px; color:var(--muted); }
-  .extcard li { margin:3px 0; }
-  .extcard b { color:var(--fg); }
-  .extcard .why { color:var(--muted); font-size:12.5px; margin:0; }
-  footer { padding:0 24px 28px; color:var(--muted); font-size:12px; }
-  code { background:#f1f1f3; padding:1px 4px; border-radius:4px; }
+  .extcard ul { margin:0 0 10px; padding-left:20px; color:var(--mute); }
+  .extcard li { margin:4px 0; }
+  .extcard b { color:var(--ink); }
+  .extcard .why { color:var(--mute); font-size:12.5px; margin:0; }
+  footer { padding:0 24px 30px; color:var(--mute); font-size:12px; }
+  code { background:#f0ebe0; color:#6b5a3a; padding:1px 5px; border-radius:3px; font-size:.92em; }
 </style>
 </head>
 <body>
 <header>
-  <h1>汉字字形库 · 浏览</h1>
+  <h1>汉字字形库 <span class="latin">hanzi-glyphs-svg</span></h1>
+  <p class="sub">只读预览 · 每一格都能追到出处</p>
   <p class="lede">
-    字形 SVG 只读预览。字形文件在 <code>glyphs/</code>，每个字形一条出处记录在
+    字形文件在 <code>glyphs/</code>，每个字形一条出处记录在
     <code>glyphs/provenance/&lt;书体&gt;.jsonl</code>。
     甲骨文字形来源为
     <a href="https://zenodo.org/records/22467946" target="_blank" rel="noopener">Zenodo 10.5281/zenodo.22467946</a>，
     依 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>
-    使用；篆书字形来自汉典（zdic.net）「书法」小篆实例，依其《服务条款》第四条以
+    使用；金文、隶书、篆书与甲骨拓片摹本来自汉典（zdic.net）「书法」实例，
+    依其《服务条款》第四条以
     <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>
     释出；楷书、行书、草书、宋体、黑体六层是从 OFL 开源字体提取的轮廓，依
     <a href="https://openfontlicense.org" target="_blank" rel="noopener">SIL OFL 1.1</a>
@@ -180,22 +223,36 @@ TEMPLATE = r"""<!DOCTYPE html>
   //   1) glyphs/     —— 与页面同目录（旧的整目录部署）
   //   2) ../glyphs/  —— 仓库里的 viewer/index.html（本地双击）
   //   3) jsDelivr    —— GitHub Pages 只发布浏览页时，字形从 CDN 取
+  //                    （cdn / fastly / gcore 三个主机名分属不同网络）
   //   4) raw.githubusercontent —— CDN 不可用时的兜底
   //
   // **本地优先**：工作区里可能有还没 push 的字形，本地预览必须看到
   // 工作区的那一份，而不是 CDN 上的旧版。所以相对路径排在网络地址前面。
+  // **但重试时反过来**：相对路径在站点形态下必然 404，垫底。见 retryPlan()。
   var GLYPH_BASES = __GLYPH_BASES__;
   var glyphBase = null;
+
+  // 只有绝对地址才算「网络源」。相对路径（glyphs/、../glyphs/）只在页面就放在
+  // 仓库里时才有意义；部署到站点根（GitHub Pages）时它们必然 404，
+  // 重试时不该再排在网络源前面——那等于每次失败都白等两轮。
+  function isRemote(base) { return /^https?:\/\//i.test(base); }
+  var REMOTE_BASES = GLYPH_BASES.filter(isRemote);
 
   // 仓库里的文档链接用**绝对地址**：页面在仓库里（viewer/index.html）和
   // 部署到站点根（index.html）时相对路径不一样，写死一种总会错一边。
   var REPO_BLOB = '__REPO_BLOB__';
 
-  function probeBase(base) {
+  // 探测用哪个源取字形。**每个源试两次**：一次网络抖动就把整页的源选错，
+  // 后面所有字形都要多绕两轮才显示出来——实测踩过这个坑。
+  function probeBase(base, attempt) {
+    attempt = attempt || 0;
     return new Promise(function (resolve) {
       var img = new Image();
       img.onload = function () { resolve(base); };
-      img.onerror = function () { resolve(null); };
+      img.onerror = function () {
+        if (attempt < 1) { resolve(probeBase(base, attempt + 1)); }
+        else { resolve(null); }
+      };
       img.src = base + 'oracle/0001.svg';
     });
   }
@@ -210,18 +267,50 @@ TEMPLATE = r"""<!DOCTYPE html>
     return next();
   }
 
-  // 选中的前缀对**某一个文件**失效时（CDN 还没缓存到这一份、或本地路径挪了），
-  // 换下一个前缀再试一次，别让首屏出现空洞。
+  // 一张图取不到时的**重试计划**（按顺序试）：
+  //   1) 同一个源再来一次，但加一个查询串——绕开边缘节点与浏览器自己的负缓存。
+  //      jsDelivr 刚回源取过这一份，第二次多半就成了。
+  //   2) 换别的网络源。jsDelivr 有三个独立的主机名（cdn / fastly / gcore），
+  //      分属不同网络；某个边缘节点缓存了坏响应时，换一个节点就能拿到。
+  //      最后是 raw.githubusercontent。
+  //   3) 最后才轮到相对路径：部署到站点根时它们必然 404，只是本地预览用得上。
+  //
+  // 为什么排这个序：2026-10-25 实测线上偶有字形取不到，原因是**兜底链本身**
+  // 当时只有「相对路径 → raw.githubusercontent」两条路——前者必 404，后者在国内
+  // 常常连不上，等于没有兜底，于是那格就永久空白。
+  function retryPlan(rel) {
+    var plan = [];
+    if (isRemote(glyphBase)) { plan.push(glyphBase + rel + '?r=1'); }
+    REMOTE_BASES.forEach(function (b) {
+      if (b !== glyphBase) { plan.push(b + rel); }
+    });
+    GLYPH_BASES.forEach(function (b) {
+      if (!isRemote(b)) { plan.push(b + rel); }
+    });
+    return plan;
+  }
+
+  // 所有源都试过了还是取不到：把格子**标出来**。
+  // 「取不到」和「字形本来就是空的」必须一眼能分清——不然只能靠猜。
+  function markFailed(img, rel) {
+    var fig = img.closest ? img.closest('figure') : null;
+    if (!fig || fig.querySelector('.fail-note')) { return; }
+    fig.classList.add('failed');
+    var note = document.createElement('div');
+    note.className = 'fail-note';
+    note.textContent = '取不到';
+    note.title = rel;
+    fig.appendChild(note);
+  }
+
   function attachFallback(img) {
+    var rel = img.getAttribute('data-g');
+    var plan = retryPlan(rel);
+    var n = 0;
     img.addEventListener('error', function () {
-      var order = [glyphBase].concat(GLYPH_BASES.filter(function (b) {
-        return b !== glyphBase;
-      }));
-      var n = parseInt(img.getAttribute('data-try') || '0', 10);
+      if (n >= plan.length) { markFailed(img, rel); return; }
+      img.src = plan[n];
       n += 1;
-      if (n >= order.length) { return; }
-      img.setAttribute('data-try', String(n));
-      img.src = order[n] + img.getAttribute('data-g');
     });
   }
 
@@ -229,6 +318,12 @@ TEMPLATE = r"""<!DOCTYPE html>
     return String(s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
+  }
+
+  // 层说明写在 Python 里，用的是 Markdown 的 **粗体**。
+  // 页面里只支持这一种标记，别的按原样转义显示。
+  function note(s) {
+    return esc(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
   }
 
   function svgURL(script, file, layer) {
@@ -353,7 +448,7 @@ TEMPLATE = r"""<!DOCTYPE html>
         '<label class="chk"><input type="checkbox"> 只看待复核</label>' +
         '<span class="count"></span>' +
       '</div>' +
-      '<p class="layer-note">' + esc(meta[3]) + '</p>' +
+      '<p class="layer-note">' + note(meta[3]) + '</p>' +
       '<div class="grid"></div>' +
       '<button type="button" class="more" hidden>加载更多…</button>';
 
@@ -524,9 +619,14 @@ def main(argv=None) -> int:
     parser.add_argument("--repo-slug", default=DEFAULT_REPO_SLUG,
                         help="GitHub 仓库 slug（owner/name），用来拼 CDN 与文档链接")
     parser.add_argument("--cdn-base", action="append", default=None,
-                        help="字形的 CDN 前缀（可重复）。默认 jsDelivr + raw.githubusercontent 两条")
+                        help="字形的 CDN 前缀（可重复）。默认四条：jsDelivr 的 cdn / fastly / gcore "
+                             "三个节点 + raw.githubusercontent 兜底")
     parser.add_argument("--no-cdn", action="store_true",
                         help="只用相对路径取字形，不联网（离线生成时用）")
+    parser.add_argument("--out", type=Path, default=None,
+                        help="写到哪里（默认 <repo-root>/viewer/index.html）。"
+                             "要做「站点形态」的测试页时用得到——站点上页面在根目录，"
+                             "相对路径 ../glyphs/ 必然 404，只能靠 CDN 取字形")
     args = parser.parse_args(argv)
 
     repo_root: Path = args.repo_root.resolve()
@@ -548,7 +648,7 @@ def main(argv=None) -> int:
     external: dict[str, dict] = {}
     total = 0
 
-    # 只给「真的有这一层」的书体出标签页：没发布的层连 index.csv 都没有，
+    # 只给「真的有这一层」的书体出标签页：没发布/没入库的层连 index.csv 都没有，
     # 画一个空标签页等于让读者以为库里有这一层。
     active = [s for s in SCRIPTS if (glyphs_root / s[0] / "index.csv").is_file()]
 
@@ -592,8 +692,21 @@ def main(argv=None) -> int:
             .replace("__GENERATED__",
                      datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")))
 
-    out_path = repo_root / "viewer" / "index.html"
+    out_path = (args.out.resolve() if args.out
+                else repo_root / "viewer" / "index.html")
     out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # **布局关键声明的最小体检。**
+    # CSS 里属性名写错，浏览器**静默丢弃**那条声明，不报错、不打日志——
+    # 页面照常打开，只是布局悄悄变了（踩过：把 grid-template-columns 写成
+    # grid-columns，字形网格就退化成块级堆叠，一列一行，页面上根本看不出来）。
+    # 这类错误没有浏览器就查不出来，所以在这里钉几个「少了就会塌」的声明。
+    for must in ("display:grid", "grid-template-columns", "object-fit:contain",
+                 "nav button[aria-selected", "figure img", "figure.failed"):
+        if must not in page:
+            raise SystemExit(f"浏览页 CSS 少了关键声明 {must!r}——"
+                             f"多半是属性名写错了（浏览器会静默丢弃）。")
+
     out_path.write_text(page, encoding="utf-8", newline="\n")
 
     print(f"写出     : {out_path}  ({out_path.stat().st_size} bytes)")
