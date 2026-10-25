@@ -55,11 +55,48 @@ jobs:
           python-version: '3.12'
       # 体检守的是「本库只收矢量字形」这条规则：汉典个别实例是 base64 PNG 套壳，
       # 清洗时已剔除，这里再查一遍，防止以后有字形绕过清洗直接入库。
-      # 只体检仓里真有的层：没发布的层没有目录，写死层名会让 CI 直接红，
-      # 而「红」会被当成代码坏了，反而遮蔽真问题。
+      # 只体检仓里真有的层（`glyphs/*/` 里有 index.csv 的）：写死层名的话，
+      # 本地有一层没发就会让 CI 直接红，而「红」会被当成代码坏了，反而遮蔽真问题。
       - name: 逐层体检（XML 合法、viewBox、路径 bbox、退化检测）
         run: |
           for d in glyphs/*/; do
             [ -f "$d/index.csv" ] || continue
             python src/check_glyphs.py "$d"
           done
+
+  fontlicenses:
+    name: 字体层许可正文核验
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 楷/行/草/宋/宋繁/黑体·港六层是 OFL 派生的：**正文必须与 SIL 官方 OFL 1.1 逐条款相同**，
+      # 否则不能标 OFL-1.1 入库（開元小篆就是反例，见 THIRD_PARTY_NOTICES.md）。
+      # 这一步顺带报出有没有声明保留字体名（RFN）。
+      #
+      # 这里**没有**加 --font：那个参数要读字体二进制的 name 表，
+      # 而字体原件（十几到几十 MB）不在仓库里。name 表那一侧的 RFN 结论
+      # 记在各层的 SOURCE.md 与 THIRD_PARTY_NOTICES.md 里，收字体时人工核过。
+      - name: 逐条款比对上游 OFL.txt 与官方原文
+        run: |
+          for d in glyphs/*/; do
+            [ -f "$d/OFL.txt" ] || continue
+            python src/verify_font_licenses.py --license-dir "$d"
+          done
+
+  licenseaudit:
+    name: 发布安全审计
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 守的是「发布前必须随附的东西都在」这条规则：
+      # 每条记录都要有 attribution 与改动说明；OFL 层要随附许可全文且正文与官方原文
+      # 逐条款相同；每一层都要在 THIRD_PARTY_NOTICES.md 里有署名段。
+      # 只用标准库，不依赖字体原件。
+      - name: 逐层核验随附义务是否已履行
+        run: python src/license_audit.py --check

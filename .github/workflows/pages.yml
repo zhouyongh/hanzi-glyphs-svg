@@ -1,8 +1,16 @@
 name: Deploy viewer to GitHub Pages
 
 # 为什么需要这个工作流：GitHub Pages 的「Deploy from a branch」只允许选仓库根目录或
-# /docs，选不了 viewer/。所以用 Actions 组装站点：浏览页放站点根，字形目录原样带上，
-# 这样页面里的相对路径 ../glyphs/... 在本地和线上都成立。
+# /docs，选不了 viewer/。所以用 Actions 组装站点：浏览页放站点根。
+#
+# **字形不随站点发布。** glyphs/ 已 1.1 GB、19.2 万多个文件，Pages 的构建与配额
+# 都装不下；而且 GitHub 对单仓库也有 100 MB 单文件、1 GB 建议值的限制。
+# 浏览页因此改从 **jsDelivr 的 gh 通道**按需取字形（见 src/build_viewer.py 的
+# GLYPH_BASES：jsDelivr 优先，raw.githubusercontent 兜底）。
+# 代价是线上浏览要联网；本地双击 viewer/index.html 仍走 ../glyphs/，离线可用。
+#
+# **注意**：CDN 取的是**已推送**的仓库内容。工作区里还没 push 的字形，
+# 只有本地预览看得到——这是「先本地提交、不上传」的必然结果。
 
 on:
   push:
@@ -27,7 +35,8 @@ jobs:
         run: |
           mkdir -p _site
           cp viewer/index.html _site/index.html
-          cp -r glyphs _site/glyphs
+          # 只放浏览页。**不要** cp -r glyphs _site/glyphs——那是 1.1 GB、
+          # 会把 Pages 构建拖垮。字形从 CDN 取。
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
@@ -41,3 +50,10 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # **必须显式开这个开关。** 没有它，deploy 步会在 `actions/deploy-pages@v4`
+          # 里 1 秒内失败：站点还没启用，deploy-pages 拿不到要发布到哪个站点。
+          # 实测（2026-10-25）：仓库的 Pages API 返回 404（站点未启用），
+          # Actions 历史里唯一一次 pages.yml 的运行就是 build 成功、deploy 失败。
+          # `pages: write` 权限已有，缺的是这一行。
+          enablement: true

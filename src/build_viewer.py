@@ -4,13 +4,19 @@
 
 用法::
 
-    python src/build_viewer.py [--repo-root DIR]
+    python src/build_viewer.py [--repo-root DIR] [--repo-slug owner/name]
+                               [--cdn-base URL] [--no-cdn]
 
 为什么要内联数据而不是 fetch index.csv：``fetch()`` 读本地文件会被浏览器的同源策略
 挡住，直接用 ``file://`` 打开页面时拿不到数据；内联后本地双击和 GitHub Pages 都能用，
 代价是数据变了要重跑本脚本。
 
 页面对外只读，只预览 ``glyphs/<书体>/`` 里的 SVG；不复制、不修改任何字形文件。
+
+**字形文件本身不内联**，页面按需去取，取哪个位置由 ``GLYPH_BASES`` 决定：
+先是相对路径（本地 ``../glyphs/``），再是 CDN（jsDelivr / raw.githubusercontent）。
+部署到 GitHub Pages 时站点只带这一个 HTML，字形从 CDN 取——``glyphs/`` 已
+1.1 GB、19.2 万个文件，Pages 装不下。
 """
 
 from __future__ import annotations
@@ -24,7 +30,7 @@ from pathlib import Path
 
 SCRIPTS = [
     ("oracle", "甲骨文", "Oracle bone script",
-     "已收录 {n} 个字形，JGW 参数化矢量骨架（CC BY 4.0，DOI 10.5281/zenodo.22467946），"
+     "已收录 {n} 个字形（JGW 参数化矢量骨架 CC BY 4.0 + 汉典拓片摹本 CC0 1.0），"
      "有轮廓层可切换。"),
     ("bronze", "金文", "Bronze script",
      "已收录 {n} 个字形，源自汉典「书法」实例（CC0 1.0），逐条记出处作品、编号与时代；"
@@ -41,7 +47,35 @@ SCRIPTS = [
     ("chuanchao", "傳抄古文", "Transmitted ancient script",
      "已收录 {n} 个字形，源自汉典「傳抄古文」实例（CC0 1.0），"
      "底本为徐在國《傳抄古文字編》；逐件记源书代号与位置，可按源书筛选。"),
+    ("kaishu", "楷书", "Regular script",
+     "已收录 {n} 个字形，从 Ma Shan Zheng 字体（OFL 1.1）提取轮廓；"
+     "键为现代字的 Unicode 码位，简体与繁体都在里面。"),
+    ("xingshu", "行书", "Running script",
+     "已收录 {n} 个字形，从 Zhi Mang Xing 字体（OFL 1.1）提取轮廓；"
+     "键为现代字的 Unicode 码位。"),
+    ("caoshu", "草书", "Cursive script",
+     "已收录 {n} 个字形，从 Liu Jian Mao Cao 字体（OFL 1.1）提取轮廓；"
+     "键为现代字的 Unicode 码位。"),
+    ("songti", "宋体·简", "Song / Ming script, Simplified",
+     "已收录 {n} 个字形，从 Noto Serif SC 字体（OFL 1.1）提取轮廓；"
+     "基本区 20,992 个码位全覆盖，简体与繁体字形都在里面。"),
+    ("songti-tc", "宋体·繁", "Song / Ming script, Traditional",
+     "已收录 {n} 个字形，从 Noto Serif TC 字体（OFL 1.1）提取轮廓；"
+     "扩展 B 区有 1,705 个简体层没有的繁体异体码位。"),
+    ("heiti-hk", "黑体·港", "Sans script, Hong Kong",
+     "已收录 {n} 个字形，从 Chiron Hei HK 字体（OFL 1.1）提取轮廓；"
+     "**港版字形**（香港標準字形），与大陆写法有差异；扩展 B 区多出简体层收不到的码位。"),
 ]
+
+# 仓库的 GitHub slug。用来拼 CDN 地址与文档链接。
+DEFAULT_REPO_SLUG = "zhouyongh/hanzi-glyphs-svg"
+
+# 部署到 GitHub Pages 时，站点**不带上** glyphs/（已 1.1 GB、19.2 万个文件，
+# Pages 装不下），字形改从 CDN 按需取。两条兜底：jsDelivr 快，raw 稳。
+DEFAULT_CDN_BASES = (
+    "https://cdn.jsdelivr.net/gh/{slug}@main/glyphs/",
+    "https://raw.githubusercontent.com/{slug}/main/glyphs/",
+)
 
 TEMPLATE = r"""<!DOCTYPE html>
 <html lang="zh-Hans">
@@ -109,16 +143,17 @@ TEMPLATE = r"""<!DOCTYPE html>
 <header>
   <h1>汉字字形库 · 浏览</h1>
   <p class="lede">
-    古文字字形 SVG 只读预览。字形文件在 <code>glyphs/</code>，每个字形一条出处记录在
+    字形 SVG 只读预览。字形文件在 <code>glyphs/</code>，每个字形一条出处记录在
     <code>glyphs/provenance/&lt;书体&gt;.jsonl</code>。
-    甲骨文字形来源为 Li, Qing-sheng &amp; Bian, Yu-lin,
-    <a href="https://zenodo.org/records/22467946" target="_blank" rel="noopener">Oracle Bone Glyphs:
-    Parametric Vector Dataset (v0.3)</a>（DOI 10.5281/zenodo.22467946），依
-    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>
-    使用：骨架与上游逐字节一致、未改动几何，轮廓层由本仓库脚本派生（同一许可）。
-    篆书字形来自汉典（zdic.net）「书法」小篆实例，依其《服务条款》第四条以
+    甲骨文字形来源为
+    <a href="https://zenodo.org/records/22467946" target="_blank" rel="noopener">Zenodo 10.5281/zenodo.22467946</a>，
+    依 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>
+    使用；篆书字形来自汉典（zdic.net）「书法」小篆实例，依其《服务条款》第四条以
     <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>
-    释出。完整署名与改动声明见仓库 <code>THIRD_PARTY_NOTICES.md</code>。
+    释出；楷书、行书、草书、宋体、黑体六层是从 OFL 开源字体提取的轮廓，依
+    <a href="https://openfontlicense.org" target="_blank" rel="noopener">SIL OFL 1.1</a>
+    分发（许可全文与版权行在各层目录的 <code>OFL.txt</code>）。
+    完整署名与改动声明见仓库 <code>THIRD_PARTY_NOTICES.md</code>。
   </p>
 </header>
 <nav id="tabs" role="tablist"></nav>
@@ -141,19 +176,52 @@ TEMPLATE = r"""<!DOCTYPE html>
   // 所以这里必须分块：先画一小批，滚到了再接着画。
   var CHUNK = 400;
 
-  // 字形目录的前缀。页面有两种放法：
-  //   仓库里的 viewer/index.html  → 字形在 ../glyphs/
-  //   Actions 部署到站点根 index.html → 字形在 glyphs/
-  // 用一个已知文件探测一次，之后所有图都用同一个前缀——
-  // 每个图各试一遍的话，首屏就是几百个 404。
+  // 字形目录的前缀。页面有几种放法，按顺序试，谁先成功用谁：
+  //   1) glyphs/     —— 与页面同目录（旧的整目录部署）
+  //   2) ../glyphs/  —— 仓库里的 viewer/index.html（本地双击）
+  //   3) jsDelivr    —— GitHub Pages 只发布浏览页时，字形从 CDN 取
+  //   4) raw.githubusercontent —— CDN 不可用时的兜底
+  //
+  // **本地优先**：工作区里可能有还没 push 的字形，本地预览必须看到
+  // 工作区的那一份，而不是 CDN 上的旧版。所以相对路径排在网络地址前面。
+  var GLYPH_BASES = __GLYPH_BASES__;
   var glyphBase = null;
 
-  function detectBase() {
+  // 仓库里的文档链接用**绝对地址**：页面在仓库里（viewer/index.html）和
+  // 部署到站点根（index.html）时相对路径不一样，写死一种总会错一边。
+  var REPO_BLOB = '__REPO_BLOB__';
+
+  function probeBase(base) {
     return new Promise(function (resolve) {
-      var probe = new Image();
-      probe.onload = function () { resolve('glyphs/'); };
-      probe.onerror = function () { resolve('../glyphs/'); };
-      probe.src = 'glyphs/oracle/0001.svg';
+      var img = new Image();
+      img.onload = function () { resolve(base); };
+      img.onerror = function () { resolve(null); };
+      img.src = base + 'oracle/0001.svg';
+    });
+  }
+
+  function detectBase() {
+    var i = 0;
+    function next() {
+      if (i >= GLYPH_BASES.length) { return Promise.resolve(GLYPH_BASES[0]); }
+      var base = GLYPH_BASES[i++];
+      return probeBase(base).then(function (ok) { return ok || next(); });
+    }
+    return next();
+  }
+
+  // 选中的前缀对**某一个文件**失效时（CDN 还没缓存到这一份、或本地路径挪了），
+  // 换下一个前缀再试一次，别让首屏出现空洞。
+  function attachFallback(img) {
+    img.addEventListener('error', function () {
+      var order = [glyphBase].concat(GLYPH_BASES.filter(function (b) {
+        return b !== glyphBase;
+      }));
+      var n = parseInt(img.getAttribute('data-try') || '0', 10);
+      n += 1;
+      if (n >= order.length) { return; }
+      img.setAttribute('data-try', String(n));
+      img.src = order[n] + img.getAttribute('data-g');
     });
   }
 
@@ -176,13 +244,15 @@ TEMPLATE = r"""<!DOCTYPE html>
 
   function cellHTML(script, row, layer) {
     var url = svgURL(script, row.file, layer);
+    // data-g 存的是「层/子目录/文件名」——换前缀重试时要用它拼路径。
+    var rel = script + '/' + (layer === 'outline' ? 'outline/' : '') + row.file;
     var title = '#' + row.i + ' ' + (row.c || '（无对应现代汉字）') +
                 '  U+' + (row.u || '—') + '  ' + (row.p || '') + '  [' + row.k + ']' +
                 (row.t ? '  ' + row.t : '') +
                 (row.s ? '  ' + row.s : '');
     return '<figure class="cell' + (row.flag ? ' flag' : '') + '" title="' + esc(title) + '">' +
            '<a href="' + url + '" target="_blank" rel="noopener">' +
-           '<img loading="lazy" src="' + url + '" alt="' + esc(title) + '"></a>' +
+           '<img loading="lazy" src="' + url + '" data-g="' + esc(rel) + '" alt="' + esc(title) + '"></a>' +
            '<figcaption><b>' + esc(row.i) + '</b> ' + esc(row.c || '—') +
            (row.t ? ' <i>' + esc(row.t) + '</i>' : '') + '</figcaption>' +
            '</figure>';
@@ -209,14 +279,17 @@ TEMPLATE = r"""<!DOCTYPE html>
                   '（另有 ' + (ex.codepoint_count - ex.codepoints_with_upstream) + ' 个码位上游尚无字形）</li>' +
               '<li>上游仓库：<a href="https://github.com/' + esc(ex.upstream_repo) + '" target="_blank" rel="noopener">' +
                   esc(ex.upstream_repo) + '</a>（钉住 commit <code>' + esc(ex.upstream_commit.slice(0, 12)) + '</code>）</li>' +
-              '<li>登记表：<a href="../' + esc(ex.registry) + '">' + esc(ex.registry) + '</a>' +
-                  '　说明：<a href="../' + esc(ex.readme) + '">' + esc(ex.readme) + '</a></li>' +
+              '<li>登记表：<a href="' + REPO_BLOB + esc(ex.registry) + '" target="_blank" rel="noopener">' +
+                  esc(ex.registry) + '</a>' +
+                  '　说明：<a href="' + REPO_BLOB + esc(ex.readme) + '" target="_blank" rel="noopener">' +
+                  esc(ex.readme) + '</a></li>' +
             '</ul>' +
             '<p class="why">未收录的原因：上游的授权语句只覆盖「output fonts」，其 <code>glyphs/**</code> ' +
             '未被明确标记为受 OFL 约束；仓库根目录也没有 LICENSE 文件。' +
             '（上游随附的 <code>OFL.txt</code> 并非 SIL 官方 OFL 1.1 文本：第 1、2 条与官方逐字相同，' +
             '第 3–9 条相似度最高 0.344、第 10 条 0.602，官方第 5 条「不得按其他许可分发」缺失。）' +
-            '详见 <a href="../THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES.md</a>。' +
+            '详见 <a href="' + REPO_BLOB + 'THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">' +
+            'THIRD_PARTY_NOTICES.md</a>。' +
             '上游澄清后可用同一份登记表一次性导入。</p>' +
           '</div>';
         return panel;
@@ -307,9 +380,13 @@ TEMPLATE = r"""<!DOCTYPE html>
         return;
       }
       var slice = shown.slice(cursor, cursor + CHUNK);
+      var before = grid.querySelectorAll('img').length;
       grid.insertAdjacentHTML('beforeend', slice.map(function (r) {
         return cellHTML(script, r, layer);
       }).join(''));
+      // 给新加的图挂上「换前缀重试」的兜底（只处理这一批，不重扫全网格）。
+      var imgs = grid.querySelectorAll('img');
+      for (var i = before; i < imgs.length; i++) { attachFallback(imgs[i]); }
       cursor += slice.length;
       moreBtn.hidden = cursor >= shown.length;
       if (cursor < shown.length) {
@@ -427,7 +504,8 @@ def load_rows(index_path: Path) -> list[dict]:
             "p": (row.get("pinyin") or "").strip(),
             "t": (row.get("period") or "").strip(),
             "k": confidence if has_confidence else "",
-            "s": (row.get("source_book") or row.get("variant") or "").strip(),
+            "s": (row.get("source_book") or row.get("variant")
+                  or row.get("font_name") or "").strip(),
             # 只有「填了确认度但不是 high」才算待复核。同一层里别的来源
             # （甲骨层的汉典摹本）没有这一列，值是空的——那不是待复核。
             "flag": 1 if (has_confidence and confidence and confidence != "high") else 0,
@@ -443,10 +521,27 @@ def load_rows(index_path: Path) -> list[dict]:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="生成静态浏览页")
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument("--repo-slug", default=DEFAULT_REPO_SLUG,
+                        help="GitHub 仓库 slug（owner/name），用来拼 CDN 与文档链接")
+    parser.add_argument("--cdn-base", action="append", default=None,
+                        help="字形的 CDN 前缀（可重复）。默认 jsDelivr + raw.githubusercontent 两条")
+    parser.add_argument("--no-cdn", action="store_true",
+                        help="只用相对路径取字形，不联网（离线生成时用）")
     args = parser.parse_args(argv)
 
     repo_root: Path = args.repo_root.resolve()
     glyphs_root = repo_root / "glyphs"
+
+    # 字形前缀候选：**相对路径在前、网络地址在后**。
+    # 本地双击时相对路径先命中——工作区里可能有还没 push 的字形，
+    # 本地预览必须看到工作区的那一份，而不是 CDN 上的旧版。
+    glyph_bases = ["glyphs/", "../glyphs/"]
+    if not args.no_cdn:
+        if args.cdn_base:
+            glyph_bases.extend(args.cdn_base)
+        else:
+            glyph_bases.extend(b.format(slug=args.repo_slug) for b in DEFAULT_CDN_BASES)
+    repo_blob = f"https://github.com/{args.repo_slug}/blob/main/"
 
     data: dict[str, list[dict]] = {}
     outline: dict[str, bool] = {}
@@ -487,6 +582,8 @@ def main(argv=None) -> int:
 
     page = (TEMPLATE
             .replace("__DATA__", payload)
+            .replace("__GLYPH_BASES__", json.dumps(glyph_bases, ensure_ascii=False))
+            .replace("__REPO_BLOB__", repo_blob)
             .replace("__SCRIPTS__", json.dumps(
                 # 说明里的字数用**实际条数**填，不写死——写死的数字迟早过期，
                 # 而过期数字比没有数字更坏：读者会拿它当依据。
@@ -501,6 +598,7 @@ def main(argv=None) -> int:
 
     print(f"写出     : {out_path}  ({out_path.stat().st_size} bytes)")
     print(f"字形总数 : {total}")
+    print("字形前缀 : " + " → ".join(glyph_bases))
     for script, zh, _en, _note in active:
         rows = data[script]
         flag = sum(1 for r in rows if r["flag"])

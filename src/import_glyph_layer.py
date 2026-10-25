@@ -74,7 +74,10 @@ DEFAULT_ALLOWED = (
 )
 
 # 本仓库承认的书体层名。层名会拼进落盘路径，不能是任意字符串。
-SCRIPT_WHITELIST = ("oracle", "bronze", "clerical", "seal", "chu", "chuanchao")
+# 末尾五个是从 OFL 开源书法字体提取轮廓的现代书体层
+# （楷 / 行 / 草 / 宋体·简体 / 宋体·繁体），第十二层是港版黑体。
+SCRIPT_WHITELIST = ("oracle", "bronze", "clerical", "seal", "chu", "chuanchao",
+                    "kaishu", "xingshu", "caoshu", "songti", "songti-tc", "heiti-hk")
 
 # index.csv 的列。index.csv 的第一列永远是 glyph_id。
 INDEX_EXTRA_COLUMNS = (
@@ -101,6 +104,16 @@ SEAL_KEY_COLUMNS = (
     "seal_candidates", "seal_note",
 )
 
+# 字体派生层的键是**现代字的 Unicode 码位**（6 位大写十六进制，补零）。
+# 字体里一个码位只有一个字形，所以不需要「条目号」这种人为序号：
+# 键直接就是码位，下游按 U+ 取字形时不必再查表。
+# font_name / font_version 记的是这份字形出自哪个字体的哪个版本——
+# 换字体就是换版本，必须能一眼看出来。
+FONT_KEY_COLUMNS = (
+    "codepoint", "modern_char", "unicode", "font_name", "font_version",
+    "source_id", "source_path", "source_url", "file", "sha256",
+)
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -108,6 +121,25 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1 << 16), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _fit_row(row: dict, header: list[str]) -> dict:
+    """把一行索引裁到表头允许的列。
+
+    **空列直接丢掉，非空列报错。** 行字典是各层通用的（总带
+    ``period`` / ``variant`` / ``source_book`` 这些列），而表头按层的维度定：
+    字体层没有「时代」「出处作品」这些维度，就不该多出一列空列。
+    但如果某一列**有值**却被表头漏掉，那是表的缺陷，必须报出来，
+    不能悄悄丢数据。
+    """
+    extra = {k: v for k, v in row.items()
+             if k not in header and str(v or "").strip()}
+    if extra:
+        raise SystemExit(
+            "index.csv 的表头缺列："
+            + ", ".join(f"{k}={str(v)[:24]!r}" for k, v in sorted(extra.items()))
+            + "。这些列有值，表头必须列出来。")
+    return {k: row.get(k, "") for k in header}
 
 
 def owned_paths(path: Path, script: str, layer: str,
@@ -307,11 +339,15 @@ def main(argv: list[str] | None = None) -> int:
                              "例如 source_dataset=汉典（zdic.net）甲骨文字形。"
                              "只替换该批次自己的旧出处记录与索引行，别的来源原样保留。"
                              "不给就是独占整层。")
-    parser.add_argument("--key-mode", choices=("glyph_id", "seal_codepoint"),
+    parser.add_argument("--key-mode", choices=("glyph_id", "seal_codepoint",
+                                               "unicode_codepoint"),
                         default="glyph_id",
                         help="文件名用什么做键。glyph_id = 本仓库条目号（4 位十进制）；"
                              "seal_codepoint = Unicode 篆书区块码位（5 位大写十六进制，"
-                             "取清单项的 codepoint 字段），篆书层用后者。")
+                             "取清单项的 codepoint 字段），篆书层用后者；"
+                             "unicode_codepoint = 现代字的 Unicode 码位"
+                             "（6 位大写十六进制、补零，取清单项的 codepoint 字段），"
+                             "字体派生层用后者。")
     args = parser.parse_args(argv)
 
     scope: tuple[str, str] | None = None
@@ -398,6 +434,16 @@ def main(argv: list[str] | None = None) -> int:
                 raise SystemExit(f"glyph {glyph_id}: codepoint {codepoint!r} 不是 5 位十六进制")
             name = f"{codepoint}.svg"
             record_id = int(codepoint, 16)
+        elif args.key_mode == "unicode_codepoint":
+            codepoint = str(item.get("codepoint") or "").strip().upper()
+            if not codepoint:
+                raise SystemExit(f"glyph {glyph_id}: key-mode=unicode_codepoint 需要 codepoint 字段")
+            codepoint = codepoint[2:] if codepoint.startswith("U+") else codepoint
+            # 现代字码位一律写成 6 位大写十六进制（AGENTS.md 的口径），补零到 6 位。
+            if len(codepoint) != 6 or any(c not in "0123456789ABCDEF" for c in codepoint):
+                raise SystemExit(f"glyph {glyph_id}: codepoint {codepoint!r} 不是 6 位十六进制")
+            name = f"{codepoint}.svg"
+            record_id = int(codepoint, 16)
         else:
             name = f"{glyph_id:04d}.svg"
             record_id = glyph_id
@@ -408,6 +454,7 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(
                 f"清单里层键重复：{record_id}（{name}）"
                 + ("（篆书模式下层键是 Unicode 篆书区块码位）" if args.key_mode == "seal_codepoint" else "")
+                + ("（字体模式下层键是现代字的 Unicode 码位）" if args.key_mode == "unicode_codepoint" else "")
             )
         seen_record_ids.add(record_id)
 
@@ -511,7 +558,7 @@ def main(argv: list[str] | None = None) -> int:
             if dest_sha != local_sha:
                 raise SystemExit(f"{dest}: 复制后 sha256 不一致")
 
-        modifications = str(item.get("modifications") or "").strip()
+        modifications = str(item.get("modifications") or manifest.get("modifications") or "").strip()
         record = {
             "path": f"glyphs/{script}/{name}",
             "sha256": dest_sha,
@@ -535,7 +582,10 @@ def main(argv: list[str] | None = None) -> int:
                       "source_record_url", "source_artifact_url", "codepoint",
                       "seal_candidates", "seal_note", "alt_caption", "book_code",
                       "book_part", "source_cited_book", "dual_caption",
-                      "source_references"):
+                      "source_references",
+                      # 派生件（字体层）要交代「从哪来、怎么变的、用什么变的」
+                      "derived_from", "derived_from_sha256", "transform", "tool",
+                      "font_name", "font_version"):
             value = str(item.get(field) or manifest.get(field) or "").strip()
             if value:
                 record[field] = value
@@ -584,6 +634,10 @@ def main(argv: list[str] | None = None) -> int:
             row["codepoint"] = record.get("codepoint", "")
             row["seal_candidates"] = record.get("seal_candidates", "")
             row["seal_note"] = record.get("seal_note", "")
+        elif args.key_mode == "unicode_codepoint":
+            row["codepoint"] = record.get("codepoint", "")
+            row["font_name"] = record.get("font_name", "")
+            row["font_version"] = record.get("font_version", "")
         else:
             row["glyph_id"] = glyph_id
         index_rows.append(row)
@@ -592,6 +646,8 @@ def main(argv: list[str] | None = None) -> int:
         index_path = out_dir / "index.csv"
         if args.key_mode == "seal_codepoint":
             header = list(SEAL_KEY_COLUMNS)
+        elif args.key_mode == "unicode_codepoint":
+            header = list(FONT_KEY_COLUMNS)
         else:
             header = ["glyph_id"] + [c for c in INDEX_EXTRA_COLUMNS if c != "glyph_id"]
             # 只在确实有值时加可选列，且放在 source_book 后面，读表时挨着看。
@@ -618,14 +674,14 @@ def main(argv: list[str] | None = None) -> int:
             # 排序键按键模式取：篆书模式的索引主键是 codepoint，没有 glyph_id 列。
             # 按 glyph_id 排会 KeyError——而且崩在**落盘之后**，
             # 留下一批既没有出处记录、也没有索引行的孤儿字形。
-            if args.key_mode == "seal_codepoint":
+            if args.key_mode in ("seal_codepoint", "unicode_codepoint"):
                 index_rows.sort(key=lambda r: str(r.get("codepoint") or ""))
             else:
                 index_rows.sort(key=lambda r: int(r.get("glyph_id") or 0))
         with index_path.open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=header, lineterminator="\n")
             writer.writeheader()
-            writer.writerows(index_rows)
+            writer.writerows([_fit_row(row, header) for row in index_rows])
         kept, total, _owned = merge_provenance(prov_path, script, layer, records, scope)
         print(f"provenance.jsonl: 保留其他记录 {kept} 条，写入后共 {total} 条")
         if scope:
@@ -635,6 +691,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"许可        : {license_id}（在允许名单内）")
     if args.key_mode == "seal_codepoint":
         print(f"字形        : {len(records)} 个 -> glyphs/{script}/<码位>.svg")
+    elif args.key_mode == "unicode_codepoint":
+        print(f"字形        : {len(records)} 个 -> glyphs/{script}/<6 位十六进制码位>.svg")
     else:
         print(f"字形        : {len(records)} 个 -> glyphs/{script}/<glyph_id:04d>.svg")
     if skipped:

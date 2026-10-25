@@ -10,7 +10,8 @@
 |------|------|------|
 | `glyphs/oracle/**`（甲骨 JGW 骨架 1,203 个 + 派生轮廓 1,203 个 + 索引 + 出处记录） | **CC BY 4.0** | 根 `LICENSE` |
 | `glyphs/seal/**`（篆书 10,591 个字形、索引、出处记录） | **CC0 1.0**（公有领域奉献，无义务） | `LICENSE-DOCS`；汉典的归公宣告原文见本文件 |
-| `glyphs/provenance/oracle.jsonl`、`glyphs/provenance/seal.jsonl` | **逐条记录**：每条按其 `license` 字段（CC BY 4.0 / CC0 1.0） | 本文件 + 根 `LICENSE` |
+| `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/`（现代书体六层 97,349 个字形、索引、出处记录） | **SIL OFL 1.1** | 各层目录的 `OFL.txt`（上游逐字节副本） |
+| `glyphs/provenance/*.jsonl` | **逐条记录**：每条按其 `license` 字段（CC BY 4.0 / CC0 1.0 / OFL-1.1） | 本文件 + 根 `LICENSE` |
 | `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC BY 4.0 | 根 `LICENSE` |
 | `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列（指向上游） | **不适用**：本仓库未复制上游内容，只登记指针 | — |
@@ -18,7 +19,7 @@
 | `src/**`、`viewer/**` | MIT | `LICENSE-CODE` |
 
 **根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 层，以及篆书登记表里本仓库整理的
-部分），**不覆盖** CC0 与 Unicode 授权的材料。下游须按各层许可分别使用。
+部分），**不覆盖** CC0、OFL 与 Unicode 授权的材料。下游须按各层许可分别使用。
 
 ---
 
@@ -107,6 +108,48 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 对应《说文》刻本系统；`index.csv` 与 `provenance/seal.jsonl` 里逐条记着部次与形制
 （正篆 / 說文古文 / 說文籀文 / 說文或體）。本仓库**不对字形及其底本主张任何权利**；
 若相关权利人认为某条内容侵犯权利，请通过 Issue 或 <1279190619@qq.com> 联系，核实后移除。
+
+---
+
+## 现代书体六层 —— SIL OFL 1.1（从开源字体提取轮廓）
+
+这六层的字形**不是上游的逐字节副本**，而是用 `src/extract_font_glyphs.py` 从 OFL 字体提取轮廓
+生成的派生件：取字体轮廓路径、y 轴翻转（字体坐标 y 向上 → SVG y 向下）、坐标四舍五入到 0.01
+字体单位；全层共用同一个画布（该层全部字形墨迹的并集外扩 1%），字形之间的相对比例与字体里一致。
+可变字体按 `wght=400` 实例提取。
+
+| 层 | 字体（版本） | 版权行 | 上游 |
+|---|---|---|---|
+| `glyphs/kaishu/` | Ma Shan Zheng 2.003 | Copyright 2018 The MaShanZheng Project Authors | `google/fonts` 的 `ofl/mashanzheng` |
+| `glyphs/xingshu/` | Zhi Mang Xing 2.001 | Copyright 2018 The ZhiMangXing Project Authors | `google/fonts` 的 `ofl/zhimangxing` |
+| `glyphs/caoshu/` | Liu Jian Mao Cao 1.003 | Copyright 2018 The Liu Jian Mao Cao Project Authors | `google/fonts` 的 `ofl/liujianmaocao` |
+| `glyphs/songti/` | Noto Serif SC 2.003（`wght=400`） | Copyright 2012 Google Inc.（name 表：© 2017-2024 Adobe） | `google/fonts` 的 `ofl/notoserifsc` |
+| `glyphs/songti-tc/` | Noto Serif TC 2.003（`wght=400`） | Copyright 2012 Google Inc.（name 表：© 2017-2024 Adobe） | `google/fonts` 的 `ofl/notoserifctc` |
+| `glyphs/heiti-hk/` | Chiron Hei HK 2.530（`wght=400`） | Copyright 2025 The Chiron Hei HK Project Authors | [chiron-fonts/chiron-hei-hk](https://github.com/chiron-fonts/chiron-hei-hk) |
+
+每层的 `SOURCE.md` 记着字体家族名、版本、上游路径、**字体二进制的 sha256**、取回时刻与变换说明；
+每层的 `OFL.txt` 是**上游随附许可全文的逐字节副本**（sha256 见 `SOURCE.md`），版权行在文件抬头。
+
+### OFL 1.1 的四条义务与履行方式
+
+| OFL 条款 | 要求 | 本仓库怎么做的 |
+|---|---|---|
+| 第 2 条 | 每份副本带版权声明与许可全文 | 每层目录随附 `OFL.txt` 逐字节副本；`attribution` 逐条写明字体家族与「Copyright 见该层 OFL.txt」 |
+| 第 3 条 | 修改版不得使用保留字体名（RFN） | 六个字体在 `OFL.txt` 抬头与**字体二进制 name 表**两处都**没有 RFN**；层名用通用书体名，字体家族名只出现在 `attribution` 与 `index.csv` |
+| 第 5 条 | 修改版须完全按 OFL 分发，不得按其他许可分发 | 六层整层标 `OFL-1.1`，**不**混入 CC0 / CC BY；下游基于这些字形做的东西也必须按 OFL 分发 |
+| 第 1 条 | 不得单独销售字体软件本身 | 本仓库不销售任何东西 |
+
+**取用须知**：版权声明与许可全文随**层目录**提供（`OFL.txt` + `SOURCE.md`），
+单个 SVG 文件里不含声明。把某个字形单独拷进其他项目时，请**连同该层的 `OFL.txt` 一并保留**，
+并按 OFL 1.1 分发。
+
+逐条款核验可复跑（正文与 SIL 官方文本 `src/licenses/OFL-1.1-official.txt` 逐条款比对，
+并检查 RFN 与版权行）：
+
+```bash
+python src/verify_font_licenses.py --license-dir glyphs/kaishu --font <本地字体路径>
+python src/build_font_license_evidence.py --font-dir <本地字体目录>
+```
 
 ---
 

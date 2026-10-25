@@ -149,8 +149,7 @@ def iter_records(prov_files: list[Path], problems: list[str]):
     """逐层读出出处记录，带上「哪个文件第几行」。
 
     provenance 按书体拆成 ``glyphs/provenance/<书体>.jsonl``：一层一个文件，
-    这样某一层的许可状态变化时，整层可以连同它的出处记录一起移除，
-    不必在一份 11 万行的全量文件里做手术。
+    这样某一层的许可状态变化时，整层可以连同它的出处记录一起移除。
     """
     for path in prov_files:
         for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):

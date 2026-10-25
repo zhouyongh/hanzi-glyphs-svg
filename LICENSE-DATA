@@ -4,11 +4,12 @@
 |---|---|---|---|
 | 甲骨文（JGW 骨架 + 派生轮廓） | `glyphs/oracle/*.svg`、`glyphs/oracle/outline/**` | **CC BY 4.0** | 根 `LICENSE` |
 | 篆书 | `glyphs/seal/**` 的字形与 `index.csv` | **CC0 1.0**（公有领域奉献） | `LICENSE-DOCS` |
+| 现代书体六层（楷/行/草/宋简/宋繁/黑港） | `glyphs/kaishu/` `xingshu/` `caoshu/` `songti/` `songti-tc/` `heiti-hk/` 的字形与 `index.csv` | **SIL OFL 1.1**（从 OFL 开源字体提取的轮廓） | 各层目录的 `OFL.txt` |
 | 篆书全量码位登记表 | `glyphs/seal/external.csv` | 本仓库整理的部分 CC BY 4.0；派生于 Unicode `SealSources.txt` 的列 Unicode License v3；`upstream_*` 列只是指针 | 根 `LICENSE` / `THIRD_PARTY_NOTICES.md` |
-| 出处记录 | `glyphs/provenance/oracle.jsonl`、`glyphs/provenance/seal.jsonl` | **逐条记录**，按各条的 `license` 字段 | `THIRD_PARTY_NOTICES.md` |
+| 出处记录 | `glyphs/provenance/*.jsonl` | **逐条记录**，按各条的 `license` 字段 | `THIRD_PARTY_NOTICES.md` |
 
 **根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 骨架与派生轮廓，
-以及篆书登记表里本仓库整理的部分），**不覆盖** CC0 与 Unicode 授权的材料；
+以及篆书登记表里本仓库整理的部分），**不覆盖** CC0、OFL 与 Unicode 授权的材料；
 下游须按各层许可分别使用。
 
 CC BY 4.0 那一层使用这些数据时须遵守 CC BY 4.0：署名（作者、来源、协议）、注明是否做过修改、
@@ -18,6 +19,12 @@ CC BY 4.0 那一层使用这些数据时须遵守 CC BY 4.0：署名（作者、
 篆书层依汉典《服务条款》第四条以 **CC0 1.0** 释出。CC0 是**公有领域奉献**：不设任何义务，
 不署名、不注明改动也可以使用。本仓库**没有**对其附加任何限制，下游也不得附加
 （CC0 是放弃权利，不是许可别人加条件）。汉典的归公宣告原文与逐件出处见 `THIRD_PARTY_NOTICES.md`。
+
+现代书体六层是**从 OFL 开源字体提取的轮廓**，按 **SIL OFL 1.1** 分发：每层目录随附上游
+`OFL.txt` 的逐字节副本（含版权行），六个字体都没有保留字体名（RFN）。
+OFL 第 5 条要求衍生作品**完全按 OFL 分发、不得按其他许可分发**——所以这六层不得被改成
+CC0 或 CC BY，下游基于它们做的东西也要按 OFL 分发；第 1 条禁止单独销售字体软件本身。
+逐条款证据见 `THIRD_PARTY_NOTICES.md` 与各层 `SOURCE.md`。
 
 ---
 
