@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""字形库的统计汇总——把各层的「记录条数 / 上游原件数 / 时代桶 / 改动分布」算出来。
+"""字形库的统计汇总——把《字形获取与出处 - 过程.md》里的数字算出来。
 
 用法::
 
     python src/glyph_stats.py            # 逐层打印
     python src/glyph_stats.py --json     # 机读输出（一个 JSON 对象）
-    python src/glyph_stats.py --layer seal
+    python src/glyph_stats.py --layer chu
 
-**为什么要有这个脚本。** 文档里的每个数字都应当能被第三方复算，
+**为什么要有这个脚本。** 过程文档里的每个数字都应当能被第三方复算，
 而不是只能相信文档。这个脚本只读 `glyphs/provenance/*.jsonl` 与各层 `index.csv`，
-不写任何东西。
+不写任何东西；输出与文档 §5.3、§4.4、§9.2 的表一一对应。
 
 「记录条数」与「不同上游原件数」是**两个数**：汉典对异体/别名给的是同一份实例，
 一份上游原件会挂在几个现代字名下，所以按 ``source_id`` 去重才是「字形个数」。
@@ -25,7 +25,10 @@ import os
 import sys
 from pathlib import Path
 
-LAYERS = ("oracle", "bronze", "clerical", "seal", "chu", "chuanchao")
+# 仓库承认的层名。统计本身按 provenance 里的 (script, layer) 分组，
+# 这份清单只是给读代码的人一个「现在有哪些层」的参照。
+LAYERS = ("oracle", "bronze", "clerical", "seal", "chu", "chuanchao",
+          "kaishu", "xingshu", "caoshu", "songti", "songti-tc", "heiti-hk")
 
 
 def load_records(path: Path) -> list[dict]:
