@@ -1,0 +1,304 @@
+{
+ "layers": {
+  "caoshu": {
+   "records": 6763,
+   "licenses": {
+    "OFL-1.1": 6763
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "字体轮廓 → SVG": 6763
+   },
+   "source_book_records": 0,
+   "source_books_top": [],
+   "source_references_records": 0,
+   "has_license_copy": true,
+   "license_copy_path": "glyphs\\caoshu\\OFL.txt",
+   "license_copy_sha256": "ff56684b0212481e7c3886c26d5a655de9b211c8119e5ccc756138a97b066acc",
+   "has_source_md": true,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "OFL 派生件（字体轮廓 → SVG），改动已声明；无底本链条。",
+   "verdict": "✅ 可安全发布",
+   "must_include": [
+    "**每份副本**都要带版权声明与许可全文（第 2 条）",
+    "不得单独销售字体软件本身（第 1 条）",
+    "衍生作品须以 OFL 分发，且**不得使用被保留的字体名**（第 3 条）"
+   ],
+   "ofl": {
+    "min_similarity": 1.0,
+    "min_similarity_typographic": 1.0,
+    "clause_count_official": 6,
+    "clause_count_layer": 6,
+    "body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2",
+    "layer_body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2"
+   }
+  },
+  "heiti-hk": {
+   "records": 31598,
+   "licenses": {
+    "OFL-1.1": 31598
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "字体轮廓 → SVG": 31598
+   },
+   "source_book_records": 0,
+   "source_books_top": [],
+   "source_references_records": 0,
+   "has_license_copy": true,
+   "license_copy_path": "glyphs\\heiti-hk\\OFL.txt",
+   "license_copy_sha256": "68b9a31cc191bb8f5f428f191209f7d08c6b5b0d4816a293e5bd230724e84f10",
+   "has_source_md": true,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "OFL 派生件（字体轮廓 → SVG），改动已声明；**港版字形标准**不是大陆写法。",
+   "verdict": "✅ 可安全发布",
+   "must_include": [
+    "**每份副本**都要带版权声明与许可全文（第 2 条）",
+    "不得单独销售字体软件本身（第 1 条）",
+    "衍生作品须以 OFL 分发，且**不得使用被保留的字体名**（第 3 条）"
+   ],
+   "ofl": {
+    "min_similarity": 1.0,
+    "min_similarity_typographic": 1.0,
+    "clause_count_official": 6,
+    "clause_count_layer": 6,
+    "body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2",
+    "layer_body_sha256": "168295ea238d59ab49c6d9af5e2e31b6218ec8a1d0d449c919fe2cbeb23fb953"
+   }
+  },
+  "kaishu": {
+   "records": 6763,
+   "licenses": {
+    "OFL-1.1": 6763
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "字体轮廓 → SVG": 6763
+   },
+   "source_book_records": 0,
+   "source_books_top": [],
+   "source_references_records": 0,
+   "has_license_copy": true,
+   "license_copy_path": "glyphs\\kaishu\\OFL.txt",
+   "license_copy_sha256": "d7bdb1cee215b689e23c2f95672a6084c790542170648267a55114103d756a08",
+   "has_source_md": true,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "OFL 派生件（字体轮廓 → SVG），改动已声明；无底本链条。",
+   "verdict": "✅ 可安全发布",
+   "must_include": [
+    "**每份副本**都要带版权声明与许可全文（第 2 条）",
+    "不得单独销售字体软件本身（第 1 条）",
+    "衍生作品须以 OFL 分发，且**不得使用被保留的字体名**（第 3 条）"
+   ],
+   "ofl": {
+    "min_similarity": 1.0,
+    "min_similarity_typographic": 1.0,
+    "clause_count_official": 6,
+    "clause_count_layer": 6,
+    "body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2",
+    "layer_body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2"
+   }
+  },
+  "oracle": {
+   "records": 2406,
+   "licenses": {
+    "CC-BY-4.0": 2406
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "未改动（逐字节副本）": 1203,
+    "骨架 → 可填充轮廓（派生层）": 1203
+   },
+   "source_book_records": 0,
+   "source_books_top": [],
+   "source_references_records": 0,
+   "has_license_copy": false,
+   "license_copy_path": "",
+   "license_copy_sha256": "",
+   "has_source_md": false,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "两批两许可：JGW 批次（CC BY 4.0，骨架逐字节副本）+ 汉典拓片摹本批次（CC0 1.0）。汉典批次是**摹本**，《甲骨文合集》的底本著作权不消灭。",
+   "verdict": "✅ 可安全发布",
+   "must_include": [
+    "不得施加额外限制（§2(a)(5)(B)）",
+    "署名：作者、来源、许可、**并说明是否修改过**（§3(a)(1)）",
+    "衍生作品须以**同一许可**（CC BY 4.0）分发（§3(a)(5)(B)）"
+   ],
+   "ofl": {}
+  },
+  "seal": {
+   "records": 10591,
+   "licenses": {
+    "CC0-1.0": 10591
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "删除汉典近白水印": 10591
+   },
+   "source_book_records": 10591,
+   "source_books_top": [
+    [
+     "說文‧水部",
+     485
+    ],
+    [
+     "說文‧艸部",
+     472
+    ],
+    [
+     "說文‧木部",
+     457
+    ],
+    [
+     "說文‧心部",
+     294
+    ],
+    [
+     "說文‧手部",
+     286
+    ],
+    [
+     "說文‧言部",
+     279
+    ]
+   ],
+   "source_references_records": 0,
+   "has_license_copy": false,
+   "license_copy_path": "",
+   "license_copy_sha256": "",
+   "has_source_md": false,
+   "has_readme": true,
+   "notices_mentions_layer": true,
+   "risk_note": "同上，底本为《秦汉魏晋篆隶字形表》等。另有「開元小篆」上游只登记指针、不复制字形。",
+   "verdict": "⚠️ 可发布（有残余风险，须随附底本说明）",
+   "must_include": [
+    "**不得**因此追加使用限制（CC0 是放弃权利，不是许可别人加条件）",
+    "无强制署名义务（CC0 放弃权利而非授予许可）"
+   ],
+   "ofl": {}
+  },
+  "songti-tc": {
+   "records": 17665,
+   "licenses": {
+    "OFL-1.1": 17665
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "字体轮廓 → SVG": 17665
+   },
+   "source_book_records": 0,
+   "source_books_top": [],
+   "source_references_records": 0,
+   "has_license_copy": true,
+   "license_copy_path": "glyphs\\songti-tc\\OFL.txt",
+   "license_copy_sha256": "5e0da210fb04058a8c0087985d2d456b931c2579811a49655721d3cf0c36b6d6",
+   "has_source_md": true,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "OFL 派生件（字体轮廓 → SVG），改动已声明；无底本链条。",
+   "verdict": "✅ 可安全发布",
+   "must_include": [
+    "**每份副本**都要带版权声明与许可全文（第 2 条）",
+    "不得单独销售字体软件本身（第 1 条）",
+    "衍生作品须以 OFL 分发，且**不得使用被保留的字体名**（第 3 条）"
+   ],
+   "ofl": {
+    "min_similarity": 1.0,
+    "min_similarity_typographic": 1.0,
+    "clause_count_official": 6,
+    "clause_count_layer": 6,
+    "body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2",
+    "layer_body_sha256": "168295ea238d59ab49c6d9af5e2e31b6218ec8a1d0d449c919fe2cbeb23fb953"
+   }
+  },
+  "songti": {
+   "records": 27797,
+   "licenses": {
+    "OFL-1.1": 27797
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "字体轮廓 → SVG": 27797
+   },
+   "source_book_records": 0,
+   "source_books_top": [],
+   "source_references_records": 0,
+   "has_license_copy": true,
+   "license_copy_path": "glyphs\\songti\\OFL.txt",
+   "license_copy_sha256": "5e0da210fb04058a8c0087985d2d456b931c2579811a49655721d3cf0c36b6d6",
+   "has_source_md": true,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "OFL 派生件（字体轮廓 → SVG），改动已声明；无底本链条。",
+   "verdict": "✅ 可安全发布",
+   "must_include": [
+    "**每份副本**都要带版权声明与许可全文（第 2 条）",
+    "不得单独销售字体软件本身（第 1 条）",
+    "衍生作品须以 OFL 分发，且**不得使用被保留的字体名**（第 3 条）"
+   ],
+   "ofl": {
+    "min_similarity": 1.0,
+    "min_similarity_typographic": 1.0,
+    "clause_count_official": 6,
+    "clause_count_layer": 6,
+    "body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2",
+    "layer_body_sha256": "168295ea238d59ab49c6d9af5e2e31b6218ec8a1d0d449c919fe2cbeb23fb953"
+   }
+  },
+  "xingshu": {
+   "records": 6763,
+   "licenses": {
+    "OFL-1.1": 6763
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "字体轮廓 → SVG": 6763
+   },
+   "source_book_records": 0,
+   "source_books_top": [],
+   "source_references_records": 0,
+   "has_license_copy": true,
+   "license_copy_path": "glyphs\\xingshu\\OFL.txt",
+   "license_copy_sha256": "10947328199e369a3e6b4a67e8e5507ed99d5bbb264a1f156415aa9b665e4d15",
+   "has_source_md": true,
+   "has_readme": false,
+   "notices_mentions_layer": true,
+   "risk_note": "OFL 派生件（字体轮廓 → SVG），改动已声明；无底本链条。",
+   "verdict": "✅ 可安全发布",
+   "must_include": [
+    "**每份副本**都要带版权声明与许可全文（第 2 条）",
+    "不得单独销售字体软件本身（第 1 条）",
+    "衍生作品须以 OFL 分发，且**不得使用被保留的字体名**（第 3 条）"
+   ],
+   "ofl": {
+    "min_similarity": 1.0,
+    "min_similarity_typographic": 1.0,
+    "clause_count_official": 6,
+    "clause_count_layer": 6,
+    "body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2",
+    "layer_body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2"
+   }
+  }
+ },
+ "generated_by": "src/license_audit.py"
+}
