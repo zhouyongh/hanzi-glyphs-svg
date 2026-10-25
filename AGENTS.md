@@ -19,7 +19,7 @@
 hanzi-glyphs-svg/
   AGENTS.md / README.md
   LICENSE            # CC BY 4.0 全文（只覆盖 CC BY 那一层）
-  LICENSE-CODE       # MIT 全文（代码）
+  LICENSE-CODE       # CC0 1.0 说明（代码与页面）
   LICENSE-DOCS       # CC0 1.0 全文（文档；篆书层的 CC0 也引这一份）
   LICENSE-DATA       # 数据/文档/代码许可说明
   THIRD_PARTY_NOTICES.md
@@ -152,8 +152,8 @@ hanzi-glyphs-svg/
   ND 直接禁止；NC 与本库公开供引用的目的冲突。
 - **底本权利未澄清的字形不得入库**：上游的 CC0 只处置它自己的权利；底本若是在版出版物，
   先拿到许可或明确的公有领域证据，再进 `glyphs/`。
-- **本仓库自身的对外许可**：文档 **CC0 1.0**（`LICENSE-DOCS`，无义务），
-  代码 `src/**`、`viewer/**` 为 **MIT**（`LICENSE-CODE`）；数据逐层不同，见上。
+- **本仓库自身的对外许可**：文档、索引、代码与浏览页 **CC0 1.0**（无义务），
+  其中代码与页面另见 `LICENSE-CODE`；数据逐层不同，见上。
 - 根 `LICENSE` 必须是 CC BY 4.0 的**逐字全文**：GitHub 的协议识别（Licensee）是把文件正文
   与已知协议做相似度比对，只写一句「本仓库采用 CC BY 4.0」的说明**不会被识别**。
 - **不得给下游附加额外限制**（例如「仅限非商业」「禁止再分发」）：既违反 CC BY 4.0
