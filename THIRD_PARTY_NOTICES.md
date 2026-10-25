@@ -16,7 +16,7 @@
 | `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列（指向上游） | **不适用**：本仓库未复制上游内容，只登记指针 | — |
 | `README.md`、`AGENTS.md`、本文件 | CC0 1.0（无义务） | `LICENSE-DOCS` |
-| `src/**`、`viewer/**` | MIT | `LICENSE-CODE` |
+| `src/**`、`viewer/**` | CC0 1.0（无义务） | `LICENSE-CODE` |
 
 **根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 层，以及篆书登记表里本仓库整理的
 部分），**不覆盖** CC0、OFL 与 Unicode 授权的材料。下游须按各层许可分别使用。
@@ -248,4 +248,4 @@ authorization of the copyright holder.
 
 ## 代码
 
-`src/**` 与 `viewer/**` 由本仓库编写，以 **MIT** 授权，全文见 `LICENSE-CODE`。
+`src/**` 与 `viewer/**` 由本仓库编写，以 **CC0 1.0** 释出，说明见 `LICENSE-CODE`。

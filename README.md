@@ -4,6 +4,9 @@
 并保证**每个字形都能追溯到出处**。
 供上层项目（字典、教学、排版）直接引用；本仓库只做字形，不做应用。
 
+本仓库**自有的内容**（文档、索引、代码、浏览页）以 **CC0 1.0** 释出，不署名、不注明改动、无任何义务。
+`glyphs/` 下的字形逐层不同：甲骨 JGW 层 **CC BY 4.0**、六个字体层 **OFL 1.1**、其余 **CC0 1.0**。
+
 ## 现在有什么
 
 | 书体 | 目录 | 数量 | 许可 |
@@ -190,7 +193,7 @@ python src/build_viewer.py
 | `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
 | `README.md`、`AGENTS.md`、`THIRD_PARTY_NOTICES.md` | **CC0 1.0**（无义务，随便用） |
-| `src/**`、`viewer/**` | **MIT** |
+| `src/**`、`viewer/**` | **CC0 1.0**（无义务，随便用） |
 
 根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层（甲骨骨架与派生轮廓），
 不覆盖 CC0、OFL 与 Unicode 授权的材料。用 `glyphs/oracle/` 下的数据**必须署名**并注明是否做过
@@ -222,7 +225,7 @@ hanzi-glyphs-svg/
   README.md                  本文件
   THIRD_PARTY_NOTICES.md     第三方署名、改动声明、权利保留
   LICENSE                    CC BY 4.0 全文（只覆盖 CC BY 那一层数据）
-  LICENSE-CODE               MIT 全文（代码）
+  LICENSE-CODE               CC0 1.0 说明（代码与页面）
   LICENSE-DOCS               CC0 1.0 全文（文档；篆书层的 CC0 也引这一份）
   LICENSE-DATA               逐层数据/文档/代码许可说明
   glyphs/
