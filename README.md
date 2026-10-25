@@ -1,6 +1,6 @@
 # hanzi-glyphs-svg
 
-汉字字形 **SVG** 库：收录甲骨文、篆书，以及楷书、行书、草书、宋体、黑体等现代书体，
+汉字字形 **SVG** 库：收录甲骨文、金文、篆书、隶书，以及楷书、行书、草书、宋体、黑体等现代书体，
 并保证**每个字形都能追溯到出处**。
 供上层项目（字典、教学、排版）直接引用；本仓库只做字形，不做应用。
 
@@ -11,8 +11,10 @@
 
 | 书体 | 目录 | 数量 | 许可 |
 |------|------|------|------|
-| 甲骨文 Oracle bone script | `glyphs/oracle/` | **1,203** 个骨架 + **1,203** 个轮廓 | **CC BY 4.0**（须署名） |
+| 甲骨文 Oracle bone script | `glyphs/oracle/` | **10,213** 个拓片摹本 + **1,203** 个骨架 + **1,203** 个轮廓 | **CC0 1.0**（摹本）+ **CC BY 4.0**（骨架/轮廓） |
+| 金文 Bronze script | `glyphs/bronze/` | **8,290** 个字形 | **CC0 1.0**（无义务） |
 | 篆书 Seal script | `glyphs/seal/` | **10,591** 个字形 | **CC0 1.0**（无义务） |
+| 隶书 Clerical script | `glyphs/clerical/` | **11,947** 个字形 | **CC0 1.0**（无义务） |
 | 楷书 Regular script | `glyphs/kaishu/` | **6,763** 个字形 | **OFL 1.1** |
 | 行书 Running script | `glyphs/xingshu/` | **6,763** 个字形 | **OFL 1.1** |
 | 草书 Cursive script | `glyphs/caoshu/` | **6,763** 个字形 | **OFL 1.1** |
@@ -21,9 +23,9 @@
 | 黑体（港）Sans, HK | `glyphs/heiti-hk/` | **31,598** 个字形 | **OFL 1.1** |
 | 篆书全量码位登记表 | `glyphs/seal/external.csv` | **11,328** 个码位（不含字形，只登记指针） | 见「许可」 |
 
-合计 **110,346** 条字形记录（含 1,203 个派生轮廓）。
+合计 **140,796** 条字形记录（含 1,203 个派生轮廓）。
 
-### 甲骨文（CC BY 4.0）
+### 甲骨文（JGW 批 CC BY 4.0 + 汉典摹本 CC0 1.0）
 
 来自公开数据集 *Oracle Bone Glyphs: Parametric Vector Dataset (v0.3)*
 （DOI [`10.5281/zenodo.22467946`](https://zenodo.org/records/22467946)，CC BY 4.0）。
@@ -32,12 +34,29 @@
 使用这批字形的义务（署名、注明修改、附协议链接）见
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
+同一目录里另有 **10,213** 个汉典（zdic.net）的拓片摹本，依其《服务条款》第四条以 **CC0 1.0** 释出。
+题记逐件带拓片号、《甲骨文合集》合号与卜辞组别（如「乙3400 / 合1285 / 賓組」）。
+两批同目录，靠 `glyphs/provenance/oracle.jsonl` 的 `license` 与 `source_dataset` 区分，
+`index.csv` 里靠 `char_form` 列区分（JGW 批有值）。
+
+### 金文（CC0 1.0）
+
+来自汉典「书法」金文实例，**8,290** 条。题记为器名 + 集成号 + 时代
+（如「毛公鼎 集成2838 西周中期」），底本是青铜器拓片。
+同一个现代字在不同器物、不同时代各收一条（26 个时代桶），拼起来是字形演变链。
+
 ### 篆书（CC0 1.0）
 
 来自汉典（zdic.net）「书法」小篆实例，依其《服务条款》第四条以 **CC0 1.0** 释出。
 每个字形都记清**出处部次与形制**——例如「說文‧心部」的正篆 / 說文古文 / 說文籀文 /
 說文或體，逐条写在 `glyphs/provenance/seal.jsonl` 与 `glyphs/seal/index.csv` 里。
 这一层的底本是《说文》刻本系统（公有领域），矢量化由汉典完成并已放弃权利。
+
+### 隶书（CC0 1.0）
+
+来自汉典「书法」隶书实例，**11,947** 条。题记为碑帖名或简号 + 时代
+（如「睡.日甲111背 秦」「武梁祠畫象題字」），底本为汉碑、印谱与秦汉简牍。
+同样每字每时代一条（12 个时代桶）。
 
 ### 现代书体六层（OFL 1.1）
 
@@ -68,10 +87,10 @@
 - **本地预览**：直接双击 `viewer/index.html`（零依赖、无需服务器；索引数据已内联进页面，
   字形文件按需去取）
 
-页面按书体分 Tab：甲骨文 Tab 可预览全部 1,203 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
-可在「骨架」与「轮廓」两层之间切换，身份存疑的条目有黄框标记；篆书 Tab 预览 10,591 个字形，
-悬停可看到出处部次与形制；楷/行/草/宋简/宋繁/黑港六个 Tab 各预览该层全部字形，
-悬停可看到字体家族与版本。
+页面按书体分 Tab：甲骨文 Tab 可预览全部 11,416 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
+可在「骨架」与「轮廓」两层之间切换，身份存疑的条目有黄框标记；金文、篆书、隶书三个 Tab
+各预览该层全部字形，悬停可看到出处作品、编号与时代（金文与隶书另有时代筛选）；
+楷/行/草/宋简/宋繁/黑港六个 Tab 各预览该层全部字形，悬停可看到字体家族与版本。
 
 线上预览的字形从 jsDelivr（`gh` 通道）取，取不到时回落到 raw.githubusercontent；
 本地双击时走相对路径 `../glyphs/`，离线可用。
@@ -187,18 +206,18 @@ python src/build_viewer.py
 
 | 范围 | 许可 |
 |------|------|
-| `glyphs/oracle/**`（1,203 骨架 + 1,203 轮廓） | **CC BY 4.0**（全文见根 `LICENSE`） |
-| `glyphs/seal/**`（篆书字形、索引、出处记录） | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
+| `glyphs/oracle/` 的 JGW 批（1,203 骨架 + 1,203 轮廓） | **CC BY 4.0**（全文见根 `LICENSE`） |
+| `glyphs/oracle/` 的汉典批（10,213 拓片摹本）、`glyphs/bronze/`、`glyphs/seal/`、`glyphs/clerical/` | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/` | **SIL OFL 1.1**（各层目录的 `OFL.txt`） |
 | `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
-| `README.md`、`AGENTS.md`、`THIRD_PARTY_NOTICES.md` | **CC0 1.0**（无义务，随便用） |
+| `README.md`、`AGENTS.md`、`THIRD_PARTY_NOTICES.md`、各层 `index.csv` | **CC0 1.0**（无义务，随便用） |
 | `src/**`、`viewer/**` | **CC0 1.0**（无义务，随便用） |
 
-根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层（甲骨骨架与派生轮廓），
-不覆盖 CC0、OFL 与 Unicode 授权的材料。用 `glyphs/oracle/` 下的数据**必须署名**并注明是否做过
-修改，署名文字见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；
-篆书层是 CC0，**没有义务**，本仓库也不对它附加任何限制。
+根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层（甲骨 JGW 骨架与派生轮廓），
+不覆盖 CC0、OFL 与 Unicode 授权的材料。用 `glyphs/oracle/` 下的 JGW 批数据**必须署名**并注明
+是否做过修改，署名文字见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；
+汉典各层与篆书层是 CC0，**没有义务**，本仓库也不对它附加任何限制。
 
 **OFL 层有四条必须守住的约束**：整层只能按 OFL-1.1 分发（不得改成 CC0 / CC BY）、
 必须随附 `OFL.txt` 与版权声明、不得使用被保留的字体名（本库六个字体都没有 RFN）、
@@ -230,11 +249,30 @@ hanzi-glyphs-svg/
   LICENSE-DATA               逐层数据/文档/代码许可说明
   glyphs/
     provenance/              出处记录，一层一个文件
-    oracle/                  甲骨文骨架 + index.csv + outline/（派生）
+    oracle/                  甲骨文：JGW 骨架 + 汉典拓片摹本 + index.csv + outline/（派生）
+    bronze/                  金文字形 + index.csv
     seal/                    篆书字形 + index.csv + external.csv（全量码位登记表）
+    clerical/                隶书字形 + index.csv
     kaishu/ xingshu/ caoshu/ 现代书体（OFL）：字形 + index.csv + OFL.txt + SOURCE.md
     songti/ songti-tc/ heiti-hk/
   src/                       脚本：导入 / 抽取 / 派生 / 校验 / 生成浏览页
     licenses/                第三方许可原文（供逐条款比对）
   viewer/index.html          静态浏览页（生成的，勿手改）
 ```
+
+## 致谢
+
+这些字形不是我们画的，是很多人一笔一笔留下来的：
+
+- **汉典（zdic.net）**：把甲骨、金文、小篆、隶书逐字整理成矢量字形，并以 CC0 释出。本库的古文字形大多来自这里。
+- **李庆生、边玉林**（浙江传媒学院）：1,203 个甲骨文字形的参数化矢量数据集，CC BY 4.0 公开。
+- **Ma Shan Zheng、Zhi Mang Xing、Liu Jian Mao Cao** 三个书法字体项目（各依其书法家的手迹），
+  **Google Fonts / Adobe**（Noto Serif SC、TC），**Chiron Fonts**（Chiron Hei HK）：
+  楷、行、草、宋、黑六层的轮廓来源。
+- **郭沫若、胡厚宣**等《甲骨文合集》的编纂者，**中国社会科学院考古研究所**《殷周金文集成》的编者，
+  历代**拓本与摹本**的制作者，《说文解字》两千年来传抄、刊刻的人——他们大多没有留下名字。
+- **Unicode Consortium**（篆书区块与 `SealSources.txt`）、**OpenCC**（篆书反查表）、
+  **fontTools**：码位与工具。
+
+我们能做的，是把每一个字形的来路记清楚。
+

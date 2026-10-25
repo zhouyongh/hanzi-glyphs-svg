@@ -8,22 +8,22 @@
 
 | 范围 | 许可 | 全文 |
 |------|------|------|
-| `glyphs/oracle/**`（甲骨 JGW 骨架 1,203 个 + 派生轮廓 1,203 个 + 索引 + 出处记录） | **CC BY 4.0** | 根 `LICENSE` |
-| `glyphs/seal/**`（篆书 10,591 个字形、索引、出处记录） | **CC0 1.0**（公有领域奉献，无义务） | `LICENSE-DOCS`；汉典的归公宣告原文见本文件 |
+| `glyphs/oracle/` 的 JGW 批（骨架 1,203 + 派生轮廓 1,203） | **CC BY 4.0** | 根 `LICENSE` |
+| `glyphs/oracle/` 的汉典批（拓片摹本 10,213）、`glyphs/bronze/`（金文 8,290）、`glyphs/clerical/`（隶书 11,947）、`glyphs/seal/`（篆书 10,591） | **CC0 1.0**（公有领域奉献，无义务） | `LICENSE-DOCS`；汉典的归公宣告原文见本文件 |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/`（现代书体六层 97,349 个字形、索引、出处记录） | **SIL OFL 1.1** | 各层目录的 `OFL.txt`（上游逐字节副本） |
 | `glyphs/provenance/*.jsonl` | **逐条记录**：每条按其 `license` 字段（CC BY 4.0 / CC0 1.0 / OFL-1.1） | 本文件 + 根 `LICENSE` |
-| `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC BY 4.0 | 根 `LICENSE` |
+| `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC0 1.0 | `LICENSE-DOCS` |
 | `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列（指向上游） | **不适用**：本仓库未复制上游内容，只登记指针 | — |
-| `README.md`、`AGENTS.md`、本文件 | CC0 1.0（无义务） | `LICENSE-DOCS` |
+| `README.md`、`AGENTS.md`、本文件、各层 `index.csv` | CC0 1.0（无义务） | `LICENSE-DOCS` |
 | `src/**`、`viewer/**` | CC0 1.0（无义务） | `LICENSE-CODE` |
 
-**根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 层，以及篆书登记表里本仓库整理的
-部分），**不覆盖** CC0、OFL 与 Unicode 授权的材料。下游须按各层许可分别使用。
+**根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 骨架与派生轮廓），
+**不覆盖** CC0、OFL 与 Unicode 授权的材料。下游须按各层许可分别使用。
 
 ---
 
-## `glyphs/oracle/` —— 甲骨文（JGW 批，CC BY 4.0）
+## `glyphs/oracle/` —— 甲骨文（两批：JGW 批 CC BY 4.0 + 汉典拓片摹本 CC0 1.0）
 
 | 项 | 内容 |
 |---|---|
@@ -108,6 +108,29 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 对应《说文》刻本系统；`index.csv` 与 `provenance/seal.jsonl` 里逐条记着部次与形制
 （正篆 / 說文古文 / 說文籀文 / 說文或體）。本仓库**不对字形及其底本主张任何权利**；
 若相关权利人认为某条内容侵犯权利，请通过 Issue 或 <1279190619@qq.com> 联系，核实后移除。
+
+---
+
+## 金文、隶书与甲骨拓片摹本 —— 汉典「书法」字形（CC0 1.0）
+
+| 项 | 内容 |
+|---|---|
+| 来源 | 汉典（zdic.net）「书法」字形实例 |
+| 实例页 | `https://www.zdic.net/hans/<字>/<kind>`（`jinwen` 金文 / `lishu` 隶书 / `jiaguwen` 甲骨文） |
+| 字形直链 | `https://img.zdic.net/zy/<kind>/<id>.svg` |
+| 许可 | **CC0 1.0**（汉典《服务条款》第四条「归公宣告」，原文见上一节） |
+| 规模 | 甲骨 10,213（`glyphs/oracle/`，与 JGW 批同目录）、金文 8,290（`glyphs/bronze/`）、隶书 11,947（`glyphs/clerical/`） |
+
+**出处粒度**：逐件记出处作品、编号与时代——甲骨「乙3400 / 合1285 / 賓組」、
+金文「毛公鼎 / 集成2838 / 西周中期」、隶书「睡.日甲111背 / 秦」。底本分别是
+《甲骨文合集》所收拓片、青铜器拓片、汉碑与印谱及秦汉简牍。
+
+**本仓库做了哪些修改**：删去字形里的近白色角标水印元素（与笔画零重叠，占画布 0.16%–0.46%），
+剔除以 base64 PNG 套壳的位图实例，其余字节原样保留；每条的改动记在
+`glyphs/provenance/<层>.jsonl` 的 `modifications` 字段，`source_sha256` 仍指上游原件。
+
+**立场**：本仓库不对字形及其底本主张任何权利。若相关权利人认为某条内容侵犯权利，
+请通过 Issue 或 <1279190619@qq.com> 联系，核实后按 `source_id` 整份移除。
 
 ---
 

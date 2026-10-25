@@ -8,7 +8,7 @@
 
 ## 用途
 
-- 收录汉字 SVG 字形（甲骨文、篆书、楷书、行书、草书、宋体、黑体）
+- 收录汉字 SVG 字形（甲骨文、金文、篆书、隶书、楷书、行书、草书、宋体、黑体）
 - 供上层项目引用；本仓库不做游戏、不做业务应用
 - 附一个**零构建的只读浏览页** `viewer/index.html`（由 `src/build_viewer.py` 生成，不是应用、
   不引入依赖、不复制字形文件），用于人工核验字形
@@ -25,8 +25,10 @@ hanzi-glyphs-svg/
   THIRD_PARTY_NOTICES.md
   glyphs/            # 字形 SVG + 出处记录
     provenance/      # 出处记录，一层一个文件（文件名 = 书体名）
-    oracle/          # 骨架 + index.csv + outline/（派生层）
+    oracle/          # JGW 骨架 + 汉典拓片摹本 + index.csv + outline/（派生层）
+    bronze/          # 金文字形 + index.csv
     seal/            # 篆书字形 + index.csv + external.csv（全量码位登记表）+ README.md
+    clerical/        # 隶书字形 + index.csv
     kaishu/ xingshu/ caoshu/ songti/ songti-tc/ heiti-hk/
                      # 现代书体（OFL）：字形 + index.csv + OFL.txt + SOURCE.md
   src/               # 脚本（导入/抽取/派生/校验/生成浏览页）
@@ -42,7 +44,9 @@ hanzi-glyphs-svg/
 | 目录 | 中文 | 英文（学术/国际常用） |
 |------|------|----------------------|
 | `glyphs/oracle/` | 甲骨文 | Oracle bone script |
+| `glyphs/bronze/` | 金文 | Bronze script |
 | `glyphs/seal/` | 篆书 | Seal script |
+| `glyphs/clerical/` | 隶书 | Clerical script |
 | `glyphs/kaishu/` | 楷书 | Regular script |
 | `glyphs/xingshu/` | 行书 | Running script |
 | `glyphs/caoshu/` | 草书 | Cursive script |
@@ -68,10 +72,15 @@ hanzi-glyphs-svg/
 |------|--------|----|
 | `glyphs/seal/` | `<Unicode>.svg` | 篆书区块码位，**5 位大写十六进制**，如 `3D000.svg` = U+3D000（一） |
 | `glyphs/oracle/` | `<glyph_id>.svg` | 源字库条目号，**4 位十进制**，如 `0001.svg` |
+| `glyphs/bronze/` `glyphs/clerical/` | `<glyph_id>.svg` | 本仓库条目号，**≥4 位十进制**（不足 10,000 时补零），如 `0001.svg` |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/` | `<Unicode>.svg` | 现代字的 Unicode 码位，**6 位大写十六进制**（补零），如 `004E04.svg` = 你 |
 
 - **甲骨文在 Unicode 里没有自己的码位**，`<Unicode>.svg` 表达不了它；而且一字多形是常态
-  （JGW 那批 1,203 条里，33 个现代字各对应 2 个条目），所以改用**条目号**做键。
+  （JGW 那批 1,203 条里，33 个现代字各对应 2 个条目；汉典拓片摹本 10,213 条覆盖 1,811 个现代字），
+  所以改用**条目号**做键。
+- **金文/隶书层有意收「一字多形」**：同一个现代字在不同器物、不同时代各收一条，
+  拼起来才是演变链。选取规则是**每个时代最多取 1 个实例**（`--max-per-era 1`），
+  目的是覆盖时代跨度，不是堆数量。合并清单要用 `--keep-multi`（键 = 现代字码位 + 来源编号）。
 - **篆书用篆书区块自己的码位做键**（U+3D000–U+3FC3F），不是现代字码位：同一个现代字在
   篆书区块里有多个码位（正篆 + 重文），篆书区块 **11,328** 个码位只对应 **11,231** 个现代字，
   其中 **93 个现代字对应多个码位**（89 个 ×2、4 个 ×3，共多出 96 个码位），
@@ -133,8 +142,9 @@ hanzi-glyphs-svg/
 
 - 字形 SVG 的许可**逐书体**不同，以 `glyphs/provenance/<书体>.jsonl` 每条的 `license` 为准；
   使用方须按该许可署名，署名文字在 `attribution` 字段与 `THIRD_PARTY_NOTICES.md`。
-- 目前 `glyphs/oracle/`（1,203 骨架 + 1,203 轮廓）为 **CC-BY-4.0**；
-  `glyphs/seal/` 为 **CC0-1.0**；
+- 目前 `glyphs/oracle/` 的 JGW 批（1,203 骨架 + 1,203 轮廓）为 **CC-BY-4.0**；
+  `glyphs/oracle/` 的汉典批（10,213 拓片摹本）、`glyphs/bronze/`、`glyphs/seal/`、
+  `glyphs/clerical/` 为 **CC0-1.0**；
   `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/`
   `glyphs/heiti-hk/`（从 OFL 开源字体提取的轮廓）为 **OFL-1.1**。
 - **根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**，不覆盖 CC0、OFL 与 Unicode 授权的材料；
@@ -169,8 +179,10 @@ hanzi-glyphs-svg/
 
 | 书体 | 状态 |
 |------|------|
-| 甲骨文（JGW 批） | **1,203** 骨架 + **1,203** 轮廓（CC BY 4.0），provenance 与 `index.csv` 齐全 |
+| 甲骨文 | **10,213** 拓片摹本（CC0 1.0） + **1,203** 骨架 + **1,203** 轮廓（CC BY 4.0），provenance 与 `index.csv` 齐全 |
+| 金文 | **8,290** 字形（CC0 1.0），**一字多形**：每时代最多 1 个实例，26 个时代桶 |
 | 篆书 | **10,591** 字形（CC0 1.0），键 = 篆书区块码位，覆盖 **10,591 / 11,328**（93.5%）；另有 `external.csv` 登记全量 11,328 个码位 |
+| 隶书 | **11,947** 字形（CC0 1.0），**一字多形**，12 个时代桶 |
 | 楷书 | **6,763** 字形（OFL 1.1，Ma Shan Zheng），键 = 现代字码位；层内带 `OFL.txt` + `SOURCE.md` |
 | 行书 | **6,763** 字形（OFL 1.1，Zhi Mang Xing） |
 | 草书 | **6,763** 字形（OFL 1.1，Liu Jian Mao Cao） |
@@ -178,7 +190,8 @@ hanzi-glyphs-svg/
 | 宋体（繁） | **17,665** 字形（OFL 1.1，Noto Serif TC `wght=400`）；**扩展 B 1,705 个是简体层没有的繁体异体码位** |
 | 黑体（港） | **31,598** 字形（OFL 1.1，Chiron Hei HK `wght=400`）；**香港標準字形**，不是大陆字形的另一种写法 |
 
-- `glyphs/provenance/` 现为 **110,346 条**（oracle 2,406 + seal 10,591 + 六个字体层 97,349）；
+- `glyphs/provenance/` 现为 **140,796 条**
+  （oracle 12,619 + bronze 8,290 + seal 10,591 + clerical 11,947 + 六个字体层 97,349）；
   `verify_provenance.py` 机读校验 **0 问题**，`check_glyphs.py` 各层 **0 问题**。
 - 甲骨文特例：`0380`、`0916` 无对应现代汉字；`1180`（妞）身份为 `provisional`。
 - 篆书层的键、覆盖率、正篆/重文的取舍规则，以及一处对 Unicode `SealSources.txt`
