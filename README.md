@@ -1,6 +1,6 @@
 # hanzi-glyphs-svg
 
-汉字字形 **SVG** 库：收录甲骨文、金文、篆书、隶书，以及楷书、行书、草书、宋体、黑体等现代书体，
+汉字字形 **SVG** 库：收录甲骨文、金文、篆书、隶书、楚文字，以及楷书、行书、草书、宋体、黑体等现代书体，
 并保证**每个字形都能追溯到出处**。
 供上层项目（字典、教学、排版）直接引用；本仓库只做字形，不做应用。
 
@@ -15,6 +15,7 @@
 | 金文 Bronze script | `glyphs/bronze/` | **8,290** 个字形 | **CC0 1.0**（无义务） |
 | 篆书 Seal script | `glyphs/seal/` | **10,591** 个字形 | **CC0 1.0**（无义务） |
 | 隶书 Clerical script | `glyphs/clerical/` | **11,947** 个字形 | **CC0 1.0**（无义务） |
+| 楚文字 Chu script | `glyphs/chu/` | **11,039** 个字形 | **CC0 1.0**（无义务） |
 | 楷书 Regular script | `glyphs/kaishu/` | **6,763** 个字形 | **OFL 1.1** |
 | 行书 Running script | `glyphs/xingshu/` | **6,763** 个字形 | **OFL 1.1** |
 | 草书 Cursive script | `glyphs/caoshu/` | **6,763** 个字形 | **OFL 1.1** |
@@ -22,8 +23,9 @@
 | 宋体（繁）Song / Ming, TC | `glyphs/songti-tc/` | **17,665** 个字形 | **OFL 1.1** |
 | 黑体（港）Sans, HK | `glyphs/heiti-hk/` | **31,598** 个字形 | **OFL 1.1** |
 | 篆书全量码位登记表 | `glyphs/seal/external.csv` | **11,328** 个码位（不含字形，只登记指针） | 见「许可」 |
+| 楚文献出处对照 | `glyphs/chu/books.csv`、`glyphs/chu/books_xxt.csv` | 文献代号 → 全称、归属、收录与否 | **CC0 1.0**（汉典 + 中研院小學堂） |
 
-合计 **140,796** 条字形记录（含 1,203 个派生轮廓）。
+合计 **151,835** 条字形记录（含 1,203 个派生轮廓）。
 
 ### 甲骨文（JGW 批 CC BY 4.0 + 汉典摹本 CC0 1.0）
 
@@ -58,6 +60,27 @@
 （如「睡.日甲111背 秦」「武梁祠畫象題字」），底本为汉碑、印谱与秦汉简牍。
 同样每字每时代一条（12 个时代桶）。
 
+### 楚文字（CC0 1.0）
+
+来自汉典「书法」**楚系簡帛**实例，**11,039** 条，覆盖 **4,171** 个现代字。
+战国楚简的题记里**没有时代词**，所以这一层按**出土文献**分桶：同一个现代字在不同出土文献各收一条
+（「郭」郭店、「包」包山、「上」上博、「新甲」新蔡、「望」望山、「信」信陽、
+「天卜」天星觀、「九」九店、「帛甲」長沙楚帛書……），拼起来是楚文字内部的写法演变链。
+
+每个字形记三样东西：**出土文献**（题记原文的代号 / 全称）、**篇名与位置编号**（如「郭.語2.26」
+= 郭店楚簡《語》第 2 簡第 26 字）、以及**摹本底本与页.行**（《楚系簡帛文字編》（增訂本）
+頁.行：543.9 等），逐条写在 `glyphs/chu/index.csv` 与 `glyphs/provenance/chu.jsonl` 里。
+
+**这一层只收楚系材料**：汉典同一栏目里混着秦系简帛（《睡虎地秦簡文字編》等）与
+傳抄古文（《傳抄古文字編》的磚文等），按 `glyphs/chu/books.csv` 的归属列筛选。
+**被筛掉的字形不删除**，登记在未发布清单里（`glyphs/chu/staged.csv`），
+留给将来的秦文字层与傳抄古文层直接取用。
+原先有六个代号（「天策」「香中大」「常」「雨」「范」「馬」）查不到出土文献全称：
+当时只证实了**归属是楚系**（跨栏实测），书名不编、`source_book` 按上游原文记代号。
+**2026-10-31 已从小學堂「楚系簡帛」出處表取到这六个代号的文献全称**，
+并据此重导了本层：`source_book` 改记全称，字形文件、条目号与文献分桶均未变。
+键规则、出处链条与复跑命令见 [glyphs/chu/README.md](glyphs/chu/README.md)。
+
 ### 现代书体六层（OFL 1.1）
 
 六层都是**从 OFL 开源字体提取轮廓**的派生件，用 `src/extract_font_glyphs.py` 生成：
@@ -90,6 +113,7 @@
 页面按书体分 Tab：甲骨文 Tab 可预览全部 11,416 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
 可在「骨架」与「轮廓」两层之间切换，身份存疑的条目有黄框标记；金文、篆书、隶书三个 Tab
 各预览该层全部字形，悬停可看到出处作品、编号与时代（金文与隶书另有时代筛选）；
+**楚文字 Tab** 预览 11,039 个字形，悬停可看到出土文献与位置编号，并可按出土文献筛选；
 楷/行/草/宋简/宋繁/黑港六个 Tab 各预览该层全部字形，悬停可看到字体家族与版本。
 
 线上预览的字形按需从 CDN 取，失败时按一条兜底链重试：同源加查询串再取一次 →
@@ -214,7 +238,8 @@ python src/build_viewer.py
 | 范围 | 许可 |
 |------|------|
 | `glyphs/oracle/` 的 JGW 批（1,203 骨架 + 1,203 轮廓） | **CC BY 4.0**（全文见根 `LICENSE`） |
-| `glyphs/oracle/` 的汉典批（10,213 拓片摹本）、`glyphs/bronze/`、`glyphs/seal/`、`glyphs/clerical/` | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
+| `glyphs/oracle/` 的汉典批（10,213 拓片摹本）、`glyphs/bronze/`、`glyphs/seal/`、`glyphs/clerical/`、`glyphs/chu/` | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
+| `glyphs/chu/books_xxt.csv`（中研院「小學堂」楚系簡帛庫出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.*` | **CC0 1.0**（全文见 `LICENSE-DOCS`；声明原文见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/` | **SIL OFL 1.1**（各层目录的 `OFL.txt`） |
 | `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
@@ -260,6 +285,7 @@ hanzi-glyphs-svg/
     bronze/                  金文字形 + index.csv
     seal/                    篆书字形 + index.csv + external.csv（全量码位登记表）
     clerical/                隶书字形 + index.csv
+    chu/                     楚文字形 + index.csv + books.csv（文献代号对照表）+ books_xxt.csv（小學堂出處表对照）+ staged.csv（未发布登记）
     kaishu/ xingshu/ caoshu/ 现代书体（OFL）：字形 + index.csv + OFL.txt + SOURCE.md
     songti/ songti-tc/ heiti-hk/
   src/                       脚本：导入 / 抽取 / 派生 / 校验 / 生成浏览页
@@ -272,6 +298,7 @@ hanzi-glyphs-svg/
 这些字形不是我们画的，是很多人一笔一笔留下来的：
 
 - **汉典（zdic.net）**：把甲骨、金文、小篆、隶书逐字整理成矢量字形，并以 CC0 释出。本库的古文字形大多来自这里。
+- **中央研究院「小學堂」汉字字形资料库**：公开各分辨率「字形圖片」与字形屬性資訊，并以 CC0 1.0 释出。本库楚层的文献代号全称取自它的出處表。
 - **李庆生、边玉林**（浙江传媒学院）：1,203 个甲骨文字形的参数化矢量数据集，CC BY 4.0 公开。
 - **Ma Shan Zheng、Zhi Mang Xing、Liu Jian Mao Cao** 三个书法字体项目（各依其书法家的手迹），
   **Google Fonts / Adobe**（Noto Serif SC、TC），**Chiron Fonts**（Chiron Hei HK）：

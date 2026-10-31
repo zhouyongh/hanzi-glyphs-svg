@@ -76,7 +76,10 @@ DEFAULT_ALLOWED = (
 # 本仓库承认的书体层名。层名会拼进落盘路径，不能是任意字符串。
 # 末尾五个是从 OFL 开源书法字体提取轮廓的现代书体层
 # （楷 / 行 / 草 / 宋体·简体 / 宋体·繁体），第十二层是港版黑体。
+# qinwenzi（秦系簡牘）、xiaozhuan（小學堂小篆）是小學堂新增的两层：
+# 与 seal（漢典小篆，键 = Unicode 篆书区块码位）**不是同一批材料**，也不能用同一套键。
 SCRIPT_WHITELIST = ("oracle", "bronze", "clerical", "seal", "chu", "chuanchao",
+                    "qinwenzi", "xiaozhuan",
                     "kaishu", "xingshu", "caoshu", "songti", "songti-tc", "heiti-hk")
 
 # index.csv 的列。index.csv 的第一列永远是 glyph_id。
@@ -91,8 +94,12 @@ INDEX_EXTRA_COLUMNS = (
 #   所以单独存一列 `book_part`。
 # - 傳抄古文的题记带尾注，是该字形在来源书里标注的**引书名**（「汗3.34說」的「說」），
 #   与 `source_book`（摹本底本 / 传抄本）是两个层级，所以另立 `source_cited_book`。
+# - `identity_confidence` / `modern_char_slot`：**现代字身份的可信度**。
+#   小學堂有些字頭只給字體排版槽位碼位（私用區），不是漢字碼位；
+#   這類記錄的码位是**临时身份**，必须标出来，不能让人当成真汉字引用。
 # 其余层没有这些维度，就不要多出一列空列。
-OPTIONAL_INDEX_COLUMNS = ("book_part", "source_cited_book")
+OPTIONAL_INDEX_COLUMNS = ("book_part", "source_cited_book",
+                           "identity_confidence", "modern_char_slot")
 
 # 篆书层的键是 Unicode 篆书区块码位，不是本仓库的条目号。
 # seal_candidates / seal_note 两列说明这个字还有哪些篆书码位（重文 / 异体）没填、
@@ -142,12 +149,15 @@ def _fit_row(row: dict, header: list[str]) -> dict:
     return {k: row.get(k, "") for k in header}
 
 
-def owned_paths(path: Path, script: str, layer: str,
+def owned_paths(path: Path, script: str, layers: set[str],
                 scope: tuple[str, str] | None) -> set[str]:
     """列出 provenance 里属于本层（按 scope 限定）的记录的文件路径。
 
     用来在落盘前做孤儿体检：**这一层自己原来有哪些文件**，是有据可查的，
     不用靠「目录里多出来的就是孤儿」这种猜法。
+
+    ``layers`` 是一组：一份清单里可以混着两种层（漢典的骨架件 + 描摹件），
+    两者的记录都要算作「本层自己原来有的」。
     """
     out: set[str] = set()
     if not path.exists():
@@ -162,7 +172,7 @@ def owned_paths(path: Path, script: str, layer: str,
             continue
         if record.get("script") != script:
             continue
-        if record.get("layer", "skeleton") != layer:
+        if str(record.get("layer", "skeleton")) not in layers:
             continue
         if scope is not None:
             field, value = scope
@@ -232,7 +242,7 @@ def layer_key(record: dict) -> str:
         return f"id:{glyph_id}"
 
 
-def other_scope_claims(prov_path: Path, script: str, layer: str,
+def other_scope_claims(prov_path: Path, script: str, layers: set[str],
                        scope: tuple[str, str] | None
                        ) -> tuple[dict[str, dict], dict[str, dict]]:
     """列出**别的来源批次**已经占用的文件路径与层键。
@@ -262,7 +272,7 @@ def other_scope_claims(prov_path: Path, script: str, layer: str,
                 continue
             if record.get("script") != script:
                 continue
-            if str(record.get("layer", "skeleton")) != layer:
+            if str(record.get("layer", "skeleton")) not in layers:
                 continue
             if str(record.get(field) or "") == value:
                 continue                      # 自己这个批次
@@ -273,7 +283,7 @@ def other_scope_claims(prov_path: Path, script: str, layer: str,
     return paths, keys
 
 
-def merge_provenance(path: Path, script: str, layer: str,
+def merge_provenance(path: Path, script: str, layers: set[str],
                      new_records: list[dict],
                      scope: tuple[str, str] | None = None
                      ) -> tuple[int, int, set[str]]:
@@ -284,6 +294,9 @@ def merge_provenance(path: Path, script: str, layer: str,
     甲骨层有两个来源（JGW 的参数化矢量、汉典的拓片摹本），都用 script=oracle、
     layer=skeleton，靠这个字段区分批次——不然一个来源的导入会把另一个来源的
     出处记录整层抹掉。
+
+    ``layers`` 是一组：一份清单里可以混着骨架件与描摹件（漢典的矢量 + 描摹件），
+    两者的旧记录都要被替换掉——本次导入同时拥有这两种层。
 
     返回 (保留的旧记录数, 写入后的总记录数, 本次导入所拥有的旧记录路径)。
     """
@@ -300,7 +313,7 @@ def merge_provenance(path: Path, script: str, layer: str,
                 raise SystemExit(f"{path}:{lineno} 不是合法 JSON：{exc}") from exc
             same = (
                 record.get("script") == script
-                and record.get("layer", "skeleton") == layer
+                and str(record.get("layer", "skeleton")) in layers
             )
             if same and scope is not None:
                 field, value = scope
@@ -374,8 +387,11 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(
             f"未知的书体层名 {script!r}。本仓库承认的层名：{', '.join(SCRIPT_WHITELIST)}"
         )
-    if layer != "skeleton":
-        raise SystemExit(f"本脚本只导入骨架层，layer={layer!r} 请另找对应脚本")
+    if layer not in ("skeleton", "outline"):
+        raise SystemExit(
+            f"本脚本只导入骨架层与描摹层，layer={layer!r} 请另找对应脚本。"
+            "（骨架层 = 上游逐字节副本；描摹层 = 位图自动描摹成的 SVG。）"
+        )
 
     license_id = str(manifest.get("license") or "").strip()
     allowed = {x.strip() for x in args.allowed_licenses.split(",") if x.strip()}
@@ -410,15 +426,27 @@ def main(argv: list[str] | None = None) -> int:
     # 清单里有坏路径就直接报错退出，于是目录里留下一堆「有文件、无出处记录」的
     # 孤儿字形——那正是硬规则 1「无出处，不入仓库」要防的事。
     plan: list[tuple[dict, Path, str, str, str, int]] = []
+    item_layers: set[str] = set()
 
     for item in glyphs:
         glyph_id = int(item["glyph_id"])
+
+        # **逐条的层**。一份清单里可以混着两种层：漢典的矢量是骨架层（上游逐字节副本），
+        # 小學堂的描摹件是描摹层。顶层只有一个 layer 字段，会把其中一种盖错。
+        item_layer = str(item.get("layer") or layer).strip()
+        if item_layer not in ("skeleton", "outline"):
+            raise SystemExit(
+                f"glyph {glyph_id}: layer={item_layer!r} 不认识"
+                "（只允许 skeleton / outline）")
+        item_layers.add(item_layer)
 
         # 每条字形可以用自己的许可（清单级是默认值）；不在允许名单里的直接不入库。
         item_license = str(item.get("license") or license_id).strip()
         if item_license not in allowed:
             skipped.append(f"{glyph_id}: 许可 {item_license!r} 不在允许名单内")
             continue
+        # 写回显式的层，后面落盘与 provenance 记账都按它来
+        item["layer"] = item_layer
 
         if glyph_id in seen_ids:
             raise SystemExit(f"清单里 glyph_id 重复：{glyph_id}")
@@ -496,13 +524,13 @@ def main(argv: list[str] | None = None) -> int:
     # - 不给 --provenance-scope 时，本次导入独占整层，目录里任何不在清单里的字形都算多余；
     # - 给了 scope 时（同层多来源），只有本批次原来那些算多余，别家来源的字形只报告。
     expected_names = {entry[4] for entry in plan}
-    owned = owned_paths(prov_path, script, layer, scope)
+    owned = owned_paths(prov_path, script, item_layers, scope)
     owned_names = {Path(p).name for p in owned if p}
 
     # **跨来源批次的层键/路径撞车检查**（落盘之前）。
     # 同层多来源时，别家批次占的层键不能被这次导入覆盖——
     # 覆盖了就是「文件被换掉、别家的 provenance 的 sha256 变成假话」。
-    other_paths, other_keys = other_scope_claims(prov_path, script, layer, scope)
+    other_paths, other_keys = other_scope_claims(prov_path, script, item_layers, scope)
     if other_paths or other_keys:
         clashes: list[str] = []
         for item, _src, _ls, _us, name, record_id in plan:
@@ -563,7 +591,7 @@ def main(argv: list[str] | None = None) -> int:
             "path": f"glyphs/{script}/{name}",
             "sha256": dest_sha,
             "script": script,
-            "layer": layer,
+            "layer": str(item.get("layer") or layer),
             "glyph_id": record_id,
             "license": str(item.get("license") or license_id).strip(),
             # **取回时间取清单里的逐字形值，取不到才用入库时刻。**
@@ -582,9 +610,15 @@ def main(argv: list[str] | None = None) -> int:
                       "source_record_url", "source_artifact_url", "codepoint",
                       "seal_candidates", "seal_note", "alt_caption", "book_code",
                       "book_part", "source_cited_book", "dual_caption",
-                      "source_references",
+                      "source_references", "source_base_pages",
                       # 派生件（字体层）要交代「从哪来、怎么变的、用什么变的」
                       "derived_from", "derived_from_sha256", "transform", "tool",
+                      # 位图描摹件的保真指标：本地 SVG 与上游位图的 IoU。
+                      # 记下来是为了让「这批描摹件忠实于原字形」**可复核**，
+                      # 不必重跑描摹就能查（见 check_glyphs.py --trace-fidelity）。
+                      "trace_iou",
+                      # 现代字身份的可信度与依据（现代字是临时身份时）
+                      "identity_confidence", "modern_char_slot",
                       "font_name", "font_version"):
             value = str(item.get(field) or manifest.get(field) or "").strip()
             if value:
@@ -597,6 +631,15 @@ def main(argv: list[str] | None = None) -> int:
                                  str(record["book_code"]))
             if mapped:
                 record["source_book"] = mapped
+            else:
+                # 对照表里没有全称（文献全称待考）：只留**代号**。
+                # 题记切出来的 source_book 是「代号.篇名」，篇名另有 book_part 一列；
+                # 把篇名留在 source_book 里会让「按文献分组」把同一个文献拆成两个桶
+                # （「香中大」与「香中大.甲」）。这里把篇名摘掉。
+                part = str(record.get("book_part") or "")
+                source_book = str(record.get("source_book") or "")
+                if part and source_book.endswith("." + part):
+                    record["source_book"] = source_book[: -(len(part) + 1)]
         if not any(record.get(f) for f in ("source_url", "source_record_url",
                                            "source_artifact_url", "source_page_url",
                                            "mirror_url")):
@@ -630,6 +673,10 @@ def main(argv: list[str] | None = None) -> int:
             row["book_part"] = record["book_part"]
         if record.get("source_cited_book"):
             row["source_cited_book"] = record["source_cited_book"]
+        if record.get("identity_confidence"):
+            row["identity_confidence"] = record["identity_confidence"]
+        if record.get("modern_char_slot"):
+            row["modern_char_slot"] = record["modern_char_slot"]
         if args.key_mode == "seal_codepoint":
             row["codepoint"] = record.get("codepoint", "")
             row["seal_candidates"] = record.get("seal_candidates", "")
@@ -682,7 +729,7 @@ def main(argv: list[str] | None = None) -> int:
             writer = csv.DictWriter(handle, fieldnames=header, lineterminator="\n")
             writer.writeheader()
             writer.writerows([_fit_row(row, header) for row in index_rows])
-        kept, total, _owned = merge_provenance(prov_path, script, layer, records, scope)
+        kept, total, _owned = merge_provenance(prov_path, script, item_layers, records, scope)
         print(f"provenance.jsonl: 保留其他记录 {kept} 条，写入后共 {total} 条")
         if scope:
             print(f"批次范围    : {scope[0]}={scope[1]}（别的来源原样保留）")

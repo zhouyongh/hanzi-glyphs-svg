@@ -89,6 +89,59 @@
     "layer_body_sha256": "356783e307aaff6dab0e1278e947baf74c9aeb4aa64ef4eafe5fb5b77f9613b2"
    }
   },
+  "chu": {
+   "records": 11039,
+   "licenses": {
+    "CC0-1.0": 11039
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 1,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "删除汉典近白水印": 11039
+   },
+   "source_book_records": 11039,
+   "source_books_top": [
+    [
+     "郭店楚簡",
+     1876
+    ],
+    [
+     "包山楚簡",
+     1844
+    ],
+    [
+     "上海博物館藏戰國楚竹書（一）",
+     865
+    ],
+    [
+     "新蔡葛陵楚簡·甲組",
+     751
+    ],
+    [
+     "上海博物館藏戰國楚竹書（二）",
+     712
+    ],
+    [
+     "江陵望山楚簡",
+     620
+    ]
+   ],
+   "source_references_records": 11039,
+   "has_license_copy": false,
+   "license_copy_path": "",
+   "license_copy_sha256": "",
+   "has_source_md": false,
+   "has_readme": true,
+   "notices_mentions_layer": true,
+   "risk_note": "链条**多一层**：原简帛 → 考古整理本 → 《楚系简帛文字编》摹本 → 汉典转录；逐字形的摹本底本与页.行记在 `source_references`。另有**小学堂批次**（中研院數位文化中心，CC0 1.0）：同为《楚系簡帛文字編》摹本的字形圖片，本地 SVG 是**位图自动描摹**的派生件，改动与工具记在 `modifications` / `transform`；底本链条与漢典批次相同。",
+   "verdict": "⚠️ 可发布（有残余风险，须随附底本说明）",
+   "must_include": [
+    "**不得**因此追加使用限制（CC0 是放弃权利，不是许可别人加条件）",
+    "无强制署名义务（CC0 放弃权利而非授予许可）"
+   ],
+   "ofl": {}
+  },
   "clerical": {
    "records": 11947,
    "licenses": {
