@@ -48,7 +48,8 @@ LAYERS_WITH_CP = (
     "kaishu", "xingshu", "caoshu", "songti", "songti-tc", "heiti-hk",
 )
 # 键是条目号或篆书区块码位的层：按 modern_char 列反查 ord()
-LAYERS_WITH_MODERN = ("oracle", "bronze", "clerical", "seal", "chu", "chuanchao")
+LAYERS_WITH_MODERN = ("oracle", "bronze", "clerical", "seal", "chu", "chuanchao",
+                       "qinwenzi", "xiaozhuan")
 
 BLOCKS = [
     ("基本区", 0x4E00, 0x9FFF), ("扩展A", 0x3400, 0x4DBF),
@@ -180,7 +181,7 @@ def main(argv=None):
 
     out = Path(args.out) if args.out else (OUT_DIR / f"eval_{label}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
     print(f"\n→ {out}")
     return 0
 

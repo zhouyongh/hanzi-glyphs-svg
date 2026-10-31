@@ -46,7 +46,17 @@ SCRIPTS = [
      "逐件记出土文献与位置，并附该字所依据的摹本底本与页.行；可按出土文献筛选。"),
     ("chuanchao", "傳抄古文", "Transmitted ancient script",
      "已收录 {n} 个字形，源自汉典「傳抄古文」实例（CC0 1.0），"
-     "底本为徐在國《傳抄古文字編》；逐件记源书代号与位置，可按源书筛选。"),
+     "底本为徐在國《傳抄古文字編》；逐件记源书代号与位置，可按源书筛选。"
+     "本层计划改以**小学堂**傳抄古文字資料庫为主源（位图自动描摹，CC0 1.0）。"),
+    ("qinwenzi", "秦系簡牘", "Qin bamboo and wooden slips script",
+     "已收录 {n} 个字形，源自**小学堂**秦系簡牘文字資料庫（CC0 1.0）："
+     "上游原件是位图，本地 SVG 由自动描摹生成；底本为《睡虎地秦簡文字編》等，"
+     "逐件记出土文献与位置，可按出土文献筛选。"),
+    ("xiaozhuan", "小篆·小学堂", "Seal script (Xiaoxuetang)",
+     "已收录 {n} 个字形，源自**小学堂**小篆資料庫（CC0 1.0）："
+     "上游原件是位图，本地 SVG 由自动描摹生成。"
+     "与「篆书」层（漢典《說文》系，键为 Unicode 篆书区块码位）**不是同一批材料**，"
+     "键空间也不同——本层的键是本仓条目号。"),
     ("kaishu", "楷书", "Regular script",
      "已收录 {n} 个字形，从 Ma Shan Zheng 字体（OFL 1.1）提取轮廓；"
      "键为现代字的 Unicode 码位，简体与繁体都在里面。"),
@@ -70,6 +80,36 @@ SCRIPTS = [
      "已收录 {n} 个字形，从 Chiron Hei HK 字体（OFL 1.1）提取轮廓；"
      "**港版字形**（香港標準字形），与大陆写法有差异；扩展 B 区多出简体层收不到的码位。"),
 ]
+
+# **按层里实际有的内容**才追加的话。
+#
+# 说明文字写「另有小学堂描摹件」而层里其实没有，等于告诉读者一个假事实——
+# 所以这几段只在层里**真有**位图描摹件时才出现。判据是 provenance 里的
+# ``transform`` 是否带 marching-squares（位图 → SVG 的描摹件才带；
+# 甲骨层 JGW 的矢量转轮廓不带）。
+EXTRA_NOTES = {
+    "chu": "另有**小学堂**（中央研究院數位文化中心）楚系簡帛文字資料庫的"
+           "**位图描摹件**（CC0 1.0）补缺口：同一字形以漢典矢量为主源，"
+           "小學堂只补漢典没有的字形与出處。",
+}
+
+
+def has_traced_glyphs(glyphs_root: Path, script: str) -> bool:
+    """这一层里有没有**位图描摹件**（有的话才配说小學堂）。"""
+    prov = glyphs_root / "provenance" / f"{script}.jsonl"
+    if not prov.is_file():
+        return False
+    with prov.open(encoding="utf-8") as fh:
+        for line in fh:
+            if "marching-squares" in line:
+                return True
+    return False
+
+
+def extra_note(glyphs_root: Path, script: str) -> str:
+    """这一层该追加的说明（没有就返回空串）。"""
+    note = EXTRA_NOTES.get(script, "")
+    return note if note and has_traced_glyphs(glyphs_root, script) else ""
 
 # 仓库的 GitHub slug。用来拼 CDN 地址与文档链接。
 DEFAULT_REPO_SLUG = "zhouyongh/hanzi-glyphs-svg"
@@ -687,7 +727,9 @@ def main(argv=None) -> int:
             .replace("__SCRIPTS__", json.dumps(
                 # 说明里的字数用**实际条数**填，不写死——写死的数字迟早过期，
                 # 而过期数字比没有数字更坏：读者会拿它当依据。
-                [[s[0], s[1], s[2], s[3].format(n=len(data.get(s[0], [])))]
+                # 追加的说明按层里**实际有的内容**决定（见 extra_note）。
+                [[s[0], s[1], s[2],
+                  s[3].format(n=len(data.get(s[0], []))) + extra_note(glyphs_root, s[0])]
                  for s in active], ensure_ascii=False))
             .replace("__GENERATED__",
                      datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")))

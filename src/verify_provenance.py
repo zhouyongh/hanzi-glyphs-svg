@@ -134,10 +134,19 @@ def check_index_files(repo_root: Path, script_filter: str | None,
                         f"{index_path.name}:{lineno} {key_col} 重复：{index_key}"
                         f"（{seen_keys[index_key]} 与 {name}）")
                 seen_keys[index_key] = name
-        # 反向：本层骨架层的每条出处记录都应该在索引里。
+        # 反向：本层骨架层与描摹层的每条出处记录都应该在索引里。
+        #
+        # **但派生层目录不在索引覆盖范围内**：甲骨层的轮廓件住在
+        # `glyphs/oracle/outline/` 这个**子目录**里，`glyphs/oracle/index.csv`
+        # 只索引层目录**直接**下的字形文件。判据是路径的段数：
+        # `<书体>/<文件名>` 才归索引管，`<书体>/<子目录>/<文件名>` 不归。
         for rel, record in prov_by_path.items():
-            if record.get("script") != script or record.get("layer") != "skeleton":
+            if record.get("script") != script:
                 continue
+            if record.get("layer") not in ("skeleton", "outline"):
+                continue
+            if len(Path(rel).parts) != 2:
+                continue          # 在子目录里（如 oracle/outline/），不在索引范围
             if rel not in indexed:
                 problems.append(
                     f"{index_path.name}: provenance 里的 {rel} 不在索引中（下游按索引解析）")
@@ -216,6 +225,18 @@ def main(argv: list[str] | None = None) -> int:
             problems.append(
                 f"{prov_name}:{lineno} 没有任何来源 URL 字段（{'/'.join(URL_FIELDS)}）"
             )
+        # 派生件记账：描摹层（位图 → SVG）与字体派生层必须交代
+        # 「从哪来、怎么变的、用什么变的」，否则「出处的字形」与「入库的字形」对不上号。
+        # 描摹层（layer=outline）一律要求；其余层只要带了其中一个字段就要求四个齐全。
+        derived_fields = ("derived_from", "derived_from_sha256", "transform", "tool")
+        is_outline = str(record.get("layer") or "") == "outline"
+        present = [f for f in derived_fields if record.get(f)]
+        if is_outline or present:
+            for field in derived_fields:
+                if not record.get(field):
+                    problems.append(
+                        f"{prov_name}:{lineno} 派生件缺记账字段 {field}"
+                        f"（layer={record.get('layer') or ''}）")
 
         rel = str(record.get("path", ""))
         if not rel:
