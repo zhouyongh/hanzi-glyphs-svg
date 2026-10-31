@@ -30,10 +30,12 @@ from pathlib import Path
 
 SCRIPTS = [
     ("oracle", "甲骨文", "Oracle bone script",
-     "已收录 {n} 个字形（JGW 参数化矢量骨架 CC BY 4.0 + 汉典拓片摹本 CC0 1.0），"
+     "已收录 {n} 个字形（JGW 参数化矢量骨架 CC BY 4.0 + 汉典拓片摹本 CC0 1.0 "
+     "+ **小学堂**甲骨文資料庫的位图描摹件 CC0 1.0），"
      "有轮廓层可切换。"),
     ("bronze", "金文", "Bronze script",
-     "已收录 {n} 个字形，源自汉典「书法」实例（CC0 1.0），逐条记出处作品、编号与时代；"
+     "已收录 {n} 个字形：汉典「书法」矢量件 + **小学堂**金文資料庫的位图描摹件"
+     "（均为 CC0 1.0），逐条记出处作品、编号与时代；"
      "一字多形，同字跨时代各一条，可按时代筛选。"),
     ("seal", "篆书", "Seal script",
      "已收录 {n} 个字形，源自汉典「书法」小篆实例（CC0 1.0），"
@@ -45,13 +47,13 @@ SCRIPTS = [
      "已收录 {n} 个字形，源自汉典「楚系簡帛」实例（CC0 1.0），"
      "逐件记出土文献与位置，并附该字所依据的摹本底本与页.行；可按出土文献筛选。"),
     ("chuanchao", "傳抄古文", "Transmitted ancient script",
-     "已收录 {n} 个字形，源自汉典「傳抄古文」实例（CC0 1.0），"
-     "底本为徐在國《傳抄古文字編》；逐件记源书代号与位置，可按源书筛选。"
-     "本层计划改以**小学堂**傳抄古文字資料庫为主源（位图自动描摹，CC0 1.0）。"),
+     "已收录 {n} 个字形：漢典「傳抄古文」矢量件（CC0 1.0）+ **小学堂**傳抄古文字"
+     "資料庫的位图描摹件（CC0 1.0）。"
+     "底本为徐在國《傳抄古文字編》；逐件记源书代号与位置，可按源书筛选。"),
     ("qinwenzi", "秦系簡牘", "Qin bamboo and wooden slips script",
-     "已收录 {n} 个字形，源自**小学堂**秦系簡牘文字資料庫（CC0 1.0）："
-     "上游原件是位图，本地 SVG 由自动描摹生成；底本为《睡虎地秦簡文字編》等，"
-     "逐件记出土文献与位置，可按出土文献筛选。"),
+     "已收录 {n} 个字形：漢典「书法」栏里的秦系矢量件 + **小学堂**秦系簡牘文字資料庫"
+     "的位图描摹件（均为 CC0 1.0）；后者上游原件是位图，本地 SVG 由自动描摹生成。"
+     "底本为《睡虎地秦簡文字編》等，逐件记出土文献与位置，可按出土文献筛选。"),
     ("xiaozhuan", "小篆·小学堂", "Seal script (Xiaoxuetang)",
      "已收录 {n} 个字形，源自**小学堂**小篆資料庫（CC0 1.0）："
      "上游原件是位图，本地 SVG 由自动描摹生成。"
@@ -110,6 +112,24 @@ def extra_note(glyphs_root: Path, script: str) -> str:
     """这一层该追加的说明（没有就返回空串）。"""
     note = EXTRA_NOTES.get(script, "")
     return note if note and has_traced_glyphs(glyphs_root, script) else ""
+
+
+def pending_note(glyphs_root: Path, script: str) -> str:
+    """这一层有没有**待补清单**（有就在说明里说清楚缺多少、缺在哪）。
+
+    数字取**清单里的实际条数**，不写死——写死的数字迟早过期，
+    而过期数字比没有数字更坏：读者会拿它当依据。
+    """
+    path = glyphs_root / script / "pending-xxt.csv"
+    if not path.is_file():
+        return ""
+    with path.open("r", encoding="utf-8-sig", newline="") as fh:
+        n = sum(1 for _ in csv.DictReader(fh))
+    if not n:
+        return ""
+    return (f"另有 **{n}** 件小學堂位图描摹件因上游取图端点不可用暂缺，"
+            f"逐条登记在 `glyphs/{script}/pending-xxt.csv`"
+            f"（含上游取图地址，端点恢复后可直接续抓）。")
 
 # 仓库的 GitHub slug。用来拼 CDN 地址与文档链接。
 DEFAULT_REPO_SLUG = "zhouyongh/hanzi-glyphs-svg"
@@ -729,7 +749,8 @@ def main(argv=None) -> int:
                 # 而过期数字比没有数字更坏：读者会拿它当依据。
                 # 追加的说明按层里**实际有的内容**决定（见 extra_note）。
                 [[s[0], s[1], s[2],
-                  s[3].format(n=len(data.get(s[0], []))) + extra_note(glyphs_root, s[0])]
+                  s[3].format(n=len(data.get(s[0], []))) + extra_note(glyphs_root, s[0])
+                  + pending_note(glyphs_root, s[0])]
                  for s in active], ensure_ascii=False))
             .replace("__GENERATED__",
                      datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")))

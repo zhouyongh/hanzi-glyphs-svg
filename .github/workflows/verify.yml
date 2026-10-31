@@ -63,6 +63,11 @@ jobs:
             [ -f "$d/index.csv" ] || continue
             python src/check_glyphs.py "$d"
           done
+      # 位图描摹件的保真核验：本地 SVG 回光栅化后与上游位图的 IoU，
+      # 按**单条 ≥ 0.97 / 层级 p05 ≥ 0.96 / 失败率 ≤ 1%** 三道门槛判。
+      # 只读 provenance 里记的 trace_iou，不用重跑光栅化，标准库即可。
+      - name: 描摹保真核验
+        run: python src/check_glyphs.py --trace-fidelity
 
   fontlicenses:
     name: 字体层许可正文核验
@@ -115,3 +120,41 @@ jobs:
       # 只读两个 index.csv，不用字体原件，秒级。
       - name: 核验两层的字符集事实
         run: python src/verify_songti_variants.py --charset-only
+
+  layerrules:
+    name: 层的规则与不变量体检
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 守的是层**自己的规矩**（verify_provenance.py 管出处、check_glyphs.py 管 SVG 合不合法，
+      # 两者都不管这一层）：
+      # ① 规则统一——分桶维度与每字上限与 build_xxt_manifest.LAYER_RULES 一致；
+      # ② 无重复字——「(现代字, 字形键)」唯一；
+      # ③ 字正确——unicode 必须等于 modern_char 的码位，私用區码位不得当汉字码位；
+      # ④ 相关信息更新正确——index.csv 与 provenance 逐条对得上。
+      # 只用标准库。
+      - name: 逐层体检规则与不变量
+        run: python src/check_layer_rules.py --repo-root .
+      # 文档里的层件数与层里实际件数对账：层的规模一变，README 顶层层表
+      # 的数字就得跟着改，漏改的数字比没有数字更坏（读者会拿它当依据）。
+      # 只认 README 顶层层表那种固定写法（`| `glyphs/层/` | **N** 个字形 |`），
+      # 免得把子集数、分批数、合计数误判成层规模。
+      - name: 文档层件数对账
+        run: python src/check_doc_numbers.py --repo-root .
+
+  xxtpending:
+    name: 小學堂批次待补清单体检
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 待补清单记的是「计划要收、但上游位图取不到」的字形。
+      # 清单里若有字形**已经在层里**，说明清单过期了——上游一旦恢复、字形补进来，
+      # 就该把它从清单里划掉。这条检查只读仓内文件，不用 tmp/，也不用联网。
+      - name: 逐层体检待补清单
+        run: python src/xxt_pending.py --check --repo-root .

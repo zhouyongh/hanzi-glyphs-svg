@@ -101,6 +101,15 @@ INDEX_EXTRA_COLUMNS = (
 OPTIONAL_INDEX_COLUMNS = ("book_part", "source_cited_book",
                            "identity_confidence", "modern_char_slot")
 
+#: 清单 → index.csv 时**要带过去的层专有列**。
+#:
+#: 甲骨层的 JGW 批（参数化矢量数据集）自带这些字段。**重导入时不能丢**：
+#: 轮廓层（``glyphs/oracle/outline/``）靠 ``char_form`` 认出哪些行是 JGW 的
+#: （只有那一批是 polyline 骨架，能转成填充轮廓）——重建清单时丢了它，
+#: 合并重排之后就再也重建不出轮廓了。
+JGW_INDEX_COLUMNS = ("char_form", "encoding_status", "pinyin",
+                      "n_points", "n_strokes", "n_source_variants")
+
 # 篆书层的键是 Unicode 篆书区块码位，不是本仓库的条目号。
 # seal_candidates / seal_note 两列说明这个字还有哪些篆书码位（重文 / 异体）没填、
 # 以及为什么——篆书区块里一个现代字常对应多个码位，下游要按码位取字形时需要知道。
@@ -619,6 +628,12 @@ def main(argv: list[str] | None = None) -> int:
                       "trace_iou",
                       # 现代字身份的可信度与依据（现代字是临时身份时）
                       "identity_confidence", "modern_char_slot",
+                      # **甲骨层 JGW 批的层专有列**：少了它们，索引里就没有
+                      # 「哪些行是 JGW 的」这条线索，轮廓层再也认不出来
+                      # （重建清单带了，合并也带了，**这里漏了就前功尽弃**）。
+                      *JGW_INDEX_COLUMNS,
+                      # JGW 批的镜像指针（许可核验要查它的 RFN 与版本）
+                      "mirror_url", "mirror_commit",
                       "font_name", "font_version"):
             value = str(item.get(field) or manifest.get(field) or "").strip()
             if value:
@@ -677,6 +692,9 @@ def main(argv: list[str] | None = None) -> int:
             row["identity_confidence"] = record["identity_confidence"]
         if record.get("modern_char_slot"):
             row["modern_char_slot"] = record["modern_char_slot"]
+        for col in JGW_INDEX_COLUMNS:
+            if record.get(col):
+                row[col] = record[col]
         if args.key_mode == "seal_codepoint":
             row["codepoint"] = record.get("codepoint", "")
             row["seal_candidates"] = record.get("seal_candidates", "")
@@ -701,6 +719,11 @@ def main(argv: list[str] | None = None) -> int:
             for col in OPTIONAL_INDEX_COLUMNS:
                 if any(str(row.get(col) or "").strip() for row in index_rows):
                     header.insert(header.index("source_book") + 1, col)
+            # 层专有列（甲骨层的 JGW 批那几列）：有值就带上，别丢。
+            for col in JGW_INDEX_COLUMNS:
+                if (col not in header
+                        and any(str(row.get(col) or "").strip() for row in index_rows)):
+                    header.append(col)
         # 同层多来源时（甲骨层有 JGW 与汉典两批），索引要**并**进去，不能盖掉别家。
         # 列取并集：别家那一批有的列（如 JGW 的 char_form）本批没有就留空。
         #
