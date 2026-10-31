@@ -13,6 +13,7 @@
 | `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/` 的小學堂位图描摹件（秦系 2,114 + 傳抄 7,469 + 甲骨 2,540 + 金文 3,401 + 隸書 1,812） | **CC0 1.0**（中研院「小學堂」《版權聲明》） | `LICENSE-DOCS`；声明原文见本文件 |
 | `glyphs/chu/books_xxt.csv`（小學堂出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.{md,html}` | **CC0 1.0**（中研院「小學堂」《版權聲明》） | `LICENSE-DOCS`；声明原文见本文件 |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/`（现代书体六层 97,349 个字形、索引、出处记录） | **SIL OFL 1.1** | 各层目录的 `OFL.txt`（上游逐字节副本） |
+| `glyphs/<层>/inverted/`（拓片件的标准字形，1,117 个） | **随源层**：逐条记录按其 `license` 字段 | 本文件 + 根 `LICENSE` |
 | `glyphs/provenance/*.jsonl` | **逐条记录**：每条按其 `license` 字段（CC BY 4.0 / CC0 1.0 / OFL-1.1） | 本文件 + 根 `LICENSE` |
 | `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC0 1.0 | `LICENSE-DOCS` |
 | `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
@@ -328,6 +329,26 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 
 **失败 0 件**——单条不合格的件都按单条闸挡在层外，层级 p05 全部 ≥ 0.96。
 机检入口：`python src/check_glyphs.py --trace-fidelity`（只读 provenance 里记的 `trace_iou`）。
+
+### 拓片件的标准字形（反转变体）
+
+拓片的形态是「石面黑、刻痕白」。本库对这类字形另备一份**标准字形**
+（`glyphs/<层>/inverted/`，黑笔画、透明底）：笔画取自原件里被石面包住的白刻轮廓，
+不是重新描摹；石面麻点按面积与相对显著性两条规则剔除。
+
+这些是**派生件**，许可**随源层不变**（源件是 CC0 1.0，反转件也是 CC0 1.0）——
+反转是同一件材料的另一种呈现，不引入新的权利。按 CC0 / CC BY 的规则，
+每条记录另记 `derived_from`（派生自哪个文件）、`derived_from_sha256`、
+`transform`（反转算法）、`tool`（脚本），并在 `modifications` 里写明改了什么。
+
+**只收真拓片**：判「那块黑是不是石面」——石面要铺满画面（≥ 七成）、
+轮廓本身是实的、白刻笔画只占石面三成以内；再判「石面是不是实心的」
+（不是器物图的圈或框）。达不到的源件多半是**正片**
+（黑字白底，本来就是标准字形，反转反而错），保留原样。
+
+**逐件检查**：每件都算笔画占比、连通块数、主体大小与墨迹填充率；
+指标不过的**不出派生件**，那一件仍然只有拓片原样。
+逐件判定见各层的 `rubbing-invert.csv`。
 
 ### 尚未发布的部分
 

@@ -271,7 +271,8 @@ TEMPLATE = r"""<!DOCTYPE html>
   var SCRIPTS = __SCRIPTS__;
   var tabs = document.getElementById('tabs');
   var panels = document.getElementById('panels');
-  var LAYER_LABEL = { skeleton: '骨架', outline: '轮廓（可填充）' };
+  var LAYER_LABEL = { skeleton: '骨架', outline: '轮廓（可填充）',
+                      inverted: '标准字形（拓片已反转）' };
 
   // 一屏最多先画这么多字形，剩下的滚到底再画。
   // 全库 93,875 个字形一次性塞进 DOM 会把浏览器卡死（实测导航直接超时），
@@ -338,13 +339,19 @@ TEMPLATE = r"""<!DOCTYPE html>
   // 当时只有「相对路径 → raw.githubusercontent」两条路——前者必 404，后者在国内
   // 常常连不上，等于没有兜底，于是那格就永久空白。
   function retryPlan(rel) {
+    // **候选表**：rel 可能是「候选1|候选2」。反转变体只对一部分件有，
+    // 取不到时要能退回主文件——所以候选表是「变体路径 → 主文件路径」。
+    // 顺序：先把候选1的各源试完，再试候选2的各源。
     var plan = [];
-    if (isRemote(glyphBase)) { plan.push(glyphBase + rel + '?r=1'); }
-    REMOTE_BASES.forEach(function (b) {
-      if (b !== glyphBase) { plan.push(b + rel); }
-    });
-    GLYPH_BASES.forEach(function (b) {
-      if (!isRemote(b)) { plan.push(b + rel); }
+    String(rel).split('|').forEach(function (one) {
+      if (!one) { return; }
+      if (isRemote(glyphBase)) { plan.push(glyphBase + one + '?r=1'); }
+      REMOTE_BASES.forEach(function (b) {
+        if (b !== glyphBase) { plan.push(b + one); }
+      });
+      GLYPH_BASES.forEach(function (b) {
+        if (!isRemote(b)) { plan.push(b + one); }
+      });
     });
     return plan;
   }
@@ -385,8 +392,11 @@ TEMPLATE = r"""<!DOCTYPE html>
     return esc(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
   }
 
-  function svgURL(script, file, layer) {
-    return glyphBase + script + '/' + (layer === 'outline' ? 'outline/' : '') + file;
+  // 变体子目录：轮廓层在 outline/，拓片反转变体在 inverted/。
+  function variantDir(layer) {
+    if (layer === 'outline') { return 'outline/'; }
+    if (layer === 'inverted') { return 'inverted/'; }
+    return '';
   }
 
   function tabCount(script) {
@@ -396,10 +406,25 @@ TEMPLATE = r"""<!DOCTYPE html>
     return ext ? ext.codepoint_count + ' 外链' : '0';
   }
 
+  function cellPaths(script, row, layer) {
+    // 主文件（拓片原样）
+    var main = script + '/' + row.file;
+    if (layer === 'outline') { return [script + '/outline/' + row.file]; }
+    if (layer === 'inverted') {
+      // 反转变体只对「质检通过」的件有；没有的那件**保留拓片原样**——
+      // 这一格仍用主文件，不是空格。
+      if (row.inv) { return [script + '/inverted/' + row.file, main]; }
+      return [main];
+    }
+    return [main];
+  }
+
   function cellHTML(script, row, layer) {
-    var url = svgURL(script, row.file, layer);
-    // data-g 存的是「层/子目录/文件名」——换前缀重试时要用它拼路径。
-    var rel = script + '/' + (layer === 'outline' ? 'outline/' : '') + row.file;
+    var paths = cellPaths(script, row, layer);
+    var url = glyphBase + paths[0];
+    // data-g 存的是候选相对路径（「层/子目录/文件名」，多个用 | 分隔）——
+    // 换前缀重试时要用它拼路径；候选表让变体取不到时能退回主文件。
+    var rel = paths.join('|');
     var title = '#' + row.i + ' ' + (row.c || '（无对应现代汉字）') +
                 '  U+' + (row.u || '—') + '  ' + (row.p || '') + '  [' + row.k + ']' +
                 (row.t ? '  ' + row.t : '') +
@@ -454,12 +479,20 @@ TEMPLATE = r"""<!DOCTYPE html>
     }
 
     var hasOutline = !!(DATA.__outline && DATA.__outline[script]);
+    var invCount = (DATA.__inverted && DATA.__inverted[script]) || 0;
     var seg = '';
-    if (hasOutline) {
+    if (hasOutline || invCount) {
       seg = '<div class="seg" role="group" aria-label="字形层">' +
-            '<button type="button" data-layer="skeleton" aria-pressed="true">骨架</button>' +
-            '<button type="button" data-layer="outline" aria-pressed="false">轮廓（可填充）</button>' +
-            '</div>';
+            '<button type="button" data-layer="skeleton" aria-pressed="true">骨架</button>';
+      if (hasOutline) {
+        seg += '<button type="button" data-layer="outline" aria-pressed="false">轮廓（可填充）</button>';
+      }
+      if (invCount) {
+        // 反转变体不是每件都有（质检不过的保留拓片原样），所以标件数。
+        seg += '<button type="button" data-layer="inverted" aria-pressed="false">标准字形（' +
+               invCount + ' 件已反转）</button>';
+      }
+      seg += '</div>';
     }
     // 筛选：金文与隶书层「一字多形」，同一个字在不同时代各有一条，
     // 按时代筛才看得出字形怎么随时间变。
@@ -704,6 +737,7 @@ def main(argv=None) -> int:
 
     data: dict[str, list[dict]] = {}
     outline: dict[str, bool] = {}
+    inverted: dict[str, int] = {}
     external: dict[str, dict] = {}
     total = 0
 
@@ -731,10 +765,19 @@ def main(argv=None) -> int:
                 raise SystemExit(f"缺字形文件：glyphs/{script}/{row['file']}")
         data[script] = rows
         outline[script] = (glyphs_root / script / "outline").is_dir()
+        # 反转变体：只对「质检通过」的件有。逐件标出来，页面才能在
+        # 「标准字形」层里对没有变体的件**保留拓片原样**。
+        inv_dir = glyphs_root / script / "inverted"
+        inv_names = ({p.name for p in inv_dir.glob("*.svg")}
+                     if inv_dir.is_dir() else set())
+        for row in rows:
+            row["inv"] = 1 if row["file"] in inv_names else 0
+        inverted[script] = sum(r["inv"] for r in rows)
         total += len(rows)
 
     payload_obj: dict[str, object] = dict(data)
     payload_obj["__outline"] = outline
+    payload_obj["__inverted"] = inverted
     payload_obj["__external"] = external
     payload = json.dumps(payload_obj, ensure_ascii=False, separators=(",", ":"))
     payload = payload.replace("<", "\\u003c")  # 数据里若出现 </script> 不会截断脚本
@@ -778,6 +821,8 @@ def main(argv=None) -> int:
         rows = data[script]
         flag = sum(1 for r in rows if r["flag"])
         extra = "（有轮廓层）" if outline.get(script) else ""
+        if inverted.get(script):
+            extra += f"（{inverted[script]} 件已反转）"
         print(f"  {zh:<4} {len(rows):>5} 个，待复核 {flag} 个 {extra}")
     return 0
 
