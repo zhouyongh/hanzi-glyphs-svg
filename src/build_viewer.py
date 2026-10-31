@@ -230,7 +230,7 @@ TEMPLATE = r"""<!DOCTYPE html>
     甲骨文字形来源为
     <a href="https://zenodo.org/records/22467946" target="_blank" rel="noopener">Zenodo 10.5281/zenodo.22467946</a>，
     依 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>
-    使用；金文、隶书、篆书与甲骨拓片摹本来自汉典（zdic.net）「书法」实例，
+    使用；金文、隶书、篆书、楚文字与甲骨拓片摹本来自汉典（zdic.net）「书法」实例，
     依其《服务条款》第四条以
     <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a>
     释出；楷书、行书、草书、宋体、黑体六层是从 OFL 开源字体提取的轮廓，依
