@@ -309,7 +309,9 @@ hanzi-glyphs-svg/
     bronze/                  金文字形（汉典矢量件 + 小学堂描摹件）+ index.csv
     seal/                    篆书字形 + index.csv + external.csv（全量码位登记表）
     clerical/                隶书字形 + index.csv + pending-xxt.csv（小學堂批次待补清单）
-    chu/                     楚文字形 + index.csv + books.csv（文献代号对照表）+ books_xxt.csv（小學堂出處表对照）+ staged.csv（未发布登记）
+    chu/                     楚文字形 + index.csv + books.csv（文献代号对照表）+ books_xxt.csv（小學堂出處表对照）+ staged.csv（未发布登记）+ README.md
+    chuanchao/               傳抄古文字字形 + index.csv + books.csv / books_xxt.csv（文献代号对照）+ README.md
+    qinwenzi/                秦系简牘字形 + index.csv + books.csv（文献代号对照）+ README.md
     kaishu/ xingshu/ caoshu/ 现代书体（OFL）：字形 + index.csv + OFL.txt + SOURCE.md
     songti/ songti-tc/ heiti-hk/
   src/                       脚本：导入 / 抽取 / 派生 / 校验 / 生成浏览页
