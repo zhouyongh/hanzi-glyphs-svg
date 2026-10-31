@@ -50,6 +50,28 @@ DBS = {
 
 FIELDS = ["code", "corpus_full", "script_belong", "include", "reason", "evidence"]
 
+#: **漢典那边有、小學堂出處表没有**的源書代号。
+#:
+#: 傳抄层的收录闸门按 `book_code` 判，两边的代号是两套体系：
+#: 漢典「傳抄古文字」栏的 21 个代号里，「說籀」「汗目」「石附」「石補」
+#: **小學堂出處表一个都没有**（其余 17 个两边对得上）。
+#: 这四个是漢典对《傳抄古文字編》所引書目的代号，收录闸门不认识它们
+#: 就得把 839 条矢量件全部挡在层外——那是**误挡**，不是该挡的。
+#:
+#: **各代号具体指哪部书未证实**（见 `src/fetch_zdic_glyphs.py` 的
+#: `CHUANCHAO_BOOK_CODES` 注释），按仓库惯例**一律按上游原文记**，
+#: 不替它猜：`corpus_full` 留空，层里的 `source_book` 就保留这个代号
+#: （见 `import_glyph_layer.py` 的 `load_book_map`）。
+#: 「查不到就不编」比「编一个像样的书名」好。
+EXTRA_BOOKS: dict[str, list[tuple[str, str]]] = {
+    "chuanchao": [
+        ("說籀", "https://www.zdic.net/hans/%E3%91%82/chuanchao"),
+        ("汗目", "https://www.zdic.net/hans/%E3%90%BA/chuanchao"),
+        ("石附", "https://www.zdic.net/hans/%E7%9F%B3/chuanchao"),
+        ("石補", "https://www.zdic.net/hans/%E7%9F%B3/chuanchao"),
+    ],
+}
+
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="按小學堂出處表生成层的文献对照表")
@@ -100,6 +122,23 @@ def main(argv: list[str] | None = None) -> int:
                     continue
                 by_code[code] = entry
                 rows.append(entry)
+
+    # 漢典那边有、小學堂出處表没有的代号：补进来，否则收录闸门会误挡。
+    for code, url in EXTRA_BOOKS.get(db, []):
+        if code in by_code:
+            continue
+        entry = {
+            "code": code,
+            "corpus_full": "",
+            "script_belong": layer,
+            "include": "yes",
+            "reason": (base_note + "漢典「傳抄古文字」栏的源書代号，"
+                       "小學堂出處表没有这一项；各代号具体指哪部书未证实，"
+                       "按上游原文记代号，不代它猜"),
+            "evidence": f"{url}（2026-10-31 取回）",
+        }
+        by_code[code] = entry
+        rows.append(entry)
 
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8", newline="") as fh:

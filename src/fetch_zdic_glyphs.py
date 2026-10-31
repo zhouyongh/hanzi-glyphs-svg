@@ -357,6 +357,14 @@ CHU_PART_RE = re.compile(r"^(\([^)]*\))?\.?([\u3400-\u9fff]+)?")
 CHU_BASE_BOOK = "《楚系簡帛文字編》"
 CHU_BASE_PAGES_RE = re.compile(r"頁[.．]?\s*行[：:]\s*([^；]+)")
 
+# 傳抄古文层的摹本底本：《傳抄古文字編》（徐在國主編，綫裝書局）。
+# **冊頁.行** 的粒度與楚系的「頁.行」不同——它帶冊次（上/下），
+# 所以两层的 ``source_base_pages`` 格式不一样，路线 D 反查时按层各用自己的底本名。
+CHUANCHAO_BASE_BOOK = "《傳抄古文字編》"
+# 冊頁.行 与 頁.行 是两种写法：楚系写「頁.行：1.3、8.4」，
+# 傳抄写「冊頁.行：上1.2、下1031.3」。两种都要认，否則傳抄层一条也取不到。
+CHUANCHAO_BASE_PAGES_RE = re.compile(r"冊?頁[.．]?\s*行[：:]\s*([^；]+)")
+
 
 def chu_base_pages(references: str) -> str:
     """从字级参考书目里取出《楚系簡帛文字編》那一条的页.行。
@@ -364,12 +372,26 @@ def chu_base_pages(references: str) -> str:
     找不到就返回空串——不猜。取不到说明这个字在楚系摹本底本里没有定位，
     空着比编一个页码诚实。
     """
+    return _base_pages_of(references, CHU_BASE_BOOK, CHU_BASE_PAGES_RE)
+
+
+def chuanchao_base_pages(references: str) -> str:
+    """从字级参考书目里取出《傳抄古文字編》那一条的冊頁.行。
+
+    傳抄古文层的摹本底本是《傳抄古文字編》（徐在國主編），字在书里的位置
+    记成「冊頁.行」（帶冊次）。找不到就返回空串——不猜。
+    """
+    return _base_pages_of(references, CHUANCHAO_BASE_BOOK, CHUANCHAO_BASE_PAGES_RE)
+
+
+def _base_pages_of(references: str, book: str, pattern: re.Pattern) -> str:
+    """从字级参考书目里取出指定底本那一条的页.行。"""
     if not references:
         return ""
     for entry in str(references).split("；"):
-        if CHU_BASE_BOOK not in entry:
+        if book not in entry:
             continue
-        m = CHU_BASE_PAGES_RE.search(entry)
+        m = pattern.search(entry)
         if m:
             return m.group(1).strip()
     return ""
@@ -911,6 +933,15 @@ def main(argv: list[str] | None = None) -> int:
                         item["source_base_pages"] = base
                     else:
                         item.pop("source_base_pages", None)
+                elif kind_name == "chuanchao":
+                    # 傳抄古文层的摹本底本是《傳抄古文字編》，粒度是「冊頁.行」。
+                    base = chuanchao_base_pages(str(item.get("source_references") or ""))
+                    if base != str(item.get("source_base_pages") or ""):
+                        changed += 1
+                    if base:
+                        item["source_base_pages"] = base
+                    else:
+                        item.pop("source_base_pages", None)
                 continue
             book = flat(" ".join(x for x in (parts["artifact"], parts["number"]) if x))
             if item.get("period") != parts["era"] or item.get("source_book") != book:
@@ -1170,6 +1201,8 @@ def main(argv: list[str] | None = None) -> int:
                     record["source_references"] = "；".join(inst["references"])
                     if kind == "chuwenzi":
                         record["source_base_pages"] = chu_base_pages(record["source_references"])
+                    elif kind == "chuanchao":
+                        record["source_base_pages"] = chuanchao_base_pages(record["source_references"])
                 # 双 caption 页：副题记按上游原文与「主题记去掉现代字前缀」
                 # 完全一致（回源抽样 571 个实例，58 个双 caption 页零例外），
                 # 所以只记**页面上是双 caption** 这一个事实，不重复存一遍文本。

@@ -113,10 +113,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--staged-csv-out", type=Path, default=None,
                         help="把未收录登记表再写一份到这个路径（如 glyphs/chu/staged.csv）。"
                              "**只登记表，字形本体不进层**——将来另立层时按登记表回源取用即可。")
+    parser.add_argument("--clean", action="store_true",
+                        help="合并前先清空输出目录里的旧字形文件。输出目录是**本轮合并的产物目录**，"
+                             "上一轮的残留会让「同名不同内容」的判定把旧文件当成这一轮的字形——"
+                             "判错一次就是一次假冲突（反过来说，把旧文件当成同一件字形放行更糟："
+                             "两条记录会指向同一个文件）。")
     args = parser.parse_args(argv)
 
     out_dir = args.out.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+    if args.clean:
+        removed = 0
+        for old in out_dir.glob("*.svg"):
+            old.unlink()
+            removed += 1
+        if removed:
+            print(f"清理输出目录: 删除 {removed} 个上一轮的字形文件（--clean）")
 
     base: dict = {}
     merged: dict[str, dict] = {}

@@ -308,14 +308,24 @@ def sha256_file(path: Path) -> str:
 
 
 def merge_provenance(path: Path, new_records: list[dict], layer: str) -> tuple[int, int]:
+    """把轮廓层的记录并进 provenance.jsonl。
+
+    **本层按「路径」认，不按 layer 认。** ``layer="outline"`` 有两个意思：
+    甲骨骨架转出来的**轮廓**，和**位图描摹件**（小學堂批次的派生件）。
+    两者都是「派生件」，但**位置不同**：轮廓在 ``glyphs/oracle/outline/`` 下，
+    描摹件在层目录里。用 layer 认本层会把描摹件的出处记录整批抹掉——
+    那些字形还在层里，出处却没了，正好撞上「无出处，不入仓库」这条硬规则。
+    """
     kept = []
+    prefix = "glyphs/oracle/outline/"
     if path.exists():
         for line in path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line:
                 continue
             record = json.loads(line)
-            if record.get("script") == "oracle" and record.get("layer") == layer:
+            if (record.get("script") == "oracle"
+                    and str(record.get("path") or "").startswith(prefix)):
                 continue
             kept.append(record)
     merged = kept + new_records
@@ -480,6 +490,15 @@ def main(argv=None) -> int:
     if not args.dry_run:
         kept, total = merge_provenance(prov_path, records, "outline")
         print(f"provenance.jsonl: 保留其他记录 {kept} 条，写入后共 {total} 条")
+        # **清掉孤儿轮廓**：条目号重排后，旧的轮廓文件名全部作废。
+        # 留着就是「有文件、无出处记录」的孤儿字形（导入的 --prune 只清层目录下的
+        # *.svg，不动子目录）。
+        wanted = {rec["path"].rsplit("/", 1)[-1] for rec in records}
+        stale = [p for p in out_dir.glob("*.svg") if p.name not in wanted]
+        for p in stale:
+            p.unlink()
+        if stale:
+            print(f"孤儿轮廓     : 删除 {len(stale)} 个（条目号重排后旧文件名作废）")
 
     print(f"轮廓文件   : {len(records)} 个 -> glyphs/oracle/outline/<glyph_id>.svg")
     print(f"扩过 viewBox: {len(expanded_viewbox)} 个"

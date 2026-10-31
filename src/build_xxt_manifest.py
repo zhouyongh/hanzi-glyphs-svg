@@ -55,6 +55,10 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+# 时代词表与时代归一**直接用漢典抓取器的那一套**（``fetch_zdic_glyphs``）——
+# 两边用同一个函数，桶键才谈得上是同一个桶。不另抄一份正则。
+from fetch_zdic_glyphs import canonical_era, find_era  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 
 # 小學堂各库的脚本名（合并/入库用的 script 字段）
@@ -66,6 +70,14 @@ DB_SCRIPT = {
     "jinwen": "bronze",
     "lishu": "clerical",
     "xiaozhuan": "xiaozhuan",
+}
+
+# 各库的**摹本底本**（路线 D 反查身份时，底本页.行要认它）。
+# 楚系层的摹本底本是《楚系簡帛文字編》，傳抄層是《傳抄古文字編》——
+# 两者的页.行体系不同（前者「頁.行」，后者「冊頁.行」帶冊次），不能混用。
+DB_BASE_BOOK = {
+    "chuwenzi": "楚系簡帛文字編",
+    "chuanchao": "傳抄古文字編",
 }
 
 ATTRIBUTION = ("字形图来自小学堂（中央研究院數位文化中心）古文字資料庫，"
@@ -152,11 +164,249 @@ def resolve_literature(short: str, books_rows: dict[str, dict]) -> tuple[str, di
     return best, books_rows.get(best)
 
 
-def strip_variant(v: str, codes: list[str]) -> str:
-    """漢典 variant = 異體字（一个）+ 出處簡號。
+# 出處簡號末尾的時代詞。隸變庫的寫法是「曹全碑 東漢」這類「碑名 + 时代」。
+# 「孫吳」「新莽」「三國吳」实测也出现在隸變庫的簡號裡（「吳谷朗碑 孫吳」「新嘉量 新莽」），
+# 漏了它們時代後缀就剥不掉，文档名帶著後缀去對方层永遠對不上。
+ERA_SUFFIX_RE = re.compile(
+    r"\s+(東漢至魏晉|三國吳|孫吳|東漢|西漢|新莽|東晉|西晉|曹魏|蜀漢|戰國|秦|漢|晉|魏|隋|唐|宋|元|明|清)\s*$")
+# 編號：末尾的數字 / 點 / 字母組合（「秦51」「上351.2」「日甲131背」）。
+NUM_TAIL_RE = re.compile(r"^(.*?)((?:\d+)?[.．]?[0-9A-Za-z]*[上下正反]?)$")
 
-    出處簡號 = 文獻標識 + 編號，編號必以數字或點開頭。切點因此唯一確定。
-    為什麼不能只看「已知標識前綴」：異體字本身也可能是漢字，而且可能**恰好**
+
+def split_source_short(short: str) -> tuple[str, str, str]:
+    """出處簡號 → (文獻名, 編號, 時代)。
+
+    拆不出編號時**編號留空**——不猜。用途是拿「文獻名」去**对方层**找同名的文献：
+    隸變庫的出處表只列 33 種，碑刻类一个没有，但漢典 clerical 层記的就是碑名本身。
+    """
+    s = (short or "").strip()
+    era = ""
+    m = ERA_SUFFIX_RE.search(s)
+    if m:
+        era = m.group(1)
+        s = s[:m.start()].strip()
+    m2 = NUM_TAIL_RE.match(s)
+    if m2 and m2.group(1):
+        return m2.group(1).strip(), m2.group(2), era
+    return s, "", era
+
+
+def match_zdic_book(name: str, number: str,
+                    zdic_books: dict[str, str]) -> tuple[str, str]:
+    """在**对方层**的 ``source_book`` 里找同一件材料，返回 (文献名, 对方层的原始值)。
+
+    两边是**同一套簡號体系**——小學堂的「睡.封95 秦」与漢典 clerical 层的「睡.封95」
+    指同一条；差在三处：对方常不带時代后缀、编号写法偶有出入、部分号对方没收。
+    所以接合点依次是：
+
+    1. 把编号拼回去**全等**（「定縣竹簡13」→ 「定縣竹簡13」）；
+    2. 编号拼回去对不上、但文献名本身在对方层（对方没收那一号）；
+    3. 文献名是对方某个 source_book 的**前缀**（「定縣竹簡」← 「定縣竹簡10」）——
+       这时取回对方那条、把它的编号剥掉，得到**文献名级**的出处。
+
+    「对不上」多数不是缺出处，而是**粒度不同**：对方层记的是逐条编号，
+    小學堂给的簡號只到文献名。实测隸變庫 24,841 條里，这样能接上 23,786 條（95.8%）。
+    """
+    if number:
+        for cand in (name + number, name + "." + number):
+            if cand in zdic_books:
+                return name, zdic_books[cand]
+    if name in zdic_books:
+        return name, zdic_books[name]
+    hit = ""
+    for k in zdic_books:
+        if k.startswith(name) and (not hit or len(k) < len(hit)):
+            hit = k
+    if hit:
+        # 对方那条带编号（「定縣竹簡10」）→ 剥掉编号，留文献名级出处。
+        m = NUM_TAIL_RE.match(hit)
+        doc = m.group(1).strip() if (m and m.group(1)) else hit
+        return doc, zdic_books[hit]
+    return "", ""
+
+
+# ---------------------------------------------------------------------------
+# 分桶维度：**与现有层同一套口径**
+#
+# 现有层是怎么分桶的（实测 glyphs/<层>/index.csv）：
+#
+#   clerical / bronze → 每 (现代字, **时代**) 1 条，每字 6 / 8 条
+#                       時代值就是 index.csv 的 period 列
+#                       （bronze 25 种、clerical 11 种 + 空）
+#   oracle            → 每 (现代字, **著錄號+組**) 1 条，每字 8 条
+#                       也就是 source_book 列（「菁3.1 賓組」）
+#   chu / chuanchao / qinwenzi → 每 (现代字, **文献**) 1 条，每字 ≤5 条
+#
+# 小學堂的簡號与漢典层是**同一套体系**，所以能拆到同一个桶键：
+#   clerical：「曹全碑 東漢」                → 时代「東漢」
+#   bronze ：「毛公鼎 西周晚期 集成2841」    → 时代「西周晚期」、编号「集成2841」
+#   oracle ：「菁3.1 合10405 賓組」          → 著錄號+組「菁3.1 賓組」、编号「合10405」
+#
+# 时代词表**从现有层的 period 列取**，不另抄一份——两边用同一张表，
+# 才谈得上「规则统一」。
+# ---------------------------------------------------------------------------
+
+BUCKET_MODES = ("book", "era", "oracle")
+
+#: 描摹保真的**单条**门槛：低于这个 IoU 的描摹件判失败，不进层。
+#: 与 ``src/check_glyphs.py --trace-fidelity`` 的判据一致（那里也是硬闸）。
+TRACE_IOU_FAIL = 0.93
+
+#: 层名 → (分桶维度, 每字上限)。**与现有层同一套**。
+LAYER_RULES: dict[str, tuple[str, int]] = {
+    "chu": ("book", 5),
+    "chuanchao": ("book", 5),
+    "qinwenzi": ("book", 5),
+    "xiaozhuan": ("book", 5),
+    "clerical": ("era", 6),
+    "bronze": ("era", 8),
+    "oracle": ("oracle", 8),
+}
+
+#: 层 → 桶键按什么算：``doc`` = 按文献（时代 / 著錄號+組 / 文献代号）；
+#: ``shape`` = 按**字形键**。
+#:
+#: 甲骨层是 ``shape``——实测它同一著錄下**可以有多条摹本**
+#: （「菁1.1合6057賓組」有两个字形：42_F4F2 与 42_F4F3），
+#: 它的唯一键是 **(现代字, 字形键)**（10,213 条漢典记录里 0 重复），
+#: 每字最多 8 条。按文献分桶会把这些摹本误判成重复。
+LAYER_BUCKET_BY: dict[str, str] = {
+    "oracle": "shape",
+}
+
+#: 金文簡號末尾的「集成NNNN」（《殷周金文集成》著錄號）。
+JICHENG_RE = re.compile(r"\s*集成\s*\d+\s*$")
+#: 甲骨簡號中间的「合NNNN」（《甲骨文合集》著錄號）。
+HE_RE = re.compile(r"\s+合\s*\d+")
+
+
+def era_vocab_of(index_path: Path | None) -> list[str]:
+    """现有层的 ``period`` 列 → 时代词表（长度倒序，最长优先匹配）。"""
+    vocab: list[str] = []
+    if not index_path or not index_path.is_file():
+        return vocab
+    with index_path.open("r", encoding="utf-8-sig", newline="") as fh:
+        for row in csv.DictReader(fh):
+            p = (row.get("period") or "").strip()
+            if p and p not in vocab:
+                vocab.append(p)
+    vocab.sort(key=len, reverse=True)
+    return vocab
+
+
+def split_source_fields(short: str, mode: str, era_vocab: list[str]) -> tuple[str, str, str, str]:
+    """出處簡號 → (文献名, 编号, 时代, 分桶键)。**按层同一套口径**。
+
+    - ``book``   → (简号原文, "", "", "")：文献与分桶由文献代号表决定
+    - ``era``    → 金文「毛公鼎 西周晚期 集成2841」→ ("毛公鼎", "集成2841", "西周晚期", "西周晚期")
+    - ``oracle`` → 甲骨「菁3.1 合10405 賓組」→ ("菁3.1 賓組", "合10405", "", "菁3.1 賓組")
+
+    时代认不出来就退到**文献名本身**当桶键（漢典那边叫「器名 + 编号」）：
+    印谱（《漢印徵》）、器名紧贴时代没切开的那批都落在这儿。
+
+    **时代怎么认。** 先用漢典抓取器的 ``find_era``（它认的是「最后一段就是时代」
+    或「时代后面跟着编号」这两种形状）；它认不出的时候退到**词元比对**——
+    拿现有层 ``period`` 列里的时代词表逐个词元比，认得出就用。
+    词表从现有层取，两边用同一张表，才谈得上「规则统一」。
+    """
+    s = (short or "").strip()
+    if mode == "book":
+        return s, "", "", ""
+    if mode == "oracle":
+        m = HE_RE.search(s)
+        number = ""
+        if m:
+            number = m.group(0).strip()
+            s = HE_RE.sub(" ", s)
+        doc = re.sub(r"\s+", " ", s).strip()
+        return doc, number, "", doc
+    # mode == "era"
+    span = _find_era_span(s, era_vocab)
+    if span is None:
+        return s, "", "", _material(s, "")
+    era_raw, start, end = span
+    era = canonical_era(era_raw)
+    doc = s[:start].strip()
+    number = s[end:].strip()
+    return doc, number, era, (era or _material(doc, number))
+
+
+def _material(doc: str, number: str) -> str:
+    """文献名 + 编号 → **材料键**（去掉所有空白，两边的写法差异就抹平了）。
+
+    漢典的题记里没有空格（「㐭老子乙前93下西漢」），小學堂的簡號有
+    （「老子甲5 西漢」）；去掉空白之后两边才能对上。
+    """
+    return re.sub(r"\s+", "", (doc or "") + (number or ""))
+
+
+def _find_era_span(s: str, era_vocab: list[str]) -> tuple[str, int, int] | None:
+    """在簡號里定位时代 → (原样时代, 起点, 终点)。找不到返回 None。"""
+    hit = find_era(s)
+    if hit:
+        return hit
+    if not era_vocab:
+        return None
+    # 词元比对：整个词元就是时代，或词元以某个时代开头（「東漢至魏晉」）。
+    offset = 0
+    for token in s.split(" "):
+        start = s.find(token, offset)
+        if start < 0:
+            continue
+        offset = start + len(token)
+        if token in era_vocab:
+            return token, start, start + len(token)
+        for e in era_vocab:
+            if len(e) >= 2 and token.startswith(e):
+                return e, start, start + len(e)
+    return None
+
+
+def bucket_of_zdic_row(row: dict, mode: str, bucket_by: str = "doc") -> str:
+    """现有层的一行 → 它的桶键（与 ``split_source_fields`` 的第四项同一口径）。
+
+    **与漢典抓取器的 ``era_bucket`` 同一个规则**：有时代就用归一后的时代，
+    没有时代就退到「器名 + 编号」。时代归一也用同一个 ``canonical_era``。
+
+    ``bucket_by="shape"`` 时桶键改用**字形键**（``source_id``）——
+    甲骨层是这一档：同一著錄下**可以有多条摹本**
+    （「菁1.1合6057賓組」有两个字形：42_F4F2 与 42_F4F3），
+    它的唯一键是 **(现代字, 字形键)**，按文献分桶会把这些摹本误判成重复。
+    """
+    if bucket_by == "shape":
+        return (row.get("source_id") or "").strip()
+    if mode == "era":
+        period = (row.get("period") or "").strip()
+        if period:
+            return canonical_era(period)
+        return ((row.get("source_book") or "").strip()
+                + (row.get("source_number") or "").strip())
+    if mode == "oracle":
+        return (row.get("source_book") or "").strip()
+    return (row.get("book_code") or "").strip()
+
+
+def _confidence_of(sel: dict | None, idrec: dict | None, provisional: bool) -> str:
+    """这条记录的身份可信度（写进 provenance 的 ``identity_confidence``）。
+
+    词表见 AGENTS.md：``""`` / ``base-page`` / ``seal-slot`` /
+    ``base-page+seal-slot`` / ``base-page∩seal-slot`` / ``shape-key`` / ``pua-slot``。
+
+    - 临时身份 → ``pua-slot``；
+    - 由反查表补回 → 用反查表那一档（``base-page`` 等）；
+    - 由**字形键**定出（漢典层这个字形只挂一个现代字）→ ``shape-key``。
+    """
+    if provisional:
+        return "pua-slot"
+    if idrec:
+        return str(idrec.get("confidence", "") or "")
+    if sel and str(sel.get("identity_confidence") or "") == "shape-key":
+        return "shape-key"
+    return ""
+
+
+def strip_variant(v: str, codes: list[str]) -> str:
+    """漢典 variant = 異體字（一个）+ 出處簡號。    為什麼不能只看「已知標識前綴」：異體字本身也可能是漢字，而且可能**恰好**
     是一個文獻代號（異體字「上」+ 出處「帛乙6.4」= 「上帛乙6.4」）。
     """
     v = (v or "").strip()
@@ -176,17 +426,26 @@ def strip_variant(v: str, codes: list[str]) -> str:
     return v
 
 
-def base_pages_of(references: list[str]) -> tuple[str, str]:
+def base_pages_of(references: list[str], base_book: str = "") -> tuple[str, str]:
     """從「相關索引」裡拆出 (底本页.行, 底本清單)。
 
-    底本页.行取《楚系簡帛文字編》那條——它是楚系層的**摹本底本**，粒度與漢典層的
-    ``source_base_pages`` 一致（實測 53/53 逐條相同）。底本清單則是全部相關索引。
+    底本页.行取**该层的摹本底本**那條——楚系層是《楚系簡帛文字編》，
+    傳抄層是《傳抄古文字編》。粒度與漢典層的 ``source_base_pages`` 一致
+    （實測 53/53 逐條相同）。底本清單則是全部相關索引。
+
+    ``base_book`` 留空時按楚系底本處理（老接口的默認值）。
+
+    **只认指定底本那一条。** 同一份字頭的相關索引里还列着《睡虎地秦簡文字編》
+    《傳抄古文字編》等别的底本，粒度不同，混进来会错配：
+    實測楚系層有 14 條字頭的相關索引里《睡虎地秦簡文字編》排在《楚系簡帛文字編》
+    之前，取錯了就配不上漢典層（漢典層的 ``source_base_pages`` 从不出现那些值）。
     """
     pages = ""
     refs = list(references)
+    books = (base_book,) if base_book else ("楚系簡帛文字編",)
     for item in references:
-        if "楚系簡帛文字編" in item or "睡虎地秦簡文字編" in item:
-            m = re.search(r"頁[.．]?行[：:]\s*([^\s，,；;]+)", item)
+        if any(b in item for b in books):
+            m = re.search(r"冊?頁[.．]?行[：:]\s*([^\s，,；;]+)", item)
             if m:
                 pages = m.group(1)
                 break
@@ -206,28 +465,55 @@ def main(argv: list[str] | None = None) -> int:
                     help="层的文献对照表（glyphs/<层>/books.csv）：用来把文献代号换成"
                          "与漢典层**同一粒度**的全称，避免两边的分桶口径不一致")
     ap.add_argument("--zdic-index", type=Path, default=None,
-                    help="漢典层 index.csv：用来对齐異體字与识别重复")
+                    help="漢典层 index.csv：用来对齐異體字与识别重复。"
+                         "**优先用 --zdic-manifest**（合并时用的同一份基线）——"
+                         "拿层现在的 index.csv 当基线会把上一轮并进来的小學堂批次"
+                         "判成重复，清单就空了")
+    ap.add_argument("--zdic-manifest", type=Path, default=None,
+                    help="漢典侧的**基线清单**（重建清单或抓取器的原始输出）："
+                         "判「层里有没有这一条」用它，与合并阶段同一份")
     ap.add_argument("--identity-map", type=Path, default=None,
                     help="私用區身份反查表（resolve_pua_identity.py 的输出）："
                          "给私用區字頭补回真漢字碼位")
+    ap.add_argument("--selection", type=Path, default=None,
+                    help="取图阶段的选取记录（plan_xxt_fetch.py --out-selection）："
+                         "**按同一份选择走**——分桶规则与每字上限是在取图阶段算的，"
+                         "清单阶段不再另挑一遍；记录里的身份也直接沿用")
     ap.add_argument("--font-allow", default=None,
                     help="只收字体名以此开头的实例（逗号分隔多个）。"
                          "**书体由字体决定，不由材料决定**：隸變库里同時有"
                          "「中研院隸書重文」與「中研院秦系簡牘文字重文」兩種字体，"
                          "前者是隸書字形（歸隸書層），後者是秦系字形（歸秦系層）")
+    ap.add_argument("--bucket", choices=BUCKET_MODES, default=None,
+                    help="分桶维度（默认按层定，见 LAYER_RULES）："
+                         "book = 每 (现代字, 文献) 1 条；"
+                         "era = 每 (现代字, 时代) 1 条（clerical / bronze 层）；"
+                         "oracle = 每 (现代字, 著錄號+組) 1 条（甲骨层）。"
+                         "era / oracle 两种**不从出處表取文献**，"
+                         "而是把簡號自己拆成 (文献名, 编号, 时代)——"
+                         "隸變库的出處表只列 31 种，靠它分桶会把九成实例丢掉")
     ap.add_argument("--out-dir", type=Path, default=None,
                     help="字形文件输出目录（默认 <out 所在目录>/files）")
+    ap.add_argument("--layer", default=None,
+                    help="目标层名（默认按库名推断）。一个库可能喂多个层"
+                         "（隸變库按字体拆成隸書层与秦系层），"
+                         "层名决定**分桶维度与每字上限**（见 LAYER_RULES）")
     args = ap.parse_args(argv)
 
     script = DB_SCRIPT.get(args.db)
     if not script:
         raise SystemExit(f"未知库：{args.db}")
 
+    # 分桶维度：**按现有层同一套口径**（LAYER_RULES）。
+    layer_name = args.layer or script
+    bucket_mode = args.bucket or LAYER_RULES.get(layer_name, ("book", 5))[0]
+    era_vocab = era_vocab_of(args.zdic_index) if bucket_mode == "era" else []
+
     books_rows: dict[str, dict] = {}
     codes: list[str] = []
     if args.books_xxt:
         books_rows, codes = load_books_xxt(args.books_xxt.resolve())
-        if not books_rows:
+        if not books_rows and bucket_mode == "book":
             raise SystemExit(f"出處表登记表读不出来：{args.books_xxt}")
 
     # 层的文献对照表（漢典口径的全称）：分桶要**两边同一粒度**，
@@ -242,13 +528,60 @@ def main(argv: list[str] | None = None) -> int:
 
     # 漢典层：字形键 → 行（用来定異體字、识别重复）
     z_by_shape: dict[str, list[dict]] = defaultdict(list)
-    if args.zdic_index and args.zdic_index.is_file():
+    # 漢典层的**文献名 → 全称**：自己的出處表對不上时的兜底。
+    # 隸變库的出處表只列 33 種（碑刻类一个没有），但漢典 clerical 层记的就是碑名本身。
+    zdic_books: dict[str, str] = {}
+    if args.zdic_manifest and args.zdic_manifest.is_file():
+        # **基线用漢典那份清单**（合并时用的同一份）。
+        #
+        # 为什么不能拿「层现在的 index.csv」当基线：**层里已经含有上一轮并进来的
+        # 小學堂批次**。拿它判「层里有没有这一条」，小學堂那批会把自己
+        # 判成重复 → 清单出来是空的（实测：20,674 条的层，重跑清单得 0 条）。
+        #
+        # 基线必须是**合并前的那份漢典清单**：
+        #   - 现有层（oracle / bronze / clerical）：重建清单（tmp/zdic/<层>-rebuilt）；
+        #   - 新层（傳抄）：抓取器的原始输出（tmp/zdic/chuanchao-full）。
+        # 合并阶段用的也是同一份，两边口径一致。
+        data = json.loads(args.zdic_manifest.read_text(encoding="utf-8"))
+        for g in data.get("glyphs", []):
+            sid = str(g.get("source_id") or "").strip()
+            if not sid:
+                continue
+            z_by_shape[sid].append(g)
+            name = str(g.get("source_book") or "").strip()
+            if name and name not in zdic_books:
+                zdic_books[name] = name
+    elif args.zdic_index and args.zdic_index.is_file():
         with args.zdic_index.open("r", encoding="utf-8-sig", newline="") as fh:
             for row in csv.DictReader(fh):
-                z_by_shape[row["source_id"]].append(row)
+                # 字形键为空的那几行（JGW 批当年就是这么记的）**不归到空键下**——
+                # 空键会把上千行堆在一起，看着像「一个字形挂着上千个现代字」。
+                sid = (row.get("source_id") or "").strip()
+                if sid:
+                    z_by_shape[sid].append(row)
+                name = (row.get("source_book") or "").strip()
+                if name and name not in zdic_books:
+                    zdic_books[name] = name
 
     instances = load_jsonl(args.index.resolve())
     traced = {r["shape_key"]: r for r in load_jsonl(args.traced.resolve())}
+
+    # **取图阶段的选取记录**（plan_xxt_fetch.py --out-selection）。
+    #
+    # 为什么必须用它：**分桶规则与每字上限是在取图阶段算的**——
+    # 「每 (现代字, 桶键) 留一条」「每字不超过上限」「重叠处漢典优先」，
+    # 这三条都在那张表里定死了。清单阶段若自己再算一遍，两边的口径就会分家
+    # （分桶维度、时代归一、每字上限都得各自维护一份），合并出来的层
+    # 就可能超限或重复。**按同一份选择走**，抓的时候选一套、入库用同一套。
+    #
+    # 表里同时记了每个字形的**身份**（现代字码位，或临时身份的槽位），
+    # 清单阶段直接用它，不再各算各的。
+    selection: dict[str, dict] = {}
+    if args.selection and args.selection.is_file():
+        for rec in load_jsonl(args.selection.resolve()):
+            sk = str(rec.get("shape_key") or "").strip()
+            if sk:
+                selection[sk] = rec
 
     # 字体闸门：**书体由字体决定**。同一库里可能混着不同书体的字形
     # （隸變库的「秦系簡牘」字体是秦系字形，不是隸書）。
@@ -279,6 +612,28 @@ def main(argv: list[str] | None = None) -> int:
         short = inst.get("source_short", "")
         site_char = inst.get("modern_char", "")
         xxt_char = site_char
+
+        # **取图阶段的选取结果说了算**：没被选中的字形不进这一层。
+        #
+        # 分桶规则（「每 (现代字, 桶键) 留一条」）与每字上限是在取图阶段算的；
+        # 清单阶段若自己再挑一遍，两边的口径就会分家，层里可能出现超限或重复。
+        sel = selection.get(shape_key)
+        if selection and sel is None:
+            stats["not_selected"] = stats.get("not_selected", 0) + 1
+            continue
+        sel_slot = ""
+        if sel is not None:
+            # 选取记录里的身份是**现代字码位**（或临时身份的槽位）。
+            ident = str(sel.get("identity") or "").strip()
+            if ident.startswith("slot:"):
+                # 临时身份：现代字未知，槽位是唯一线索。
+                xxt_char = ""
+                sel_slot = ident[5:]
+            elif ident:
+                try:
+                    xxt_char = chr(int(ident, 16))
+                except ValueError:
+                    xxt_char = ""
 
         # 私用區字頭 → 先試反查表補回真漢字身份。
         # 站点的楷書字頭只是**字體排版槽位**，不是 Unicode；
@@ -358,14 +713,53 @@ def main(argv: list[str] | None = None) -> int:
         if not tr:
             stats["no_traced"] += 1
             continue
-        lit, book = resolve_literature(short, books_rows)
-        if not lit or book is None:
-            stats["no_book"] += 1
-            crosswalk.append({
-                "kind": "unresolved_literature", "shape_key": shape_key,
-                "source_short": short, "note": "出處簡號對不上出處表，未收",
-            })
+        # **描摹保真不合格的件不入库**。
+        #
+        # 单条门槛（AGENTS.md）：IoU ≥ 0.97 合格、0.93–0.97 警戒、< 0.93 判失败。
+        # 判失败的件**不进这一层**——发布一件自己都测不出忠实度的描摹件，
+        # 等于把「忠实于原字形」这句承诺打折。层级门槛（p05 ≥ 0.96、失败率 ≤ 1%）
+        # 是另一道闸：它管的是整层的成色，不替代单条闸。
+        iou = tr.get("iou")
+        if iou is not None and float(iou) < TRACE_IOU_FAIL:
+            stats["trace_iou_failed"] = stats.get("trace_iou_failed", 0) + 1
             continue
+        lit, book = resolve_literature(short, books_rows)
+        src_number = ""
+        src_era = ""
+        if bucket_mode == "book":
+            if not lit or book is None:
+                # **自己的出處表對不上，先查对方层。**
+                #
+                # 「對不上表」不等于「没出處」——隸變库实测：13,403 条對不上小學堂那 31 種的表，
+                # 但两边是**同一套簡號体系**（「睡.封95」两边写法一样），差的是粒度：
+                # 漢典 clerical 层记的是逐条编号（「定縣竹簡10」），小學堂的簡號只到文献名。
+                # 實測 24,841 條里这样能接上 23,786 條（95.8%），真正两边都沒有的只有 1,055 條。
+                # **兩邊都沒有才是不收**——那時登记在 crosswalk 里备查。
+                name, number, era = split_source_short(short)
+                doc, zbook = match_zdic_book(name, number, zdic_books)
+                if doc:
+                    lit = doc
+                    book = {"code": doc, "corpus_full": doc, "zdic_code": doc}
+                    stats["book_from_zdic"] = stats.get("book_from_zdic", 0) + 1
+                else:
+                    stats["no_book"] += 1
+                    crosswalk.append({
+                        "kind": "unresolved_literature", "shape_key": shape_key,
+                        "source_short": short,
+                        "note": "出處簡號對不上出處表，且对方层也没有同名文献，未收",
+                    })
+                    continue
+        else:
+            # **时代 / 著錄分桶**：文献、编号、时代都从簡號自己拆——
+            # 与 plan_xxt_fetch.py 的分桶用的是同一个函数（split_source_fields），
+            # 抓哪几张位图与入库时怎么记，必须是同一套口径。
+            doc, src_number, src_era, _bucket = split_source_fields(short, bucket_mode,
+                                                                   era_vocab)
+            if not doc:
+                stats["no_book"] += 1
+                continue
+            lit = doc
+            book = {"code": doc, "corpus_full": doc, "zdic_code": doc}
 
         # 新增：這對「现代字 + 字形」在漢典层沒有。
         # 字形在漢典层有（只是这个现代字身份沒有）時，小學堂的**楷書字頭是正字**，
@@ -403,18 +797,22 @@ def main(argv: list[str] | None = None) -> int:
 
         book_code = book.get("zdic_code", "") or lit
         number = short[len(book_code):].lstrip(".")
+        if bucket_mode != "book":
+            # 时代 / 著錄分桶：编号与时代都从簡號拆出来的，不按文献代号切。
+            number = src_number
         # 编号按**漢典文献代号**切，与漢典层同口径：
         # 「信2.018」→ 代号「信」→ 编号「2.018」；「郭.老甲.4」→ 代号「郭」→ 编号「老甲.4」。
         # （按小學堂的標識切會得到「018」，跟漢典層拼不起來。）
         # 全称优先取层的对照表（與漢典层同一粒度），對照表裡沒有才用出處表的全称
         corpus_full = books_csv.get(book_code) or book.get("corpus_full", "")
-        pages, refs = base_pages_of(inst.get("base_pages", []))
+        pages, refs = base_pages_of(inst.get("base_pages", []),
+                                    DB_BASE_BOOK.get(args.db, ""))
 
         item = {
             "file": rel_file,
             "modern_char": modern_char,
             "unicode": unicode,
-            "period": "",
+            "period": src_era,
             "variant": (f"{modern_char}{short}" if modern_source == "zdic-shape" else short),
             "source_book": corpus_full,
             "source_number": number,
@@ -442,11 +840,11 @@ def main(argv: list[str] | None = None) -> int:
             #   "seal-slot"             = 由說文小篆槽位反查
             #   "base-page+seal-slot"   = 两条路都给出且一致
             #   "base-page∩seal-slot"   = 页.行多候选，槽位落在候选里
+            #   "shape-key"             = 由字形键定出（漢典层这个字形只挂一个现代字）
             #   "pua-slot"              = 仍未定，临时身份（码位不是汉字码位）
-            "identity_confidence": ("pua-slot" if provisional else
-                                    (idrec.get("confidence", "") if idrec else "")),
+            "identity_confidence": _confidence_of(sel, idrec, provisional),
             # 槽位碼位：身份未定时它是唯一線索；身份是反查来的，它是旁证。
-            "modern_char_slot": (inst.get("modern_char_slot", "")
+            "modern_char_slot": ((sel_slot or str(inst.get("modern_char_slot") or ""))
                                  if (provisional or idrec) else ""),
             "modifications": tr.get("modifications", ""),
             "literature": lit,
@@ -463,8 +861,11 @@ def main(argv: list[str] | None = None) -> int:
         stats["new_source" if zrows else "new_shape"] += 1
 
     manifest = {
-        # kind = 上游库的栏目名（与漢典清单同名，合并器要求两边一致）
-        "kind": args.db,
+        # kind = **书体（层名）**：与漢典清单同名，合并器要求两边一致。
+        # **不是库名**——库名与层名不是一回事（「jinwen」这个库喂的是「bronze」层，
+        # 「lishu」喂的是「clerical」层）。写错合并器会直接报错：
+        # 「要合并的清单书体不一致」。
+        "kind": layer_name,
         # script = 本仓库的层名（入库时用；合并后的清单取**第一份**的顶层字段）
         "script": script,
         "layer": "outline",
