@@ -11,11 +11,13 @@
 
 | 书体 | 目录 | 数量 | 许可 |
 |------|------|------|------|
-| 甲骨文 Oracle bone script | `glyphs/oracle/` | **10,213** 个拓片摹本 + **1,203** 个骨架 + **1,203** 个轮廓 | **CC0 1.0**（摹本）+ **CC BY 4.0**（骨架/轮廓） |
-| 金文 Bronze script | `glyphs/bronze/` | **8,290** 个字形 | **CC0 1.0**（无义务） |
+| 甲骨文 Oracle bone script | `glyphs/oracle/` | **13,956** 个字形（10,213 拓片摹本 + 2,540 小学堂描摹件 + 1,203 骨架；另有 1,203 个派生轮廓） | **CC0 1.0**（摹本与描摹件）+ **CC BY 4.0**（骨架/轮廓） |
+| 金文 Bronze script | `glyphs/bronze/` | **11,691** 个字形（汉典矢量件 8,290 + 小学堂位图描摹件 3,401） | **CC0 1.0**（无义务） |
 | 篆书 Seal script | `glyphs/seal/` | **10,591** 个字形 | **CC0 1.0**（无义务） |
-| 隶书 Clerical script | `glyphs/clerical/` | **11,947** 个字形 | **CC0 1.0**（无义务） |
+| 隶书 Clerical script | `glyphs/clerical/` | **12,036** 个字形（汉典矢量件 10,224 + 小学堂位图描摹件 1,812） | **CC0 1.0**（无义务） |
 | 楚文字 Chu script | `glyphs/chu/` | **11,039** 个字形 | **CC0 1.0**（无义务） |
+| 傳抄古文字 Chuanchao | `glyphs/chuanchao/` | **20,444** 个字形（漢典矢量件 12,975 + 小学堂位图描摹件 7,469） | **CC0 1.0**（无义务） |
+| 秦系简牘 Qin bamboo slips | `glyphs/qinwenzi/` | **3,708** 个字形（汉典矢量件 1,594 + 小学堂位图描摹件 2,114） | **CC0 1.0**（无义务） |
 | 楷书 Regular script | `glyphs/kaishu/` | **6,763** 个字形 | **OFL 1.1** |
 | 行书 Running script | `glyphs/xingshu/` | **6,763** 个字形 | **OFL 1.1** |
 | 草书 Cursive script | `glyphs/caoshu/` | **6,763** 个字形 | **OFL 1.1** |
@@ -25,7 +27,7 @@
 | 篆书全量码位登记表 | `glyphs/seal/external.csv` | **11,328** 个码位（不含字形，只登记指针） | 见「许可」 |
 | 楚文献出处对照 | `glyphs/chu/books.csv`、`glyphs/chu/books_xxt.csv` | 文献代号 → 全称、归属、收录与否 | **CC0 1.0**（汉典 + 中研院小學堂） |
 
-合计 **151,835** 条字形记录（含 1,203 个派生轮廓）。
+合计 **182,017** 条字形记录（含 1,203 个派生轮廓）。
 
 ### 甲骨文（JGW 批 CC BY 4.0 + 汉典摹本 CC0 1.0）
 
@@ -38,14 +40,17 @@
 
 同一目录里另有 **10,213** 个汉典（zdic.net）的拓片摹本，依其《服务条款》第四条以 **CC0 1.0** 释出。
 题记逐件带拓片号、《甲骨文合集》合号与卜辞组别（如「乙3400 / 合1285 / 賓組」）。
-两批同目录，靠 `glyphs/provenance/oracle.jsonl` 的 `license` 与 `source_dataset` 区分，
+另有 **2,540** 个来自中研院「小學堂」甲骨庫的位图描摹件（上游原件是位图，本地 SVG 是派生件）。
+三批同目录，靠 `glyphs/provenance/oracle.jsonl` 的 `license` 与 `source_dataset` 区分，
 `index.csv` 里靠 `char_form` 列区分（JGW 批有值）。
 
 ### 金文（CC0 1.0）
 
-来自汉典「书法」金文实例，**8,290** 条。题记为器名 + 集成号 + 时代
+来自汉典「书法」金文实例 **8,290** 条，另有中研院「小學堂」金文库的位图描摹件 **3,401** 条，
+合计 **11,691** 条。题记为器名 + 集成号 + 时代
 （如「毛公鼎 集成2838 西周中期」），底本是青铜器拓片。
 同一个现代字在不同器物、不同时代各收一条（26 个时代桶），拼起来是字形演变链。
+每一批内部「每字每时代一条」，每字最多 8 条（整层口径）。
 
 ### 篆书（CC0 1.0）
 
@@ -56,9 +61,20 @@
 
 ### 隶书（CC0 1.0）
 
-来自汉典「书法」隶书实例，**11,947** 条。题记为碑帖名或简号 + 时代
-（如「睡.日甲111背 秦」「武梁祠畫象題字」），底本为汉碑、印谱与秦汉简牍。
-同样每字每时代一条（12 个时代桶）。
+来自汉典「书法」隶书实例 **10,224** 条，另有中研院「小學堂」隸變庫的位图描摹件 **1,812** 条，
+合计 **12,036** 条。题记为碑帖名或简号 + 时代
+（如「曹全碑 東漢」「武梁祠畫象題字」），底本为汉碑、印谱与秦汉简牍。
+同样每字每时代一条（12 个时代桶），每字最多 6 条。
+**书体由字体决定，不由材料决定**：这一层原来还混着 **1,723** 个秦系字体
+（「中研院秦系簡牘文字重文*」）的字形，那是归类错误——已移到 `glyphs/qinwenzi/`。
+
+**小學堂批次还没抓完**：这一批计划收 2,408 条，已入库 1,812 条，
+**还差 565 张位图**——取图端点当前不可用：`xiaoxue.iis.sinica.edu.tw` 对本机所在地区
+返回「Access Restricted」，`char.iis.sinica.edu.tw` 改版后旧渲染路由
+`/ImageText2/ShowImage.ashx` 已下线（新的 `/API/Render` 只服务缺字系統，对小學堂的私用區槽位渲出空白）。
+**这 565 件记在 [`glyphs/clerical/pending-xxt.csv`](glyphs/clerical/pending-xxt.csv) 里**：
+逐条给出字形键、现代字、出处，外加一条可直接打开的上游取图地址。
+端点恢复（或换个能访问的出口）时按该清单补抓、重跑合并即可，已入库的部分不受影响。
 
 ### 楚文字（CC0 1.0）
 
@@ -80,6 +96,38 @@
 **2026-10-31 已从小學堂「楚系簡帛」出處表取到这六个代号的文献全称**，
 并据此重导了本层：`source_book` 改记全称，字形文件、条目号与文献分桶均未变。
 键规则、出处链条与复跑命令见 [glyphs/chu/README.md](glyphs/chu/README.md)。
+
+### 傳抄古文字与秦系简牘（CC0 1.0）
+
+这两个层是**新层**，材料与现有层不同：傳抄古文字是「漢以後歷代輾轉抄寫的先秦文字」，
+秦系简牘是睡虎地秦簡一路的简牍文字。**书体由字体决定，不由材料决定**——
+同一个库里混着不同书体的字形，字体名就是判据。
+
+| 层 | 来源 | 字形数 | 键 |
+|---|---|---|---|
+| `glyphs/chuanchao/` | 漢典「傳抄古文」矢量件 **12,975** + 小學堂位图描摹件 **7,469** | **20,444** | 本仓库条目号 |
+| `glyphs/qinwenzi/` | 漢典「隶书」栏里的秦系矢量件 **1,594** + 小學堂「秦系簡牘」位图描摹件 **2,114** | **3,708** | 本仓库条目号 |
+
+**傳抄层**按**源書代号**分桶（题记里的「海」「汗」「說」「說籀」……）——
+傳抄古文的题记里**没有时代**（它是歷代轉抄的，本身就没有单一时代），
+每个源書最多收一条、每字最多 5 条。两边的文献代号是**两套体系**：
+漢典有「說籀」「汗目」「石附」「石補」而小學堂沒有；小學堂有 119 个碑刻类代号而漢典沒出過——
+所以层里有两张对照表（`books.csv` 漢典口径 / `books_xxt.csv` 小學堂口径）。
+
+**秦系层**有两批来源：漢典「书法」栏里的**秦系字体**矢量件（原先被歸在隸書层里，
+按「书体由字体决定」归位过来），與小學堂「秦系簡牘」库的位图描摹件。
+两层字形键空间同构，同一键时**漢典矢量件優先**（合并器内建），
+所以有 1,056 件被漢典的矢量件顶掉了小學堂的描摹件——**渲染更忠实，出处也更完整**。
+按秦系层自己的规矩收：每（现代字, 文献代号）只留一条、每字最多 5 条。
+
+**秦系层**的现代字身份有一部分**定不下来**（小學堂只給字體排版槽位碼位，落在私用區）。
+这类记录**不丢弃**，但 `modern_char` 与 `unicode` **都留空**，
+身份线索记在 `identity_confidence` 与 `modern_char_slot` 两个字段里——
+**私用區码位不是汉字码位，不得当汉字引用**。
+
+键规则、出处链条与复跑命令见
+[glyphs/chuanchao/README.md](glyphs/chuanchao/README.md) 与
+[glyphs/qinwenzi/README.md](glyphs/qinwenzi/README.md)。
 
 ### 现代书体六层（OFL 1.1）
 
@@ -110,7 +158,7 @@
 - **本地预览**：直接双击 `viewer/index.html`（零依赖、无需服务器；索引数据已内联进页面，
   字形文件按需去取）
 
-页面按书体分 Tab：甲骨文 Tab 可预览全部 11,416 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
+页面按书体分 Tab：甲骨文 Tab 可预览全部 13,956 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
 可在「骨架」与「轮廓」两层之间切换，身份存疑的条目有黄框标记；金文、篆书、隶书三个 Tab
 各预览该层全部字形，悬停可看到出处作品、编号与时代（金文与隶书另有时代筛选）；
 **楚文字 Tab** 预览 11,039 个字形，悬停可看到出土文献与位置编号，并可按出土文献筛选；
@@ -238,8 +286,8 @@ python src/build_viewer.py
 | 范围 | 许可 |
 |------|------|
 | `glyphs/oracle/` 的 JGW 批（1,203 骨架 + 1,203 轮廓） | **CC BY 4.0**（全文见根 `LICENSE`） |
-| `glyphs/oracle/` 的汉典批（10,213 拓片摹本）、`glyphs/bronze/`、`glyphs/seal/`、`glyphs/clerical/`、`glyphs/chu/` | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
-| `glyphs/chu/books_xxt.csv`（中研院「小學堂」楚系簡帛庫出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.*` | **CC0 1.0**（全文见 `LICENSE-DOCS`；声明原文见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
+| `glyphs/oracle/` 的汉典批（10,213 拓片摹本）与秦系层里的漢典矢量件（1,594）、`glyphs/bronze/`、`glyphs/seal/`、`glyphs/clerical/`、`glyphs/chu/`、`glyphs/chuanchao/` 的漢典矢量件 | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
+| `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/` 的小學堂位图描摹件、`glyphs/chu/books_xxt.csv`（中研院「小學堂」楚系簡帛庫出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.*` | **CC0 1.0**（全文见 `LICENSE-DOCS`；声明原文见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/` | **SIL OFL 1.1**（各层目录的 `OFL.txt`） |
 | `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
@@ -279,10 +327,10 @@ hanzi-glyphs-svg/
   LICENSE-DATA               逐层数据/文档/代码许可说明
   glyphs/
     provenance/              出处记录，一层一个文件
-    oracle/                  甲骨文：JGW 骨架 + 汉典拓片摹本 + index.csv + outline/（派生）
-    bronze/                  金文字形 + index.csv
+    oracle/                  甲骨文：JGW 骨架 + 汉典拓片摹本 + 小学堂描摹件 + index.csv + outline/（派生）
+    bronze/                  金文字形（汉典矢量件 + 小学堂描摹件）+ index.csv
     seal/                    篆书字形 + index.csv + external.csv（全量码位登记表）
-    clerical/                隶书字形 + index.csv
+    clerical/                隶书字形 + index.csv + pending-xxt.csv（小學堂批次待补清单）
     chu/                     楚文字形 + index.csv + books.csv（文献代号对照表）+ books_xxt.csv（小學堂出處表对照）+ staged.csv（未发布登记）
     kaishu/ xingshu/ caoshu/ 现代书体（OFL）：字形 + index.csv + OFL.txt + SOURCE.md
     songti/ songti-tc/ heiti-hk/
