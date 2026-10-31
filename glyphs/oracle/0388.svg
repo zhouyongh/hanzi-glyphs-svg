@@ -1,13 +1,1 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.00 34.00">
-<path d="M 9 4 L 9 14" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 9 14 L 6 19 L 7 22 L 11 22 L 14 18 L 9 14" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 6 19 L 13 17" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 4 9 L 15 9" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 4 7 L 4 11" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 15 6 L 15 11" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 6 4 L 11 4" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 8 22 L 7 29" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 10 22 L 12 30" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 5 28 L 13 30" fill="none" stroke="#111" stroke-width="1.19" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<svg enable-background="new 0 0 400 400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"><path d="m31.63 185.94c7.79-3.66 15.63-3.75 23.36-2.01 14.34 3.23 28.73 3.02 43.28 2.13 36.9-2.27 73.78-5.78 110.81-4.56 17.46.57 34.9 2.01 52.32 3.4 2.33.19 4.62 2.28 6.7 3.8 1.7 1.25 3.23 1.9 5.18.81.27-.15.62-.15.91-.27 8.52-3.63 17.3-4.59 26.62-4.19 16.45.7 32.76 2 48.85 5.59 2.67.6 5.3 1.48 7.88 2.4 4.13 1.48 5.82 4.76 5.89 8.89.12 7.46-6.42 15.86-13.85 17.66-1.18.29-3.02-.25-3.94-1.09-4.77-4.37-10.44-5.73-16.66-5.72-31.47.05-62.94.22-94.41.01-7.16-.05-14.41-1-21.46-2.35-8.67-1.66-17.12-.25-25.6.7-4.29.48-8.18.04-11.98-1.78-2.51-1.2-4.97-1.22-7.67-.48-4.59 1.25-9.24 2.82-13.93 3.06-5.31.27-10.71-.61-16.03-1.27-8.09-1.01-16.12-2.72-24.24-3.26-5.2-.35-10.5.94-15.77 1.36-17.92 1.41-35.79 1.65-53.28-3.48-3.14-.92-6.19-2.15-9.23-3.37-.66-.26-1.47-1.03-1.58-1.67-.8-4.7-1.44-9.41-2.17-14.31z" fill="#010101"/></svg>

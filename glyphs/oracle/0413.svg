@@ -1,14 +1,1 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18.00 35.00">
-<path d="M 5 14 L 13 14" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 5 14 L 4 18 L 4 21 L 12 21 L 12 21" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 4 18 L 13 18" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 9 14 L 9 21" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 13 14 L 14 18 L 12 22" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 5 5 L 6 14" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 9 5 L 10 14" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 4 5 L 13 4" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 4 9 L 14 9" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 6 21 L 8 28 L 10 31" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 11 21 L 10 31" fill="none" stroke="#111" stroke-width="1.23" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<svg enable-background="new 0 0 400 400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"><path d="m202.28 366.4c-2.58-11.33-5.05-22.26-7.56-33.18-1.34-5.85-2.81-11.52-1.01-17.75.86-2.99-.36-6.71-1.04-10.01-1.16-5.61-.94-11.17-.02-16.73 1.13-6.83.14-13.52-1.06-20.19-2.14-11.89-1.37-23.88-1.49-35.85-.05-5.2-2.01-6.93-6.93-5.25-7.95 2.71-15.77.27-23.63-.17-.92-.05-2.08-1.66-2.53-2.79-.85-2.11-2.38-3.3-4.37-2.86-4.58 1-6.21-1.97-8.14-5.49 1.65-.21 3.05-.53 4.45-.55 4.74-.05 9.08-1.26 13.48-3.1 2.66-1.11 5.99-.72 9.03-.8 2.64-.07 5.3.34 7.94.23 5.9-.25 10-4.05 9.58-9.87-.81-11.4-2.24-22.75-3.42-34.12-.12-1.15-.56-2.37-.34-3.45 1.87-9.31-.83-18.35-1.61-27.48-1.4-16.34-1.2-32.64.66-48.89 1.44-12.64 3.49-25.16 1.08-37.94-1.06-5.61 1.08-10.38 5.84-13.87 1.65-1.21 2.73-1 4 .48 2.95 3.42 4.84 7.22 4.65 11.82-.19 4.55-.9 9.12-.69 13.64.5 10.89 1.92 21.76 2.04 32.65.19 17.16-.31 34.34-.72 51.5-.05 2.1-1.35 4.17-2.13 6.44 3.99 2.05 3.89 6.03 4 9.82.29 9.85.35 19.72.71 29.57.14 3.8.81 7.58 1.31 11.36.32 2.43 1.48 4.2 4.18 4.34 6.11.31 12.22.69 18.33.81 4.01.08 8.05-.55 12.04-.26 5.28.38 9.13 3.08 10.86 8.36.55 1.67.36 2.75-1.39 3.55-2.8 1.29-5.58 2-8.59.85-3.83-1.47-7.49-1.06-11.42.15-5.32 1.64-10.85 2.68-16.35 3.64-5.59.97-7.88 2.67-8.03 8.29-.13 4.71.31 9.56 1.37 14.15 2.17 9.33 3.63 18.64 3.36 28.28-.33 11.87-.27 23.76-.03 35.63.27 13.13 1.01 26.25 1.4 39.38.09 2.83-.11 5.74-.7 8.49-.79 3.54-3.27 5.82-7.11 7.17z" fill="#010104"/></svg>

@@ -1,15 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24.00 30.00">
-<path d="M 11 4 L 10 11 L 13 17 L 7 20 L 7 23 L 12 20 L 11 26" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 7 10 L 13 7" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 7 10 L 7 16" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 13 7 L 15 11 L 4 15" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 4 11 L 6 15" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 14 13 L 14 17" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 16 5 L 16 24" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 16 10 L 20 9" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 16 19 L 20 19" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 20 6 L 20 11" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 20 16 L 20 22" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 18 12 L 18 16" fill="none" stroke="#111" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="180.44 6.44 180.38 524.34">
+<path d="M 244.3 7.441 L 254.25 11.921 L 260.588 16.267 L 271.755 27.404 L 285.656 49.438 L 297.349 72.55 L 313.388 88.61 L 315.096 106.75 L 339.526 161.489 L 339.633 225.25 L 335.179 235.75 L 330.854 255.75 L 328.66 261.581 L 323.591 271.535 L 317.444 280.315 L 282.684 314.958 L 258.3 328.413 L 221.19 397.285 L 219.083 404.25 L 218.011 413.25 L 220.11 430.25 L 230.568 449.297 L 245.795 464.409 L 261.425 477.703 L 275.429 485.645 L 283.75 487.793 L 294.75 487.972 L 299.464 486.488 L 303.73 479.605 L 306.741 471.702 L 310.797 451.75 L 311.906 435.25 L 311.765 403.25 L 305.787 351.75 L 308.396 344.463 L 314.75 338.001 L 325.363 355.546 L 337.67 364.434 L 359.82 430.75 L 352.049 461.25 L 341.259 473.411 L 336.011 481.75 L 336.038 484.693 L 341.597 488.163 L 342.974 492.25 L 341.625 499.549 L 336.667 506.558 L 326.592 515.744 L 315.644 521.744 L 300.25 526.735 L 280.75 529.781 L 265.25 529.773 L 248.75 526.119 L 212.365 499.88 L 205.66 481.439 L 183.83 455.257 L 181.442 440.75 L 182.185 427.25 L 184.224 416.25 L 198.366 368.784 L 234.371 311.457 L 258.639 300.896 L 280.404 273.198 L 293.221 266.351 L 303.847 242.25 L 308.869 220.25 L 310.332 202.25 L 308.994 174.75 L 306.834 162.75 L 298.927 145.25 L 296.712 112.75 L 277.256 90.59 L 262.947 71.264 L 254.486 55.506 L 252.019 43.25 L 236.686 21.75 Z" fill="#111" fill-rule="nonzero" stroke="none"/>
 </svg>
