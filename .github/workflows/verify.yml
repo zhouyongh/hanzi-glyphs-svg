@@ -145,6 +145,34 @@ jobs:
       - name: 文档层件数对账
         run: python src/check_doc_numbers.py --repo-root .
 
+  rubbing:
+    name: 拓片反转变体核验
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 反转变体是**派生层**：它的每一个文件都得能由当前算法重跑出来。
+      # 这条检查守三件事：
+      # ① 逐件报告里的判定与目录里的文件一一对应（不多、不少）；
+      # ② 重跑一遍算法，判定不变（改了门槛却没重跑转换，这里会红）；
+      # ③ 重跑出来的文件与仓库里的**逐字节相同**（算法改了、转换没重跑，这里会红）。
+      # 光栅化要 numpy + Pillow。
+      - name: 安装光栅化依赖
+        run: python -m pip install --quiet --disable-pip-version-check numpy Pillow
+      - name: 复核反转变体层
+        run: python src/invert_rubbing_glyphs.py --repo-root . --mode check --recheck
+      # 反转变体也是**矢量字形**，跟主层一样要过体检（XML 合法、viewBox、
+      # 路径 bbox、退化检测）——它只是派生层，不该豁免。
+      # check_glyphs.py 逐目录取 *.svg（不递归），所以这里直接点目录。
+      - name: 反转变体层体检
+        run: |
+          for d in glyphs/*/inverted/; do
+            [ -d "$d" ] || continue
+            python src/check_glyphs.py "$d"
+          done
+
   xxtpending:
     name: 小學堂批次待补清单体检
     runs-on: ubuntu-latest
