@@ -9,7 +9,7 @@
 | 范围 | 许可 | 全文 |
 |------|------|------|
 | `glyphs/oracle/` 的 JGW 批（骨架 1,203 + 派生轮廓 1,203） | **CC BY 4.0** | 根 `LICENSE` |
-| `glyphs/oracle/` 的汉典批（拓片摹本 10,213）、`glyphs/bronze/`（金文 8,290）、`glyphs/clerical/`（隶书 10,224）、`glyphs/seal/`（篆书 10,591）、`glyphs/chu/`（楚文字 11,039）、`glyphs/chuanchao/`（傳抄古文字 12,975）、`glyphs/qinwenzi/` 的漢典秦系矢量件（1,594） | **CC0 1.0**（公有领域奉献，无义务） | `LICENSE-DOCS`；汉典的归公宣告原文见本文件 |
+| `glyphs/oracle/` 的汉典批（拓片摹本 10,213）、`glyphs/bronze/`（金文 8,290）、`glyphs/clerical/`（隶书 10,224）、`glyphs/seal/`（篆书 10,591）、`glyphs/chu/`（楚文字 11,039）、`glyphs/chuanchao/`（傳抄古文字 12,975）、`glyphs/qinwenzi/` 的漢典秦系矢量件（1,594） | **CC0 1.0** | `LICENSE-DOCS`；汉典的归公宣告原文见本文件 |
 | `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/` 的小學堂位图描摹件（秦系 2,114 + 傳抄 7,469 + 甲骨 2,540 + 金文 3,401 + 隸書 1,812） | **CC0 1.0**（中研院「小學堂」《版權聲明》） | `LICENSE-DOCS`；声明原文见本文件 |
 | `glyphs/chu/books_xxt.csv`（小學堂出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.{md,html}` | **CC0 1.0**（中研院「小學堂」《版權聲明》） | `LICENSE-DOCS`；声明原文见本文件 |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/`（现代书体六层 97,349 个字形、索引、出处记录） | **SIL OFL 1.1** | 各层目录的 `OFL.txt`（上游逐字节副本） |
@@ -17,8 +17,8 @@
 | `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC0 1.0 | `LICENSE-DOCS` |
 | `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列（指向上游） | **不适用**：本仓库未复制上游内容，只登记指针 | — |
-| `README.md`、`AGENTS.md`、本文件、各层 `index.csv` | CC0 1.0（无义务） | `LICENSE-DOCS` |
-| `src/**`、`viewer/**` | CC0 1.0（无义务） | `LICENSE-CODE` |
+| `README.md`、`AGENTS.md`、本文件、各层 `index.csv` | CC0 1.0 | `LICENSE-DOCS` |
+| `src/**`、`viewer/**` | CC0 1.0 | `LICENSE-CODE` |
 
 **根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 骨架与派生轮廓），
 **不覆盖** CC0、OFL 与 Unicode 授权的材料。下游须按各层许可分别使用。
@@ -274,7 +274,7 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 |---|---|
 | 来源 | 中研院「小學堂」漢字 字形資料庫 <https://xiaoxue.iis.sinica.edu.tw/> |
 | 许可声明页 | <https://xiaoxue.iis.sinica.edu.tw/License/License>（2026-10-30 取回） |
-| 许可 | **CC0 1.0**（公有领域奉献，无义务） — <https://creativecommons.org/publicdomain/zero/1.0/> |
+| 许可 | **CC0 1.0** — <https://creativecommons.org/publicdomain/zero/1.0/> |
 | 声明快照 | `src/licenses/xiaoxuetang-CC0-1.0-statement.md`（含原文引用）与 `.html`（逐字节副本） |
 
 ### 许可原文（照录，勿改写）
