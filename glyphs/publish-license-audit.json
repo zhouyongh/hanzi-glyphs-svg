@@ -1,44 +1,45 @@
 {
  "layers": {
   "bronze": {
-   "records": 8290,
+   "records": 11691,
    "licenses": {
-    "CC0-1.0": 8290
+    "CC0-1.0": 11691
    },
    "attribution_missing": 0,
-   "attribution_variants": 1,
+   "attribution_variants": 2,
    "modifications_missing": 0,
    "modification_kinds": {
-    "删除汉典近白水印": 8290
+    "删除汉典近白水印": 8290,
+    "骨架 → 可填充轮廓（派生层）": 3401
    },
-   "source_book_records": 8290,
+   "source_book_records": 11691,
    "source_books_top": [
     [
      "中山王昔鼎",
-     265
+     298
     ],
     [
      "中山王昔壺",
-     147
+     221
     ],
     [
      "毛公鼎",
-     117
+     136
     ],
     [
      "𦅫鎛",
-     110
-    ],
-    [
-     "𤼈鐘",
-     103
+     119
     ],
     [
      "秦公簋",
-     101
+     113
+    ],
+    [
+     "大盂鼎",
+     108
     ]
    ],
-   "source_references_records": 0,
+   "source_references_records": 3389,
    "has_license_copy": false,
    "license_copy_path": "",
    "license_copy_sha256": "",
@@ -142,45 +143,100 @@
    ],
    "ofl": {}
   },
-  "clerical": {
-   "records": 11947,
+  "chuanchao": {
+   "records": 20444,
    "licenses": {
-    "CC0-1.0": 11947
+    "CC0-1.0": 20444
    },
    "attribution_missing": 0,
-   "attribution_variants": 1,
+   "attribution_variants": 2,
    "modifications_missing": 0,
    "modification_kinds": {
-    "未改动（逐字节副本）": 11947
+    "未改动（逐字节副本）": 12975,
+    "骨架 → 可填充轮廓（派生层）": 7469
    },
-   "source_book_records": 11947,
+   "source_book_records": 20444,
+   "source_books_top": [
+    [
+     "杜從古：《集篆古文韻海》，《宛委別藏》選集影舊抄本三冊，1935年商務印書館依故宮博物院藏本影印。",
+     9707
+    ],
+    [
+     "夏竦：《古文四聲韻》，李零、劉新光整理：《汗簡 古文四聲韻》，中華書局1983年。",
+     3527
+    ],
+    [
+     "郭忠恕：《汗簡》，李零、劉新光整理：《汗簡 古文四聲韻》，中華書局1983年。",
+     2743
+    ],
+    [
+     "許慎：《說文解字》，影印清陳昌治刻本，中華書局1963年。",
+     1255
+    ],
+    [
+     "碧落碑，施安昌：《唐代石刻篆本》5－26頁，紫禁城出版社1987年。",
+     686
+    ],
+    [
+     "孫海波：《魏三字石經集錄》，民國二十六年（1937）石印本。",
+     515
+    ]
+   ],
+   "source_references_records": 20444,
+   "has_license_copy": false,
+   "license_copy_path": "",
+   "license_copy_sha256": "",
+   "has_source_md": false,
+   "has_readme": true,
+   "notices_mentions_layer": true,
+   "risk_note": "底本是徐在國《傳抄古文字編》（綫裝書局，2006），逐条记在 `source_references`。改以**小学堂**傳抄古文字資料庫为主源后，本地 SVG 是**位图自动描摹**的派生件，底本链条不变。",
+   "verdict": "⚠️ 可发布（有残余风险，须随附底本说明）",
+   "must_include": [
+    "**不得**因此追加使用限制（CC0 是放弃权利，不是许可别人加条件）",
+    "无强制署名义务（CC0 放弃权利而非授予许可）"
+   ],
+   "ofl": {}
+  },
+  "clerical": {
+   "records": 12036,
+   "licenses": {
+    "CC0-1.0": 12036
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 2,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "未改动（逐字节副本）": 10224,
+    "骨架 → 可填充轮廓（派生层）": 1812
+   },
+   "source_book_records": 12036,
    "source_books_top": [
     [
      "漢印徵",
-     1883
-    ],
-    [
-     "晉辟雍碑陰",
-     139
+     2220
     ],
     [
      "史晨碑",
-     133
+     180
+    ],
+    [
+     "晉辟雍碑陰",
+     152
     ],
     [
      "北海相景君銘",
-     104
+     138
+    ],
+    [
+     "曹全碑",
+     119
     ],
     [
      "漢印徵補",
-     100
-    ],
-    [
-     "華山廟碑",
-     100
+     116
     ]
    ],
-   "source_references_records": 0,
+   "source_references_records": 1811,
    "has_license_copy": false,
    "license_copy_path": "",
    "license_copy_sha256": "",
@@ -268,47 +324,47 @@
    }
   },
   "oracle": {
-   "records": 12619,
+   "records": 15159,
    "licenses": {
-    "CC-BY-4.0": 2406,
-    "CC0-1.0": 10213
+    "CC0-1.0": 12753,
+    "CC-BY-4.0": 2406
    },
    "attribution_missing": 0,
-   "attribution_variants": 2,
+   "attribution_variants": 3,
    "modifications_missing": 0,
    "modification_kinds": {
-    "未改动（逐字节副本）": 1203,
     "删除汉典近白水印": 10213,
-    "骨架 → 可填充轮廓（派生层）": 1203
+    "骨架 → 可填充轮廓（派生层）": 3743,
+    "未改动（逐字节副本）": 1203
    },
-   "source_book_records": 10213,
+   "source_book_records": 12753,
    "source_books_top": [
     [
      "菁3.1 賓組",
-     18
+     21
+    ],
+    [
+     "乙8896 子組",
+     17
     ],
     [
      "甲2121 賓組",
-     15
+     16
     ],
     [
      "菁5.1 賓組",
      14
     ],
     [
-     "乙8896 子組",
-     12
-    ],
-    [
      "乙7795 賓組",
-     10
+     13
     ],
     [
-     "甲903 歷組",
-     10
+     "甲2416 黃組",
+     11
     ]
    ],
-   "source_references_records": 0,
+   "source_references_records": 2540,
    "has_license_copy": false,
    "license_copy_path": "",
    "license_copy_sha256": "",
@@ -323,6 +379,60 @@
     "无强制署名义务（CC0 放弃权利而非授予许可）",
     "署名：作者、来源、许可、**并说明是否修改过**（§3(a)(1)）",
     "衍生作品须以**同一许可**（CC BY 4.0）分发（§3(a)(5)(B)）"
+   ],
+   "ofl": {}
+  },
+  "qinwenzi": {
+   "records": 3708,
+   "licenses": {
+    "CC0-1.0": 3708
+   },
+   "attribution_missing": 0,
+   "attribution_variants": 2,
+   "modifications_missing": 0,
+   "modification_kinds": {
+    "未改动（逐字节副本）": 1594,
+    "骨架 → 可填充轮廓（派生层）": 2114
+   },
+   "source_book_records": 3708,
+   "source_books_top": [
+    [
+     "《睡虎地秦墓竹簡‧日書甲種》",
+     845
+    ],
+    [
+     "《睡虎地秦墓竹簡‧秦律十八種》",
+     681
+    ],
+    [
+     "《睡虎地秦墓竹簡‧法律答問》",
+     506
+    ],
+    [
+     "《睡虎地秦墓竹簡‧日書乙種》",
+     464
+    ],
+    [
+     "《睡虎地秦墓竹簡‧為吏之道》",
+     364
+    ],
+    [
+     "《睡虎地秦墓竹簡‧封診式》",
+     279
+    ]
+   ],
+   "source_references_records": 3708,
+   "has_license_copy": false,
+   "license_copy_path": "",
+   "license_copy_sha256": "",
+   "has_source_md": false,
+   "has_readme": true,
+   "notices_mentions_layer": true,
+   "risk_note": "**小学堂批次**（中研院數位文化中心，CC0 1.0）：上游原件是位图，本地 SVG 是**位图自动描摹**的派生件（改动与工具记在 `modifications` / `transform`，保真指标记在 `trace_iou`）。底本是《睡虎地秦簡文字編》等出版物，**摹本底本的著作权不因 CC0 而消灭**。",
+   "verdict": "⚠️ 可发布（有残余风险，须随附底本说明）",
+   "must_include": [
+    "**不得**因此追加使用限制（CC0 是放弃权利，不是许可别人加条件）",
+    "无强制署名义务（CC0 放弃权利而非授予许可）"
    ],
    "ofl": {}
   },

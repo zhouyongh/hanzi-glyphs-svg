@@ -1,10 +1,1 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 23.00 36.00">
-<path d="M 10 4 L 11 23 L 5 30" fill="none" stroke="#111" stroke-width="1.26" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 11 22 L 19 32" fill="none" stroke="#111" stroke-width="1.26" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 4 17 L 9 12 L 18 16" fill="none" stroke="#111" stroke-width="1.26" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 6 5 L 6 9" fill="none" stroke="#111" stroke-width="1.26" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 12 5 L 17 9" fill="none" stroke="#111" stroke-width="1.26" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 6 19 L 4 25" fill="none" stroke="#111" stroke-width="1.26" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 14 19 L 17 24" fill="none" stroke="#111" stroke-width="1.26" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<svg enable-background="new 0 0 400 400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"><path d="m152.16 136.55c.99-3.58 1.39-7.46 3.08-10.67 4.36-8.3 8.81-16.45 15.78-23.23 6.17-6 11.37-13.14 16.21-20.3 5.5-8.13 6.53-17.48 5.16-27.16-.27-1.93-1.1-2.94-2.77-3.27-4.33-.87-8.66-1.82-13.04-2.36-5.28-.65-7.4-2.63-7.85-8.32 6.22-2.12 12.42-4.66 18.85-6.22 2.88-.7 6.24.77 9.39.94 9.09.49 18.21.67 27.29 1.28 4.4.3 8.83.99 13.09 2.1 2.12.55 3.89 2.44 6.33 4.05-6.23 3.67-12.1 4.79-18.11 5.34-5.96.55-11.12 2.74-14.94 7.42-.88 1.07-1.47 2.86-1.31 4.22 3.26 27.46 6.82 54.89 9.89 82.37.66 5.93-.59 12.05-.54 18.08.05 5.19-1.45 9.74-4.2 14.01-9.03 13.99-12.01 30.17-16.45 45.8-6.09 21.41-8.15 43.19-6.75 65.43 1.1 17.56 1.47 35.16 2.07 52.75.19 5.48.38 10.99.02 16.45-.28 4.24-2.56 7.76-6.17 10.61-3.97-5.88-5.68-12.41-6.4-19.12-2.19-20.33-4.36-40.66-6.14-61.02-3.38-38.59 1.47-75.92 18.09-111.29.66-1.4 1.69-2.68 2.79-3.79 7.3-7.35 11.36-15.69 9-26.39-.7-3.18-.59-6.54-.9-9.81-.58-6.16-.28-12.44-4.09-17.98-1.22-1.78-1.35-4.42-1.62-6.71-.42-3.44-2.43-5.27-5.51-6.23-2.92-.91-5.36-1.16-7.94 1.6-9.55 10.22-19.43 20.14-29.2 30.17-.58.59-1.2 1.15-1.8 1.72-.45-.16-.88-.32-1.31-.47z" fill="#010000"/></svg>
