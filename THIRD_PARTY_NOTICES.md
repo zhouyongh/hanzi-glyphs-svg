@@ -24,17 +24,6 @@
 
 ---
 
-## 采集来源（网站与数据集）
-
-| 来源 | 提供什么 | 许可 | 声明原文 |
-|---|---|---|---|
-| **汉典**（zdic.net） | 甲骨、金文、篆书、隶书、楚文字的逐字矢量字形（字页 `www.zdic.net`，实例图 `img.zdic.net`） | **CC0 1.0** | 本文件「篆书」一节照录了《服务条款》第四条「归公宣告」原文 |
-| **中央研究院「小學堂」汉字字形资料库**（xiaoxue.iis.sinica.edu.tw） | 各分辨率「字形圖片」与字形屬性資訊；本仓库楚层的文献全称取自它的出處表 | **CC0 1.0** | 见本文件「小學堂」一节照录的《版權聲明》原文 |
-| **Zenodo** —— *Oracle Bone Glyphs: Parametric Vector Dataset (v0.3)* | 1,203 个甲骨文字形的参数化矢量骨架 | **CC BY 4.0** | DOI `10.5281/zenodo.22467946` |
-| **Google Fonts**（github.com/google/fonts） | Ma Shan Zheng、Zhi Mang Xing、Liu Jian Mao Cao、Noto Serif SC/TC | **SIL OFL 1.1** | 各层目录的 `OFL.txt` |
-| **Chiron Fonts**（github.com/chiron-fonts/chiron-hei-hk） | Chiron Hei HK（黑体·港） | **SIL OFL 1.1** | `glyphs/heiti-hk/OFL.txt` |
-| **Unicode Consortium** | 篆书区块 U+3D000–U+3FC3F 与 `SealSources.txt` | **Unicode License v3** | 见本文件「Unicode 数据」一节 |
-
 ## 底本与作者
 
 字形是**摹本**，摹的是下列出版物。CC0 放弃的是**中研院／汉典自己**的权利，
