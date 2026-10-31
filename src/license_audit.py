@@ -99,12 +99,14 @@ LICENSE_RULES = {
 LAYER_TITLES = {
     "oracle": "甲骨文", "bronze": "金文", "seal": "篆书", "clerical": "隶书",
     "chu": "楚文字", "chuanchao": "傳抄古文",
+    "qinwenzi": "秦系簡牘", "xiaozhuan": "小篆·小学堂",
     "kaishu": "楷书", "xingshu": "行书", "caoshu": "草书",
     "songti": "宋体·简", "songti-tc": "宋体·繁", "heiti-hk": "黑体·港",
 }
 
 # 层的展示顺序（古文字 → 现代书体）
 LAYER_ORDER = ["oracle", "bronze", "seal", "clerical", "chu", "chuanchao",
+                "qinwenzi", "xiaozhuan",
                 "kaishu", "xingshu", "caoshu", "songti", "songti-tc", "heiti-hk"]
 
 # 各层已知的上游结构性风险（人工判定，脚本只负责把数据统计出来）
@@ -115,8 +117,21 @@ LAYER_RISK_NOTE = {
     "clerical": "同上，底本为《睡虎地秦简文字编》《秦汉魏晋篆隶字形表》等。",
     "seal": "同上，底本为《秦汉魏晋篆隶字形表》等。另有「開元小篆」上游只登记指针、不复制字形。",
     "chu": "链条**多一层**：原简帛 → 考古整理本 → 《楚系简帛文字编》摹本 → 汉典转录；"
-           "逐字形的摹本底本与页.行记在 `source_references`。",
-    "chuanchao": "底本是徐在國《傳抄古文字編》（綫裝書局，2006），逐条记在 `source_references`。",
+           "逐字形的摹本底本与页.行记在 `source_references`。"
+           "另有**小学堂批次**（中研院數位文化中心，CC0 1.0）：同为《楚系簡帛文字編》"
+           "摹本的字形圖片，本地 SVG 是**位图自动描摹**的派生件，改动与工具记在 "
+           "`modifications` / `transform`；底本链条与漢典批次相同。",
+    "chuanchao": "底本是徐在國《傳抄古文字編》（綫裝書局，2006），逐条记在 `source_references`。"
+                 "改以**小学堂**傳抄古文字資料庫为主源后，本地 SVG 是**位图自动描摹**的派生件，"
+                 "底本链条不变。",
+    "qinwenzi": "**小学堂批次**（中研院數位文化中心，CC0 1.0）：上游原件是位图，"
+                "本地 SVG 是**位图自动描摹**的派生件（改动与工具记在 `modifications` / `transform`，"
+                "保真指标记在 `trace_iou`）。底本是《睡虎地秦簡文字編》等出版物，"
+                "**摹本底本的著作权不因 CC0 而消灭**。",
+    "xiaozhuan": "**小学堂批次**（中研院數位文化中心，CC0 1.0）：上游原件是位图，"
+                 "本地 SVG 是**位图自动描摹**的派生件（改动与工具记在 `modifications` / `transform`，"
+                 "保真指标记在 `trace_iou`）。底本为《說文解字》等出版物，"
+                 "**底本著作权不因 CC0 而消灭**；与 `seal/`（漢典《說文》系）不是同一批材料。",
     "kaishu": "OFL 派生件（字体轮廓 → SVG），改动已声明；无底本链条。",
     "xingshu": "OFL 派生件（字体轮廓 → SVG），改动已声明；无底本链条。",
     "caoshu": "OFL 派生件（字体轮廓 → SVG），改动已声明；无底本链条。",
@@ -350,7 +365,10 @@ def build_markdown(layers: dict, ofl: dict) -> str:
         out.append(f"**本仓库怎么做：** {rule['note']}")
         out.append("")
 
-    out.append("## 残余风险：汉典五层的「摹本 + 矢量化」链条")
+    # 层数按实际统计，别写死——加一层就多一层，写死的数字会变成假话。
+    _chain_layers = [n for n in LAYER_ORDER
+                     if n in layers and layers[n].get("source_book_records")]
+    out.append(f"## 残余风险：汉典{len(_chain_layers)}层的「摹本 + 矢量化」链条")
     out.append("")
     out.append("汉典的 CC0 1.0 宣告放弃的是**汉典自己**的权利，"
                "**不消灭底本出版物的著作权**。本仓库的做法与甲骨层一致："

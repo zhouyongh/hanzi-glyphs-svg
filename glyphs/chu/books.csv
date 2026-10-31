@@ -1,0 +1,35 @@
+code,corpus_full,script_belong,include,reason,evidence
+郭,郭店楚簡,chu,yes,,湖北荊門郭店一號墓；1993 年出土；726 枚有字簡。《楚系簡帛文字編》凡例列「郭店楚墓竹簡」；https://baike.baidu.com/item/楚系简帛文字编/50459230
+包,包山楚簡,chu,yes,,湖北荊門包山二號墓；1987 年出土。百度百科「楚簡」列「湖北荊門包山楚簡 1987 年」；https://baike.baidu.com/item/楚简
+包牘,包山楚簡·竹牘,chu,yes,,包山楚墓出土木牘。《楚系簡帛文字編》增訂本收「竹牍」；https://baike.baidu.com/item/楚系简帛文字编/50459230
+包簽,包山楚簡·竹簽牌,chu,yes,,包山楚墓出土竹簽牌。《楚系簡帛文字編》增訂本收「竹簽牌」；https://baike.baidu.com/item/楚系简帛文字编/50459230
+上,上海博物館藏戰國楚竹書,chu,yes,,上海博物館藏；1994 年發表。《楚系簡帛文字編》凡例列「上海博物館藏戰國楚竹書(一)(二)」；https://baike.baidu.com/item/楚系简帛文字编/50459230
+上(1),上海博物館藏戰國楚竹書（一）,chu,yes,,同上；題記含冊次，如「上(1).孔.6」
+上(2),上海博物館藏戰國楚竹書（二）,chu,yes,,同上；題記含冊次與篇名，如「上(2).容.28」
+新甲,新蔡葛陵楚簡·甲組,chu,yes,,河南新蔡；1994 年發表。《楚系簡帛文字編》凡例列「河南新蔡葛陵楚墓竹簡」；https://baike.baidu.com/item/楚系简帛文字编/50459230
+新乙,新蔡葛陵楚簡·乙組,chu,yes,,同上
+新零,新蔡葛陵楚簡·零組,chu,yes,,同上
+曾,曾侯乙墓竹簡,chu,yes,,湖北隨州擂鼓墩；1978 年出土；240 餘枚。《楚系簡帛文字編》增訂本收「曾侯乙墓」；https://baike.baidu.com/item/楚简
+望,江陵望山楚簡,chu,yes,,湖北江陵望山一、二號墓。《望山一、二號墓竹簡釋文與考釋》簡稱「望山」；http://www.bsm.org.cn/?chujian/4282.html
+信,信陽長臺關楚簡,chu,yes,,河南信陽長臺關一號楚墓；1957 年出土。簡稱「信陽」；http://www.bsm.org.cn/?chujian/4282.html
+九,九店楚簡,chu,yes,,湖北荊門九店；1981—1989 年發掘。《楚系簡帛文字編》凡例列「九店楚簡」；https://baike.baidu.com/item/楚系简帛文字编/50459230
+天卜,天星觀卜筮祭禱簡,chu,yes,,湖北江陵天星觀一號墓。簡帛網〈天星觀「卜筮祭禱」簡釋文輯校〉明言《楚系簡帛文字編》中全部「天卜」類條文；http://www.bsm.org.cn/?chujian/4282.html
+仰,仰天湖楚簡,chu,yes,,長沙仰天湖第 25 號木槨墓（M167）；1953 年出土。題記編號即墓號（如「仰25.3」）；https://www.newton.com.tw/wiki/仰天湖楚簡
+牌,五里牌楚簡,chu,yes,,長沙五里牌 406 號楚墓；1951 年出土。題記編號即墓號（如「牌406.3」）；https://www.baike.com/wikiid/1517730972220918137
+帛甲,長沙楚帛書·甲篇,chu,yes,,長沙子午庫戰國楚墓。楚帛書依李零考釋分甲、乙、丙三篇；《楚系簡帛文字編》收「楚帛」；https://baike.baidu.com/item/楚系简帛文字编/50459230
+帛乙,長沙楚帛書·乙篇,chu,yes,,同上
+帛丙,長沙楚帛書·丙篇,chu,yes,,同上
+帛殘,長沙楚帛書·殘片,chu,yes,,小學堂楚系簡帛庫出處表（2026-10-31 取回；56 條）列「帛殘」= 長沙子彈庫楚帛書殘片，底本出《文物》1992 年第 11 期。漢典楚系欄無此代號，故此行只對小學堂資料生效；出處簡號與對照見 glyphs/chu/books_xxt.csv,https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference
+簽,楚墓出土竹簽牌,chu,yes,,《楚系簡帛文字編》增訂本收「竹簽牌」；https://baike.baidu.com/item/楚系简帛文字编/50459230
+磚,磚文（傳抄古文字編系統）,chuanchao,no,屬傳抄古文；另立傳抄古文層。材料不刪，登記在未發布清單裏,本倉既有傳抄古文源書代號表含「磚」（src/fetch_zdic_glyphs.py 的 CHUANCHAO_BOOK_CODES；據 3410 條題記實測）
+秦,秦系簡帛,qin,no,屬秦系簡帛；另立秦文字層。材料不刪，登記在未發布清單裏,漢典該字頁面參考文獻列《睡虎地秦簡文字編》《秦簡牘文字編》《秦簡墨書集成字形表》
+磚370,江陵磚瓦廠370號墓竹簡,chu,yes,**與漢典 chuwenzi 欄的「磚」不是同一件材料**：漢典的「磚」是傳抄古文字編的宋古文磚（歸傳抄層），小學堂楚系庫的「磚370」是江陵磚瓦廠370號墓出土的楚系竹簡，摹本出處《簡帛研究2001》廣西師範大學出版社2001年9月版,小學堂楚系簡帛庫出處表（2026-10-30 取回；56 條）列「磚370」= 江陵磚瓦廠370號墓竹簡；https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference
+秦1,江陵秦家嘴1號墓竹簡,chu,yes,**與漢典 chuwenzi 欄的「秦」不是同一件材料**：漢典的「秦」是睡虎地秦簡（歸秦系層），小學堂楚系庫的「秦1」是江陵秦家嘴1號墓出土的楚系竹簡，摹本底本《楚系簡帛文字編》湖北教育出版社1995年7月版,小學堂楚系簡帛庫出處表（2026-10-30 取回；56 條）列「秦1」= 江陵秦家嘴1號墓竹簡；https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference
+秦13,江陵秦家嘴13號墓竹簡,chu,yes,同「秦1」：江陵秦家嘴13號墓出土的楚系竹簡，摹本底本《楚系簡帛文字編》湖北教育出版社1995年7月版,小學堂楚系簡帛庫出處表（2026-10-30 取回；56 條）列「秦13」；https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference
+秦99,江陵秦家嘴99號墓竹簡,chu,yes,同「秦1」：江陵秦家嘴99號墓出土的楚系竹簡，摹本底本《楚系簡帛文字編》湖北教育出版社1995年7月版,小學堂楚系簡帛庫出處表（2026-10-30 取回；56 條）列「秦99」；https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference
+天策,江陵天星觀1號墓遣策簡,chu,yes,全稱取自小學堂楚系簡帛庫出處表（2026-10-31 取回；56 條）。摹本出處：楚系簡帛文字編 湖北教育出版社1995年7月版。歸屬已證實為楚系——漢典跨欄實測該代號只出現在「楚系簡帛」欄,https://www.zdic.net/hans/%E3%92%B3/chuwenzi（㒳 字頁；2026-10-29 實測：秦系簡牘 / 傳抄古文 / 隸書 / 篆書 / 金文 / 甲骨文欄均無此代號。複跑 python src/probe_zdic_book_tabs.py 天策 㒳）；小學堂出處表 https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference（2026-10-31 取回；出處簡號「天策」）
+香中大,香港中文大學文物館藏簡牘（甲、戰國楚簡）,chu,yes,全稱取自小學堂楚系簡帛庫出處表（2026-10-31 取回；56 條）。摹本出處：香港中文大學文物館藏簡牘 香港中文大學文物館出版社2001年版。歸屬已證實為楚系——漢典跨欄實測該代號只出現在「楚系簡帛」欄,https://www.zdic.net/hans/%E3%9D%90/chuwenzi（㝐 字頁；2026-10-29 跨欄實測。複跑 python src/probe_zdic_book_tabs.py 香中大 㝐）；小學堂出處表 https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference（2026-10-31 取回；出處簡號「香中大」）
+常,常德市德山夕陽坡1、2號墓竹簡,chu,yes,全稱取自小學堂楚系簡帛庫出處表（2026-10-31 取回；56 條；出處簡號作「常2」）。**「常」這個桶同時含 1 號墓與 2 號墓**——漢典層實測：編號首段 1 有 26 條、2 有 9 條，題記作「常1」「常2.1」，故全稱寫成兩座墓。摹本出處：楚史與楚文化研究 求索增刊1987年版。歸屬已證實為楚系——漢典跨欄實測該代號只出現在「楚系簡帛」欄,https://www.zdic.net/hans/%E3%B1%95/chuwenzi（㱕 字頁；2026-10-29 跨欄實測。複跑 python src/probe_zdic_book_tabs.py 常 㱕）；小學堂出處表 https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference（2026-10-31 取回）
+雨,江陵雨臺山21號墓竹律管墨書文字,chu,yes,全稱取自小學堂楚系簡帛庫出處表（2026-10-31 取回；56 條；出處簡號作「雨21」）。摹本出處：湖北出土商周文字輯證 武漢大學出版社1992年版。歸屬已證實為楚系——漢典跨欄實測該代號只出現在「楚系簡帛」欄,https://www.zdic.net/hans/%E4%B9%8B/chuwenzi（之 字頁；2026-10-29 跨欄實測。複跑 python src/probe_zdic_book_tabs.py 雨 之）；小學堂出處表 https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference（2026-10-31 取回）
+范,江陵范家坡27號墓竹簡,chu,yes,全稱取自小學堂楚系簡帛庫出處表（2026-10-31 取回；56 條；出處簡號作「范27」）。摹本出處：楚系簡帛文字編 湖北教育出版社1995年7月版。歸屬已證實為楚系——漢典跨欄實測該代號只出現在「楚系簡帛」欄,https://www.zdic.net/hans/%E3%A0%AF/chuwenzi（㠯 字頁；2026-10-29 跨欄實測。複跑 python src/probe_zdic_book_tabs.py 范 㠯）；小學堂出處表 https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference（2026-10-31 取回）
+馬,江陵馬山1號墓竹簡,chu,yes,全稱取自小學堂楚系簡帛庫出處表（2026-10-31 取回；56 條；出處簡號作「馬1」）。摹本出處：江陵馬山一號楚墓 文物出版社1985年2月版。歸屬已證實為楚系——漢典跨欄實測該代號只出現在「楚系簡帛」欄,https://www.zdic.net/hans/%E6%8F%80/chuwenzi（揀 字頁；2026-10-29 跨欄實測。複跑 python src/probe_zdic_book_tabs.py 馬 揀）；小學堂出處表 https://xiaoxue.iis.sinica.edu.tw/chuwenzi/Reference/Reference（2026-10-31 取回）

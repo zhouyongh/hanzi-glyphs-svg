@@ -16,7 +16,7 @@
 
 **为什么是汉典。** 汉典《服务条款》第四条：「汉典奉行 CC0 1.0 公约，将本站字词、
 古籍、诗词、**书法诸作**，悉数贡献天下，放弃著作专权及邻接法益，任人取用，以公无穷。」
-（<https://www.zdic.net/terms/>，2026-10-23 核验）。每个字有一页「书法」实例，
+（<https://www.zdic.net/terms/>，2026-10-30 核验）。每个字有一页「书法」实例，
 逐件标注**出处作品 + 编号 + 时代**，例如「日 戈厚作兄日辛簋 集成3665 商代晚期」。
 
 **一字多形，所以按实例选，不按字选。** 同一字在汉典有十几个到几十个实例
@@ -344,6 +344,37 @@ CHU_TAIL_FALLBACK_RE = re.compile(r"^([\u3400-\u9fff]{1,4})")
 CHU_PART_RE = re.compile(r"^(\([^)]*\))?\.?([\u3400-\u9fff]+)?")
 
 
+# 摹本底本的页.行定位。
+#
+# 汉典字页底部的「参考文献」段是**逐字**的，不是逐实例的：同一个字在汉典
+# 各书体栏下用到的底本各记一条，页.行是那个字在那本书里的位置。原文形如
+#   「《楚系簡帛文字編》（增訂本）（湖北教育出版社），頁.行：559.2；《睡虎地秦簡文字編》……」
+# 楚系簡帛栏的字形，摹本底本就是《楚系簡帛文字編》（增訂本），所以把那条
+# 单独抽出来记成 `source_base_pages`：
+#   —— 这条字形的摹本底本定位（**字级**：同字有多个实例时含各实例的页）。
+# 其余条目属于汉典别的书体栏（秦系簡牘 / 傳抄古文 / 隸書 / 篆書），
+# 留在 `source_references` 里备查，**不能**当成这条字形的底本定位。
+CHU_BASE_BOOK = "《楚系簡帛文字編》"
+CHU_BASE_PAGES_RE = re.compile(r"頁[.．]?\s*行[：:]\s*([^；]+)")
+
+
+def chu_base_pages(references: str) -> str:
+    """从字级参考书目里取出《楚系簡帛文字編》那一条的页.行。
+
+    找不到就返回空串——不猜。取不到说明这个字在楚系摹本底本里没有定位，
+    空着比编一个页码诚实。
+    """
+    if not references:
+        return ""
+    for entry in str(references).split("；"):
+        if CHU_BASE_BOOK not in entry:
+            continue
+        m = CHU_BASE_PAGES_RE.search(entry)
+        if m:
+            return m.group(1).strip()
+    return ""
+
+
 # 傳抄古文的源书代号表。
 #
 # **代号没有统一形状**：「海」「四」是一个字，「京一」「汗目」「說籀」是两个，
@@ -654,10 +685,12 @@ def pick_instances(instances: list[dict[str, str]], preference: list[str],
     时代分桶用归一后的时代名（「西周中期或晚期」并进「西周中期」）；
     桶按年代顺序排列（见 ``ERA_CHRONOLOGY``），年代顺序表里没有的桶按页面顺序排后面。
 
-    **``max_per_book`` > 0 时，每个源书代号最多取这么多个。**
-    给**没有时代维度**的书体用（傳抄古文）：它按时代分桶会退化成「每字只取一个」
+    **``max_per_book`` > 0 时，每个分桶维度最多取这么多个。**
+    给**没有时代维度**的书体用：它按时代分桶会退化成「每字只取一个」
     （题记里没有时代词，``era_bucket`` 只好拿「器名+编号」当桶，一个字一个桶），
-    按源书代号分桶才有「一字多形」的意思——同字在不同传抄源书里的不同写法。
+    按自己的维度分桶才有「一字多形」的意思——同字在不同来源里的不同写法。
+    **分桶维度按书体走**：楚文字按**出土文献**（《楚系简帛文字编》的文献代码），
+    傳抄古文按**源书代号**（徐在国《传抄古文字编》的代号）。
     """
     if not instances:
         return []
@@ -679,11 +712,26 @@ def pick_instances(instances: list[dict[str, str]], preference: list[str],
             return chosen
 
     if max_per_book > 0:
-        # 按**源书代号**分桶。桶序用页面上的原始顺序（没有年代序可用）。
+        # 按**分桶维度**分桶。**维度按书体走**：
+        # - 楚文字（chuwenzi）：分桶维度是**出土文献**（《楚系简帛文字编》的文献代码，
+        #   如「郭」「包」「上」「新甲」）。同一个字在不同简上写法不同，
+        #   这才拼得出演变链。
+        # - 傳抄古文（chuanchao）：分桶维度是**源书代号**（徐在国《传抄古文字编》的代号）。
+        # 两者题记格式不同、解析器也不同，用错解析器会把代号切错。
+        if kind == "chuwenzi":
+            def bucket_of(inst: dict[str, str]) -> str:
+                return parse_caption_chu(inst["detail"], modern_char)["book_code"]
+        elif kind == "chuanchao":
+            def bucket_of(inst: dict[str, str]) -> str:
+                return parse_caption_chuanchao(inst["detail"], modern_char)["book_code"]
+        else:
+            raise SystemExit(
+                f"--max-per-book 对书体 {kind!r} 不适用："
+                "只有楚文字（按出土文献）与傳抄古文（按源书）有可分桶的维度。")
+        # 桶序用页面上的原始顺序（没有年代序可用）。
         buckets: dict[str, list[dict[str, str]]] = {}
         for inst in instances:
-            code = parse_caption_chuanchao(inst["detail"], modern_char)["book_code"]
-            buckets.setdefault(code or "(未切出)", []).append(inst)
+            buckets.setdefault(bucket_of(inst) or "(未切出)", []).append(inst)
         order = list(buckets)
         return _pick_by_bucket(buckets, order, limit, max_per_book, take, chosen)
 
@@ -780,9 +828,10 @@ def main(argv: list[str] | None = None) -> int:
                              "配合 --per-char 用：--per-char 6 --max-per-era 1 "
                              "就是「六个不同时代各取一个」，而不是同一时代取六个。")
     parser.add_argument("--max-per-book", type=int, default=0,
-                        help="每个**源书代号**最多取几个实例（默认 0 = 不限）。"
-                             "给没有时代维度的书体用（傳抄古文）："
-                             "它按源书分桶才有「一字多形」的意义，"
+                        help="每个**分桶维度**最多取几个实例（默认 0 = 不限）。"
+                             "给没有时代维度的书体用："
+                             "楚文字按**出土文献**分桶（每个出土文献最多 1 条），"
+                             "傳抄古文按**源书代号**分桶；"
                              "按时代分桶会退化成「每字只取一个」。")
     parser.add_argument("--preference", default=None,
                         help="时代偏好，逗号分隔，按顺序命中（默认按书体内置）")
@@ -853,6 +902,15 @@ def main(argv: list[str] | None = None) -> int:
                 item["book_code"] = parts.get("book_code") or ""
                 item[part_field] = parts.get("part") or ""
                 item.pop(other_field, None)
+                if kind_name == "chuwenzi":
+                    # 摹本底本页.行：从已有的字级书目里派生，纯本地推导，不联网。
+                    base = chu_base_pages(str(item.get("source_references") or ""))
+                    if base != str(item.get("source_base_pages") or ""):
+                        changed += 1
+                    if base:
+                        item["source_base_pages"] = base
+                    else:
+                        item.pop("source_base_pages", None)
                 continue
             book = flat(" ".join(x for x in (parts["artifact"], parts["number"]) if x))
             if item.get("period") != parts["era"] or item.get("source_book") != book:
@@ -1061,6 +1119,8 @@ def main(argv: list[str] | None = None) -> int:
                             old.pop("book_part", None)
                         if inst.get("references"):
                             old["source_references"] = "；".join(inst["references"])
+                            if kind == "chuwenzi":
+                                old["source_base_pages"] = chu_base_pages(old["source_references"])
                         # 双 caption 页：副题记按上游原文与「主题记去掉现代字前缀」
                         # 完全一致（回源抽样 571 个实例，58 个双 caption 页零例外），
                         # 所以只记**页面上是双 caption** 这一个事实，不重复存一遍文本。
@@ -1104,9 +1164,12 @@ def main(argv: list[str] | None = None) -> int:
                     # 而它决定「哪个文本的哪个字」——出处精度要留住这一层。
                     record["book_part"] = parts["part"]
                 if inst.get("references"):
-                    # 摹本底本 + 页.行：汉典 CC0 放弃的是汉典自己的权利，
-                    # 不消灭这些摹本的著作权。链条要逐条记下来。
+                    # 字级参考书目：汉典字页底部的「参考文献」段是这个字
+                    # 在各书体栏下用到的全部底本，**不是**这一条实例的底本定位。
+                    # 摹本底本的页.行另记在 source_base_pages。
                     record["source_references"] = "；".join(inst["references"])
+                    if kind == "chuwenzi":
+                        record["source_base_pages"] = chu_base_pages(record["source_references"])
                 # 双 caption 页：副题记按上游原文与「主题记去掉现代字前缀」
                 # 完全一致（回源抽样 571 个实例，58 个双 caption 页零例外），
                 # 所以只记**页面上是双 caption** 这一个事实，不重复存一遍文本。
