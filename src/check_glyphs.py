@@ -6,6 +6,7 @@
 
     python src/check_glyphs.py glyphs/bronze glyphs/clerical
     python src/check_glyphs.py --repo-root .          # 检查全部书体层
+    python src/check_glyphs.py --trace-fidelity       # 描摹保真检查（另说）
 
 检查项：
 
@@ -15,11 +16,16 @@
 4. 外接盒不退化（宽高都大于画布的 2%），避免存进一堆空白或碎点。
 
 只看几何，不判断字形「像不像」——那要人眼看（浏览页就是给人看的）。
+
+**描摹保真检查**（``--trace-fidelity``）是另一件事：位图描摹出来的 SVG 是派生件，
+上游原件是位图，「像不像」可以**机检**——回光栅化后与上游位图的墨迹掩膜算 IoU。
+每件的 IoU 记在 provenance 的 ``trace_iou`` 里，这里按单条与层级两道门槛判定。
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import re
 import sys
@@ -292,12 +298,93 @@ def check_file(path: Path) -> str | None:
     return None
 
 
+def check_trace_fidelity(repo_root: Path) -> int:
+    """**描摹保真检查**：位图描摹出来的 SVG 是否忠实于上游位图。
+
+    位图 → SVG 的描摹件是**派生件**，上游原件是位图。仓库里记着每件的
+    ``trace_iou``（本地 SVG 回光栅化后与上游位图墨迹掩膜的 IoU），
+    这里按单条与层级两道门槛判定。
+
+    门槛（与 ``src/trace_xiaoxuetang_glyphs.py`` 的自检一致）：
+
+    - 单条：IoU ≥ 0.97 合格；0.93–0.97 记 warning；< 0.93 判失败；
+    - 层级：IoU 的 p05 ≥ 0.96，失败率 ≤ 1%。
+
+    **只查位图描摹件**（``transform`` 里带 marching-squares 的那些）。
+    甲骨层的 JGW 轮廓是**矢量转轮廓**，不是描摹件，没有 IoU 可言；
+    把它们混进来会把「没有指标」误判成「指标不合格」。
+    """
+    prov_dir = repo_root / "glyphs" / "provenance"
+    layers: dict[str, list[float]] = {}
+    missing: list[str] = []
+    for path in sorted(prov_dir.glob("*.jsonl")):
+        with path.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                rec = json.loads(line)
+                if rec.get("layer") != "outline":
+                    continue
+                transform = str(rec.get("transform") or "")
+                if "marching-squares" not in transform:
+                    continue      # 不是位图描摹件（如 JGW 的矢量转轮廓）
+                script = str(rec.get("script") or path.stem)
+                raw = rec.get("trace_iou")
+                if raw in (None, ""):
+                    missing.append(f"{script} {rec.get('path', '')}")
+                    continue
+                layers.setdefault(script, []).append(float(raw))
+
+    if not layers and not missing:
+        print("描摹保真      : 没有位图描摹件（仓库里还没这批数据）")
+        return 0
+
+    total_bad = 0
+    for script, scores in sorted(layers.items()):
+        scores.sort()
+        n = len(scores)
+        p05 = scores[max(0, int(round(0.05 * (n - 1))))]
+        worst = scores[0]
+        fails = [s for s in scores if s < 0.93]
+        warns = [s for s in scores if 0.93 <= s < 0.97]
+        bad = []
+        if worst < 0.93:
+            bad.append(f"最低 IoU={worst:.4f} < 0.93")
+        if p05 < 0.96:
+            bad.append(f"p05={p05:.4f} < 0.96")
+        if n and len(fails) / n > 0.01:
+            bad.append(f"失败率 {len(fails)}/{n} = {len(fails) / n:.2%} > 1%")
+        total_bad += len(bad)
+        print(f"{script}: 描摹件 {n} 个；最低 IoU={worst:.4f} p05={p05:.4f} "
+              f"中位={scores[n // 2]:.4f}；警戒 {len(warns)} / 失败 {len(fails)}")
+        for item in bad:
+            print("   !!", item)
+    if missing:
+        total_bad += len(missing)
+        print(f"!! 有 {len(missing)} 件描摹件**没有记 trace_iou**，无法核验保真度")
+        for item in missing[:10]:
+            print("   !!", item)
+        if len(missing) > 10:
+            print(f"   ... 另有 {len(missing) - 10} 件")
+    return total_bad
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="字形体检：画布、路径、退化")
     parser.add_argument("dirs", nargs="*", type=Path, help="要检查的字形目录")
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1],
                         help="配合 --repo-root 检查全部书体层")
+    parser.add_argument("--trace-fidelity", action="store_true",
+                        help="只跑描摹保真检查：读 provenance 里的 trace_iou，"
+                             "按单条/层级门槛判定位图描摹件是否忠实于上游位图")
     args = parser.parse_args(argv)
+
+    if args.trace_fidelity:
+        bad = check_trace_fidelity(args.repo_root.resolve())
+        print()
+        print(f"合计问题 : {bad}")
+        return 1 if bad else 0
 
     dirs = list(args.dirs)
     if not dirs:

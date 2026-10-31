@@ -28,6 +28,7 @@ from pathlib import Path
 # 仓库承认的层名。统计本身按 provenance 里的 (script, layer) 分组，
 # 这份清单只是给读代码的人一个「现在有哪些层」的参照。
 LAYERS = ("oracle", "bronze", "clerical", "seal", "chu", "chuanchao",
+          "qinwenzi", "xiaozhuan",
           "kaishu", "xingshu", "caoshu", "songti", "songti-tc", "heiti-hk")
 
 
