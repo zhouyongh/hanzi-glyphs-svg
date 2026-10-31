@@ -333,9 +333,7 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 
 - `glyphs/xiaozhuan/`（小學堂「小篆」庫）**尚未发布**；
 - `glyphs/chu/` 目前发布的是漢典矢量件，小學堂楚系描摹件**尚未发布**；
-- `glyphs/clerical/` 的小學堂批次**还差 565 件位图**——上游取图端点当前不可用
-  （`xiaoxue.iis.sinica.edu.tw` 对本机所在地区返回「Access Restricted」，
-  `char.iis.sinica.edu.tw` 改版成 Blazor 后旧渲染路由 `/ImageText2/ShowImage.ashx` 已下线）。
+- `glyphs/clerical/` 的小學堂批次**还差 565 件位图**——上游取图端点当前不可用。
   缺口逐条记在 `glyphs/clerical/pending-xxt.csv`（含上游取图地址，端点恢复后可直接续抓）。
 
 这些层入库时须另记

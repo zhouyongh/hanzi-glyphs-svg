@@ -127,9 +127,8 @@ def pending_note(glyphs_root: Path, script: str) -> str:
         n = sum(1 for _ in csv.DictReader(fh))
     if not n:
         return ""
-    return (f"另有 **{n}** 件小學堂位图描摹件因上游取图端点不可用暂缺，"
-            f"逐条登记在 `glyphs/{script}/pending-xxt.csv`"
-            f"（含上游取图地址，端点恢复后可直接续抓）。")
+    return (f"另有 **{n}** 件小學堂位图描摹件暂缺，"
+            f"逐条登记在 `glyphs/{script}/pending-xxt.csv`。")
 
 # 仓库的 GitHub slug。用来拼 CDN 地址与文档链接。
 DEFAULT_REPO_SLUG = "zhouyongh/hanzi-glyphs-svg"
