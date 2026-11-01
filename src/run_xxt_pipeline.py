@@ -56,6 +56,9 @@ DBS = {
         # 身份反查：路線 D（底本頁.行）要對方层的 provenance 裡有 source_base_pages
         "zdic_provenance": ROOT / "glyphs" / "provenance" / "chu.jsonl",
         "base_book": "楚系簡帛文字編",
+        # **整层替换**：小學堂批次并进来后条目号整体重排，
+        # 旧文件名全部作废——留着就是「有文件、无出处记录」的孤儿字形。
+        "prune": True,
     },
     "qinwenzi": {
         "layer": "qinwenzi",

@@ -11,11 +11,11 @@
 
 | 书体 | 目录 | 数量 | 许可 |
 |------|------|------|------|
-| 甲骨文 Oracle bone script | `glyphs/oracle/` | **13,956** 个字形 | **CC0 1.0** + **CC BY 4.0** |
+| 甲骨文 Oracle bone script | `glyphs/oracle/` | **14,458** 个字形 | **CC0 1.0** + **CC BY 4.0** |
 | 金文 Bronze script | `glyphs/bronze/` | **11,691** 个字形 | **CC0 1.0** |
 | 篆书 Seal script | `glyphs/seal/` | **10,591** 个字形 | **CC0 1.0** |
-| 隶书 Clerical script | `glyphs/clerical/` | **12,036** 个字形 | **CC0 1.0** |
-| 楚文字 Chu script | `glyphs/chu/` | **11,039** 个字形 | **CC0 1.0** |
+| 隶书 Clerical script | `glyphs/clerical/` | **12,597** 个字形 | **CC0 1.0** |
+| 楚文字 Chu script | `glyphs/chu/` | **12,894** 个字形 | **CC0 1.0** |
 | 傳抄古文字 Chuanchao | `glyphs/chuanchao/` | **20,444** 个字形 | **CC0 1.0** |
 | 秦系简牘 Qin bamboo slips | `glyphs/qinwenzi/` | **3,708** 个字形 | **CC0 1.0** |
 | 楷书 Regular script | `glyphs/kaishu/` | **6,763** 个字形 | **OFL 1.1** |
@@ -26,9 +26,9 @@
 | 黑体（港）Sans, HK | `glyphs/heiti-hk/` | **31,598** 个字形 | **OFL 1.1** |
 | 篆书全量码位登记表 | `glyphs/seal/external.csv` | **11,328** 个码位（不含字形，只登记指针） | 见「许可」 |
 | 楚文献出处对照 | `glyphs/chu/books.csv`、`glyphs/chu/books_xxt.csv` | 文献代号 → 全称、归属、收录与否 | **CC0 1.0** |
-| 拓片件的标准字形 | `glyphs/<层>/inverted/` | **2,337** 个字形（由拓片件反转而来） | 随源层 |
+| 拓片件的标准字形 | `glyphs/<层>/inverted/` | **2,339** 个字形（由拓片件反转而来） | 随源层 |
 
-合计 **184,354** 条字形记录（含 1,203 个派生轮廓与 2,337 个拓片反转变体）。
+合计 **187,273** 条字形记录（含 1,203 个派生轮廓与 2,339 个拓片反转变体）。
 
 ### 甲骨文（JGW 批 CC BY 4.0 + 汉典摹本 CC0 1.0）
 
@@ -62,7 +62,7 @@
 
 ### 隶书（CC0 1.0）
 
-来自汉典「书法」隶书实例与中研院「小學堂」隸變庫的位图描摹件，共 **12,036** 条。
+来自汉典「书法」隶书实例与中研院「小學堂」隸變庫的位图描摹件，共 **12,597** 条。
 题记为碑帖名或简号 + 时代
 （如「曹全碑 東漢」「武梁祠畫象題字」），底本为汉碑、印谱与秦汉简牍。
 同样每字每时代一条（12 个时代），每字最多 6 条。
@@ -187,9 +187,9 @@ jsDelivr 的三个主机名（cdn / fastly / gcore，分属不同网络）→ ra
 - **逐件检查**：每一件都算笔画占比、连通块数、主体大小、墨迹填充率与实心度，
   指标不过的**不出反转件**，那一件仍然只有拓片原样——不拿不成形的字充数。
   逐件判定见各层的 `rubbing-invert.csv`。
-- 四个摹本层共 58,127 件里，「有板形」的候选 **3,915 件**，
-  已反转 **2,337 件**（金文 1,256、傳抄 1,054、甲骨 10、隸書 17），
-  **1,578 件**保留拓片原样。在 351 件目检标注样本上，
+- 四个摹本层共 59,190 件里，「有板形」的候选 **3,990 件**，
+  已反转 **2,339 件**（金文 1,256、傳抄 1,054、甲骨 11、隸書 18），
+  **1,651 件**保留拓片原样。在 351 件目检标注样本上，
   口径内的坏件率 2.5%（独立验证样本）。
 
 ## 篆书层：键是篆书区块码位，覆盖 93.5%
@@ -300,7 +300,7 @@ python src/build_viewer.py
 |------|------|
 | `glyphs/oracle/` 的 JGW 批（骨架与派生轮廓） | **CC BY 4.0**（全文见根 `LICENSE`） |
 | `glyphs/oracle/` 的汉典批（拓片摹本）与 `glyphs/bronze/`、`glyphs/seal/`、`glyphs/clerical/`、`glyphs/chu/`、`glyphs/chuanchao/`、`glyphs/qinwenzi/` 的漢典矢量件 | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
-| `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/` 的小學堂位图描摹件、`glyphs/chu/books_xxt.csv`（中研院「小學堂」楚系簡帛庫出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.*` | **CC0 1.0**（全文见 `LICENSE-DOCS`；声明原文见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
+| `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/`、`glyphs/chu/` 的小學堂位图描摹件、`glyphs/chu/books_xxt.csv`（中研院「小學堂」楚系簡帛庫出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.*` | **CC0 1.0**（全文见 `LICENSE-DOCS`；声明原文见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/` | **SIL OFL 1.1**（各层目录的 `OFL.txt`） |
 | `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
@@ -341,6 +341,7 @@ hanzi-glyphs-svg/
     bronze/                  金文字形（汉典矢量件 + 小学堂描摹件）+ index.csv
     seal/                    篆书字形 + index.csv + external.csv（全量码位登记表）
     clerical/                隶书字形 + index.csv + pending-xxt.csv（小學堂批次待补清单）
+    <层>/pending-xxt.csv     该层小學堂批次的待补清单（位图补齐后逐层重生成，当前六层均为 0 条）
     chu/                     楚文字形 + index.csv + books.csv（文献代号对照表）+ books_xxt.csv（小學堂出處表对照）+ staged.csv（未发布登记）+ README.md
     chuanchao/               傳抄古文字字形 + index.csv + books.csv / books_xxt.csv（文献代号对照）+ README.md
     qinwenzi/                秦系简牘字形 + index.csv + books.csv（文献代号对照）+ README.md

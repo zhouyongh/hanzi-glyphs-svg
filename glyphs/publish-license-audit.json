@@ -1,30 +1,30 @@
 {
  "layers": {
   "bronze": {
-   "records": 11691,
+   "records": 12947,
    "licenses": {
-    "CC0-1.0": 11691
+    "CC0-1.0": 12947
    },
    "attribution_missing": 0,
    "attribution_variants": 2,
    "modifications_missing": 0,
    "modification_kinds": {
     "删除汉典近白水印": 8290,
-    "骨架 → 可填充轮廓（派生层）": 3401
+    "骨架 → 可填充轮廓（派生层）": 4657
    },
-   "source_book_records": 11691,
+   "source_book_records": 12947,
    "source_books_top": [
     [
      "中山王昔鼎",
-     298
+     299
     ],
     [
      "中山王昔壺",
-     221
+     222
     ],
     [
      "毛公鼎",
-     136
+     137
     ],
     [
      "𦅫鎛",
@@ -36,10 +36,10 @@
     ],
     [
      "大盂鼎",
-     108
+     109
     ]
    ],
-   "source_references_records": 3389,
+   "source_references_records": 4442,
    "has_license_copy": false,
    "license_copy_path": "",
    "license_copy_sha256": "",
@@ -91,44 +91,45 @@
    }
   },
   "chu": {
-   "records": 11039,
+   "records": 12894,
    "licenses": {
-    "CC0-1.0": 11039
+    "CC0-1.0": 12894
    },
    "attribution_missing": 0,
-   "attribution_variants": 1,
+   "attribution_variants": 2,
    "modifications_missing": 0,
    "modification_kinds": {
-    "删除汉典近白水印": 11039
+    "删除汉典近白水印": 11039,
+    "骨架 → 可填充轮廓（派生层）": 1855
    },
-   "source_book_records": 11039,
+   "source_book_records": 12894,
    "source_books_top": [
     [
-     "郭店楚簡",
-     1876
-    ],
-    [
      "包山楚簡",
-     1844
+     2319
     ],
     [
-     "上海博物館藏戰國楚竹書（一）",
-     865
+     "郭店楚簡",
+     2095
+    ],
+    [
+     "上海博物館藏戰國楚竹書",
+     1577
     ],
     [
      "新蔡葛陵楚簡·甲組",
-     751
+     891
     ],
     [
-     "上海博物館藏戰國楚竹書（二）",
-     712
+     "曾侯乙墓竹簡",
+     781
     ],
     [
      "江陵望山楚簡",
-     620
+     694
     ]
    ],
-   "source_references_records": 11039,
+   "source_references_records": 12887,
    "has_license_copy": false,
    "license_copy_path": "",
    "license_copy_sha256": "",
@@ -144,30 +145,30 @@
    "ofl": {}
   },
   "chuanchao": {
-   "records": 20444,
+   "records": 21498,
    "licenses": {
-    "CC0-1.0": 20444
+    "CC0-1.0": 21498
    },
    "attribution_missing": 0,
    "attribution_variants": 2,
    "modifications_missing": 0,
    "modification_kinds": {
     "未改动（逐字节副本）": 12975,
-    "骨架 → 可填充轮廓（派生层）": 7469
+    "骨架 → 可填充轮廓（派生层）": 8523
    },
-   "source_book_records": 20444,
+   "source_book_records": 21498,
    "source_books_top": [
     [
      "杜從古：《集篆古文韻海》，《宛委別藏》選集影舊抄本三冊，1935年商務印書館依故宮博物院藏本影印。",
-     9707
+     9711
     ],
     [
      "夏竦：《古文四聲韻》，李零、劉新光整理：《汗簡 古文四聲韻》，中華書局1983年。",
-     3527
+     3528
     ],
     [
      "郭忠恕：《汗簡》，李零、劉新光整理：《汗簡 古文四聲韻》，中華書局1983年。",
-     2743
+     2744
     ],
     [
      "許慎：《說文解字》，影印清陳昌治刻本，中華書局1963年。",
@@ -175,14 +176,14 @@
     ],
     [
      "碧落碑，施安昌：《唐代石刻篆本》5－26頁，紫禁城出版社1987年。",
-     686
+     1072
     ],
     [
      "孫海波：《魏三字石經集錄》，民國二十六年（1937）石印本。",
-     515
+     819
     ]
    ],
-   "source_references_records": 20444,
+   "source_references_records": 21498,
    "has_license_copy": false,
    "license_copy_path": "",
    "license_copy_sha256": "",
@@ -198,45 +199,45 @@
    "ofl": {}
   },
   "clerical": {
-   "records": 12036,
+   "records": 12615,
    "licenses": {
-    "CC0-1.0": 12036
+    "CC0-1.0": 12615
    },
    "attribution_missing": 0,
    "attribution_variants": 2,
    "modifications_missing": 0,
    "modification_kinds": {
     "未改动（逐字节副本）": 10224,
-    "骨架 → 可填充轮廓（派生层）": 1812
+    "骨架 → 可填充轮廓（派生层）": 2391
    },
-   "source_book_records": 12036,
+   "source_book_records": 12615,
    "source_books_top": [
     [
      "漢印徵",
-     2220
+     2323
     ],
     [
      "史晨碑",
-     180
+     184
     ],
     [
      "晉辟雍碑陰",
-     152
+     161
     ],
     [
      "北海相景君銘",
-     138
-    ],
-    [
-     "曹全碑",
-     119
+     142
     ],
     [
      "漢印徵補",
-     116
+     128
+    ],
+    [
+     "曹全碑",
+     125
     ]
    ],
-   "source_references_records": 1811,
+   "source_references_records": 2375,
    "has_license_copy": false,
    "license_copy_path": "",
    "license_copy_sha256": "",
@@ -324,9 +325,9 @@
    }
   },
   "oracle": {
-   "records": 15159,
+   "records": 15672,
    "licenses": {
-    "CC0-1.0": 12753,
+    "CC0-1.0": 13266,
     "CC-BY-4.0": 2406
    },
    "attribution_missing": 0,
@@ -334,10 +335,10 @@
    "modifications_missing": 0,
    "modification_kinds": {
     "删除汉典近白水印": 10213,
-    "骨架 → 可填充轮廓（派生层）": 3743,
+    "骨架 → 可填充轮廓（派生层）": 4256,
     "未改动（逐字节副本）": 1203
    },
-   "source_book_records": 12753,
+   "source_book_records": 13266,
    "source_books_top": [
     [
      "菁3.1 賓組",
@@ -345,7 +346,11 @@
     ],
     [
      "乙8896 子組",
-     17
+     19
+    ],
+    [
+     "乙7795 賓組",
+     16
     ],
     [
      "甲2121 賓組",
@@ -356,15 +361,11 @@
      14
     ],
     [
-     "乙7795 賓組",
-     13
-    ],
-    [
-     "甲2416 黃組",
+     "乙3400 賓組",
      11
     ]
    ],
-   "source_references_records": 2540,
+   "source_references_records": 3045,
    "has_license_copy": false,
    "license_copy_path": "",
    "license_copy_sha256": "",

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22.00 38.00">
-<path d="M 11 4 L 11 6 L 5 12" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 11 6 L 16 9" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 11 6 L 11 12 L 8 17 L 14 23 L 15 26" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 11 12 L 14 16 L 13 18 L 7 24 L 7 26" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 5 19 L 5 22" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 16 19 L 16 22" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 10 25 L 10 29 L 8 31 L 5 27 L 5 27" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 4 25 L 4 30 L 8 34 L 17 33 L 17 24" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 10 28 L 12 31 L 18 26" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 8 27 L 9 27" fill="none" stroke="#111" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 23.00 29.00">
+<path d="M 8 5 L 5 10 L 4 25" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 8 5 L 11 11 L 10 25" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 4 25 L 10 25" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 5 14 L 11 14" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 6 18 L 11 18" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 12 4 L 13 7" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 15 5 L 16 12 L 15 18 L 16 25 L 16 25" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 18 6 L 19 9" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 19 14 L 18 18" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 12 17 L 12 18 L 13 22" fill="none" stroke="#111" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

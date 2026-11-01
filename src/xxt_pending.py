@@ -83,21 +83,26 @@ def image_url(pua: str, font: str, size: int = IMAGE_SIZE) -> str:
     return f"{RENDER_ENDPOINT}?{q}"
 
 
-def normalize_unicode(identity: str, confidence: str) -> str:
-    """把选取记录里的身份写成 unicode 列。
+def resolved_unicode(rec: dict) -> tuple[str, str]:
+    """选取记录里的**身份** → (unicode 码位, 现代字)。
 
-    **私用區码位不是汉字码位**——临时身份条目（``pua-slot``）的 unicode 列必须留空，
-    否则清单里会出现「一个没有对应汉字的码位」。
+    选取记录的 ``modern_char`` 是**字頭码位**（私用區字符居多），
+    ``identity`` 才是**反查回来的真汉字码位**（临时身份是 ``slot:…``）。
+    待补清单要写「现代字」，写的就是 ``identity`` 对应的那个字。
+
+    返回 ``("", "")`` 表示身份未定（临时身份）——**不得拿字頭码位冒充现代字**。
     """
-    if not identity or confidence == "pua-slot":
-        return ""
+    ident = str(rec.get("identity") or "").strip()
+    conf = str(rec.get("identity_confidence") or "").strip()
+    if not ident or conf == "pua-slot" or ident.startswith("slot:"):
+        return "", ""
     try:
-        cp = int(identity, 16)
+        cp = int(ident, 16)
     except ValueError:
-        return ""
+        return "", ""
     if PUA_START <= cp <= PUA_END:
-        return ""
-    return f"{cp:06X}"
+        return "", ""
+    return f"{cp:06X}", chr(cp)
 
 
 def read_selection(path: Path) -> list[dict]:
@@ -120,6 +125,13 @@ def layer_pairs(root: Path, layer: str) -> set[tuple[str, str]]:
     **必须连现代字一起比**：字形键只是「字体号_码位」，而**字体号按来源各自编号**——
     漢典的 ``91_E234`` 与小學堂的 ``91_E234`` 是两个不同字体的槽位，
     码位相同纯属巧合（实测 194 例）。只比字形键会把它们误判成「已经入库」。
+
+    **现代字取 ``unicode`` 字段（码位），不取 ``modern_char``（字符）**：
+    层里 provenance 记的是**反查回来的真汉字**的码位，
+    而选取记录里对应的是**字頭码位**（甲骨/金文/傳抄/秦系层多为私用區字符）。
+    两者不是一回事——拿字頭码位去比，已入库的件也会被判成「没入库」。
+    临时身份（``pua-slot``）的条目 ``unicode`` 为空，这里也是空，
+    两边对得上（层里那些件的 ``unicode`` 同样是空）。
     """
     prov = root / "glyphs" / "provenance" / f"{layer}.jsonl"
     pairs: set[tuple[str, str]] = set()
@@ -132,7 +144,7 @@ def layer_pairs(root: Path, layer: str) -> set[tuple[str, str]]:
         sid = str(rec.get("source_id") or "")
         if "_" not in sid:
             continue
-        pairs.add((sid, str(rec.get("modern_char") or "")))
+        pairs.add((sid, str(rec.get("unicode") or "").upper()))
     return pairs
 
 
@@ -153,7 +165,8 @@ def missing_keys(selection: list[dict], img_dir: Path,
         if key in seen:
             continue
         seen.add(key)
-        if (key, str(rec.get("modern_char") or "")) in shipped:
+        uni, _ = resolved_unicode(rec)
+        if (key, uni) in shipped:
             continue
         png = img_dir / f"{key}.png"
         if png.is_file() and png.stat().st_size > 0:
@@ -172,14 +185,16 @@ def build_rows(selection: list[dict], img_dir: Path,
             continue
         font = rec.get("font", "")
         pua = rec.get("pua", "")
+        uni, char = resolved_unicode(rec)
         rows.append({
             "shape_key": key,
             "font_id": rec.get("font_id", ""),
             "font": font,
             "pua": pua,
-            "modern_char": rec.get("modern_char", ""),
-            "unicode": normalize_unicode(rec.get("identity", ""),
-                                         rec.get("identity_confidence", "")),
+            # **现代字写反查回来的那个字**（不是字頭码位）；
+            # 身份未定（临时身份）时留空——字頭码位不是现代字。
+            "modern_char": char,
+            "unicode": uni,
             "identity_confidence": rec.get("identity_confidence", ""),
             "book_code": rec.get("book_code", ""),
             "bucket_key": rec.get("bucket_key", ""),
@@ -224,10 +239,12 @@ def check_pending(root: Path, problems: list[str], quiet: bool) -> int:
             if key in seen:
                 problems.append(f"{csv_path.as_posix()}:{i} shape_key 重复：{key}")
             seen.add(key)
-            if (key, mc) in shipped:
+            uni = (row.get("unicode") or "").strip()
+            # **按合并器的键判**：(现代字码位, 字形键)。
+            # unicode 为空 = 临时身份，对应层里 unicode 同样是空的那些件。
+            if (key, uni.upper()) in shipped:
                 problems.append(
                     f"{csv_path.as_posix()}:{i} {key}「{mc}」已经在层里入库了，待补清单过期")
-            uni = (row.get("unicode") or "").strip()
             if uni:
                 if len(uni) != 6 or any(c not in "0123456789ABCDEF" for c in uni):
                     problems.append(

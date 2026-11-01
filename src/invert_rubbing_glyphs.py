@@ -886,7 +886,8 @@ def main(argv: list[str] | None = None) -> int:
             rubbing_rows = [r for r in layer_rows if r["decision"] != "not-rubbing"]
             if rubbing_rows:
                 with report_path.open("w", encoding="utf-8", newline="") as fh:
-                    w = csv.DictWriter(fh, fieldnames=REPORT_FIELDS)
+                    # **行尾 LF**：csv.DictWriter 默认写 CRLF，仓里其余文本文件都是 LF。
+                    w = csv.DictWriter(fh, fieldnames=REPORT_FIELDS, lineterminator="\n")
                     w.writeheader()
                     for r in rubbing_rows:
                         w.writerow(r)
