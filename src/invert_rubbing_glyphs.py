@@ -66,13 +66,14 @@
 
 用法::
 
-    # 体检：哪些件是拓片型、反转后过不过质检（不写文件）
+    # 体检：优先扫 glyphs/<层>/rubbing/ 拓片原件；若尚无 rubbing/ 则回退扫层根
     python src/invert_rubbing_glyphs.py --repo-root . --mode scan --layer bronze
 
-    # 生成反转层（默认 glyphs/<层>/inverted/；提升后标准件在层根、原件在 rubbing/）+ 逐件报告
+    # 生成标准极性件：读 rubbing/ 拓片原件，写层根 glyphs/<层>/<id>.svg + 逐件报告
+    # （不再默认写 inverted/；缺 rubbing/ 时直接报错，勿对层根硬转）
     python src/invert_rubbing_glyphs.py --repo-root . --mode convert --layer bronze
 
-    # 复核已生成的反转层
+    # 复核已生成的标准极性件（兼容旧 inverted/ 布局）
     python src/invert_rubbing_glyphs.py --repo-root . --mode check --layer bronze
 """
 from __future__ import annotations
@@ -654,6 +655,11 @@ def sync_provenance(repo_root: Path, script: str, rows: list[dict], out_subdir: 
     反转变体是**派生变体**：它不是上游原件，所以不覆盖源件的记录，
     而是另起一条（``layer="inverted"``），记清派生自哪个文件、用的什么算法。
     源件的出处（作品、编号、页.行、URL、许可）原样继承——反转不改变来源。
+
+    提升后布局（现行）：
+    - 拓片原件：``glyphs/<层>/rubbing/<file>``（源出处记录的 path）
+    - 标准极性件：``glyphs/<层>/<file>``（本函数写入的派生记录 path）
+    ``out_subdir`` 仅用于识别旧布局残留；新记账不再写 ``inverted/`` 路径。
     """
     prov = provenance_path(repo_root, script)
     records = read_provenance(prov)
@@ -664,15 +670,24 @@ def sync_provenance(repo_root: Path, script: str, rows: list[dict], out_subdir: 
         if row["decision"] != "converted":
             continue
         file = row["file"]
-        src_rel = f"glyphs/{script}/{file}"
-        out_rel = f"glyphs/{script}/{out_subdir}/{file}"
+        src_rel = f"glyphs/{script}/rubbing/{file}"
+        out_rel = f"glyphs/{script}/{file}"
         src = by_path.get(src_rel)
         if src is None:
-            problems.append(f"{out_rel}：源件没有出处记录（{src_rel}）")
+            # 旧布局：源在层根、派生在 inverted/ —— 不再静默记账，提示先提升。
+            legacy_src = f"glyphs/{script}/{file}"
+            legacy_out = f"glyphs/{script}/{out_subdir}/{file}"
+            if by_path.get(legacy_src) is not None or (repo_root / legacy_out).is_file():
+                problems.append(
+                    f"{out_rel}：仍是旧布局（源在层根 / 派生在 {out_subdir}/）。"
+                    f"请先把拓片原件提升到 rubbing/、标准件落到层根，再跑 provenance"
+                )
+            else:
+                problems.append(f"{out_rel}：源件没有出处记录（期望 {src_rel}）")
             continue
         out_file = repo_root / out_rel
         if not out_file.is_file():
-            problems.append(f"{out_rel}：文件不存在")
+            problems.append(f"{out_rel}：标准极性件不存在（convert 应写入层根）")
             continue
         rec = dict(src)
         rec.update({
@@ -772,7 +787,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--recheck", action="store_true",
                     help="复核时重跑一遍算法（判定是否一致、文件是否逐字节相同）")
     ap.add_argument("--out-subdir", default="inverted",
-                    help="反转件放在层目录下的哪个子目录（默认 inverted）")
+                    help="旧布局反转件子目录名（默认 inverted；"
+                         "convert 已改为写层根，此参数仅供 check 识别残留）")
     ap.add_argument("--report-name", default="rubbing-invert.csv",
                     help="逐件报告的文件名（放在层目录下）")
     args = ap.parse_args(argv)
@@ -843,16 +859,34 @@ def main(argv: list[str] | None = None) -> int:
 
     total: dict[str, int] = {}
     rows: list[dict] = []
+    convert_errors = 0
 
     for script in layers:
         layer_dir = repo_root / "glyphs" / script
         if not layer_dir.is_dir():
             continue
-        out_dir = layer_dir / args.out_subdir
+        rubbing_dir = layer_dir / "rubbing"
         report_path = layer_dir / args.report_name
+        has_rubbing = rubbing_dir.is_dir() and any(rubbing_dir.glob("*.svg"))
+
+        # convert：强制读 rubbing/ 拓片原件，写层根标准极性件。
+        # scan：有 rubbing/ 则扫 rubbing/；否则回退扫层根（旧布局 / 未提升）。
+        if args.mode == "convert":
+            if not has_rubbing:
+                print(
+                    f"{script:12} !! 缺少 glyphs/{script}/rubbing/*.svg。"
+                    f"convert 只读拓片原件、写层根；请先把黑底拓片从层根提升到 "
+                    f"rubbing/（或确认本层尚未做极性提升），不要对层根硬转。"
+                )
+                convert_errors += 1
+                continue
+            src_dir = rubbing_dir
+        else:
+            src_dir = rubbing_dir if has_rubbing else layer_dir
+
         converted = 0
         layer_rows: list[dict] = []
-        for svg in sorted(layer_dir.glob("*.svg")):
+        for svg in sorted(src_dir.glob("*.svg")):
             try:
                 res, kept = analyze(svg)
             except Exception as exc:                       # noqa: BLE001
@@ -894,19 +928,12 @@ def main(argv: list[str] | None = None) -> int:
             })
             layer_rows.append(rows[-1])
             if args.mode == "convert" and kept is not None and res["decision"] == "converted":
-                out_dir.mkdir(parents=True, exist_ok=True)
+                # 标准极性写层根；不碰其它层根件，也不再写 inverted/。
                 d = loops_to_path(kept)
                 svg_text = render_svg(res["viewbox"], d)
-                (out_dir / svg.name).write_text(svg_text, encoding="utf-8", newline="\n")
+                (layer_dir / svg.name).write_text(svg_text, encoding="utf-8", newline="\n")
 
         if args.mode == "convert":
-            # 只留转换过的件：没通过质检的不出文件
-            if out_dir.is_dir():
-                keep_names = {r["file"] for r in layer_rows
-                              if r["decision"] == "converted"}
-                for old in sorted(out_dir.glob("*.svg")):
-                    if old.name not in keep_names:
-                        old.unlink()
             # 逐件报告只记**拓片型件**。全层的件有九万多个，
             # 绝大多数跟拓片无关（写一行「不是拓片」没有信息量，
             # 还会把报告撑成几十兆）。非拓片件的数量在汇总行里给。
@@ -925,13 +952,19 @@ def main(argv: list[str] | None = None) -> int:
         kinds: dict[str, int] = {}
         for r in layer_rows:
             kinds[r["decision"]] = kinds.get(r["decision"], 0) + 1
+        src_note = src_dir.relative_to(repo_root).as_posix()
         print(f"{script:12} 共 {len(layer_rows):6} 件  "
-              + "  ".join(f"{k} {v}" for k, v in sorted(kinds.items())))
+              + "  ".join(f"{k} {v}" for k, v in sorted(kinds.items()))
+              + f"  （扫 {src_note}）")
         if args.mode == "convert":
-            print(f"{'':12} → {converted} 件写入 {out_dir.relative_to(repo_root)}"
-                  f"，报告 {report_path.relative_to(repo_root)}")
+            print(f"{'':12} → {converted} 件写入 "
+                  f"{(layer_dir.relative_to(repo_root) / '<id>.svg').as_posix()}"
+                  f"，报告 {report_path.relative_to(repo_root).as_posix()}")
 
     print("\n合计：", "，".join(f"{k} {v}" for k, v in total.items() if v))
+    if args.mode == "convert" and convert_errors:
+        print(f"convert 有 {convert_errors} 层因缺少 rubbing/ 未执行")
+        return 1
     return 0
 
 
