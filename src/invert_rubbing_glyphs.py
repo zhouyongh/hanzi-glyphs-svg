@@ -69,7 +69,7 @@
     # 体检：哪些件是拓片型、反转后过不过质检（不写文件）
     python src/invert_rubbing_glyphs.py --repo-root . --mode scan --layer bronze
 
-    # 生成反转层（glyphs/<层>/inverted/）+ 逐件报告
+    # 生成反转层（默认 glyphs/<层>/inverted/；提升后标准件在层根、原件在 rubbing/）+ 逐件报告
     python src/invert_rubbing_glyphs.py --repo-root . --mode convert --layer bronze
 
     # 复核已生成的反转层
@@ -695,41 +695,70 @@ def sync_provenance(repo_root: Path, script: str, rows: list[dict], out_subdir: 
 
 def check_layer(repo_root: Path, script: str, out_subdir: str, report_name: str,
                 recheck: bool) -> list[str]:
-    """复核反转变体层：报告、目录、文件内容三者必须对得上。"""
+    """复核反转变体层：报告、目录、文件内容三者必须对得上。
+
+    布局兼容：
+    - **提升后**：标准极性在层根 ``glyphs/<层>/<file>``，拓片原件在
+      ``glyphs/<层>/rubbing/<file>``；
+    - **旧布局**：标准件仍在 ``glyphs/<层>/<out_subdir>/``（默认 inverted/）。
+    """
     problems: list[str] = []
     report = repo_root / "glyphs" / script / report_name
-    out_dir = repo_root / "glyphs" / script / out_subdir
+    layer_dir = repo_root / "glyphs" / script
+    out_dir = layer_dir / out_subdir
+    rubbing_dir = layer_dir / "rubbing"
     if not report.is_file():
         return [f"{script}：没有逐件报告 {report_name}"]
     rows = list(csv.DictReader(report.open(encoding="utf-8")))
     want = {r["file"] for r in rows if r["decision"] == "converted"}
-    have = {p.name for p in out_dir.glob("*.svg")} if out_dir.is_dir() else set()
+    have_legacy = {p.name for p in out_dir.glob("*.svg")} if out_dir.is_dir() else set()
+    have_rubbing = (
+        {p.name for p in rubbing_dir.glob("*.svg")} if rubbing_dir.is_dir() else set()
+    )
+    have: set[str] = set()
+    for name in want:
+        if name in have_legacy:
+            have.add(name)
+        elif name in have_rubbing and (layer_dir / name).is_file():
+            have.add(name)
     for name in sorted(want - have):
-        problems.append(f"{script}/{name}：报告说已转换，但没有反转件")
-    for name in sorted(have - want):
+        problems.append(
+            f"{script}/{name}：报告说已转换，但没有反转件"
+            f"（既无 {out_subdir}/ 也无 rubbing/+层根）"
+        )
+    for name in sorted(have_legacy - want):
         problems.append(f"{script}/{name}：有反转件，但报告里不是 converted")
+    for name in sorted(have_rubbing - want):
+        problems.append(
+            f"{script}/rubbing/{name}：有拓片备份，但报告里不是 converted"
+        )
     if not recheck:
         return problems
     # 重跑一遍算法：判定必须一致，且文件必须与当前算法跑出来的**逐字节相同**。
     for row in rows:
         if row["decision"] not in CHECKED_DECISIONS:
             continue
-        src = repo_root / "glyphs" / script / row["file"]
+        name = row["file"]
+        # 提升后源件在 rubbing/；否则层根仍是拓片原件（旧布局 / 未提升）。
+        src = rubbing_dir / name if (rubbing_dir / name).is_file() else layer_dir / name
         try:
             res, kept = analyze(src)
         except Exception as exc:                            # noqa: BLE001
-            problems.append(f"{script}/{row['file']}：重跑失败 {type(exc).__name__}: {exc}")
+            problems.append(f"{script}/{name}：重跑失败 {type(exc).__name__}: {exc}")
             continue
         if res["decision"] != row["decision"]:
-            problems.append(f"{script}/{row['file']}：判定变了（报告 "
-                             f"{row['decision']} → 现在 {res['decision']}）")
+            problems.append(
+                f"{script}/{name}：判定变了（报告 "
+                f"{row['decision']} → 现在 {res['decision']}）"
+            )
             continue
         if row["decision"] != "converted":
             continue
         expect = render_svg(res["viewbox"], loops_to_path(kept))
-        got = (out_dir / row["file"]).read_text(encoding="utf-8")
+        out_file = out_dir / name if (out_dir / name).is_file() else layer_dir / name
+        got = out_file.read_text(encoding="utf-8")
         if expect != got:
-            problems.append(f"{script}/{row['file']}：反转件与当前算法跑出来的不一致")
+            problems.append(f"{script}/{name}：反转件与当前算法跑出来的不一致")
     return problems
 
 

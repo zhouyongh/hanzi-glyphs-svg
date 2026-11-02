@@ -272,7 +272,7 @@ TEMPLATE = r"""<!DOCTYPE html>
   var tabs = document.getElementById('tabs');
   var panels = document.getElementById('panels');
   var LAYER_LABEL = { skeleton: '骨架', outline: '轮廓（可填充）',
-                      inverted: '标准字形（拓片已反转）' };
+                      rubbing: '拓片原件' };
 
   // 一屏最多先画这么多字形，剩下的滚到底再画。
   // 全库 93,875 个字形一次性塞进 DOM 会把浏览器卡死（实测导航直接超时），
@@ -392,10 +392,10 @@ TEMPLATE = r"""<!DOCTYPE html>
     return esc(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
   }
 
-  // 变体子目录：轮廓层在 outline/，拓片反转变体在 inverted/。
+  // 变体子目录：轮廓层在 outline/；拓片原件在 rubbing/（层根为标准极性）。
   function variantDir(layer) {
     if (layer === 'outline') { return 'outline/'; }
-    if (layer === 'inverted') { return 'inverted/'; }
+    if (layer === 'rubbing') { return 'rubbing/'; }
     return '';
   }
 
@@ -407,13 +407,12 @@ TEMPLATE = r"""<!DOCTYPE html>
   }
 
   function cellPaths(script, row, layer) {
-    // 主文件（拓片原样）
+    // 层根即标准极性（已提升的反转件）；拓片原件在 rubbing/。
     var main = script + '/' + row.file;
     if (layer === 'outline') { return [script + '/outline/' + row.file]; }
-    if (layer === 'inverted') {
-      // 反转变体只对「质检通过」的件有；没有的那件**保留拓片原样**——
-      // 这一格仍用主文件，不是空格。
-      if (row.inv) { return [script + '/inverted/' + row.file, main]; }
+    if (layer === 'rubbing') {
+      // 仅「已提升」的件有 rubbing/ 双胞胎；没有的仍显示层根。
+      if (row.rub) { return [script + '/rubbing/' + row.file, main]; }
       return [main];
     }
     return [main];
@@ -479,18 +478,18 @@ TEMPLATE = r"""<!DOCTYPE html>
     }
 
     var hasOutline = !!(DATA.__outline && DATA.__outline[script]);
-    var invCount = (DATA.__inverted && DATA.__inverted[script]) || 0;
+    var rubCount = (DATA.__rubbing && DATA.__rubbing[script]) || 0;
     var seg = '';
-    if (hasOutline || invCount) {
+    if (hasOutline || rubCount) {
       seg = '<div class="seg" role="group" aria-label="字形层">' +
             '<button type="button" data-layer="skeleton" aria-pressed="true">骨架</button>';
       if (hasOutline) {
         seg += '<button type="button" data-layer="outline" aria-pressed="false">轮廓（可填充）</button>';
       }
-      if (invCount) {
-        // 反转变体不是每件都有（质检不过的保留拓片原样），所以标件数。
-        seg += '<button type="button" data-layer="inverted" aria-pressed="false">标准字形（' +
-               invCount + ' 件已反转）</button>';
+      if (rubCount) {
+        // 拓片原件只对「已提升为标准极性」的件有 rubbing/ 备份。
+        seg += '<button type="button" data-layer="rubbing" aria-pressed="false">拓片原件（' +
+               rubCount + '）</button>';
       }
       seg += '</div>';
     }
@@ -737,7 +736,7 @@ def main(argv=None) -> int:
 
     data: dict[str, list[dict]] = {}
     outline: dict[str, bool] = {}
-    inverted: dict[str, int] = {}
+    rubbing: dict[str, int] = {}
     external: dict[str, dict] = {}
     total = 0
 
@@ -765,19 +764,18 @@ def main(argv=None) -> int:
                 raise SystemExit(f"缺字形文件：glyphs/{script}/{row['file']}")
         data[script] = rows
         outline[script] = (glyphs_root / script / "outline").is_dir()
-        # 反转变体：只对「质检通过」的件有。逐件标出来，页面才能在
-        # 「标准字形」层里对没有变体的件**保留拓片原样**。
-        inv_dir = glyphs_root / script / "inverted"
-        inv_names = ({p.name for p in inv_dir.glob("*.svg")}
-                     if inv_dir.is_dir() else set())
+        # 拓片原件备份：提升后原件在 rubbing/；层根为标准极性。
+        rub_dir = glyphs_root / script / "rubbing"
+        rub_names = ({p.name for p in rub_dir.glob("*.svg")}
+                     if rub_dir.is_dir() else set())
         for row in rows:
-            row["inv"] = 1 if row["file"] in inv_names else 0
-        inverted[script] = sum(r["inv"] for r in rows)
+            row["rub"] = 1 if row["file"] in rub_names else 0
+        rubbing[script] = sum(r["rub"] for r in rows)
         total += len(rows)
 
     payload_obj: dict[str, object] = dict(data)
     payload_obj["__outline"] = outline
-    payload_obj["__inverted"] = inverted
+    payload_obj["__rubbing"] = rubbing
     payload_obj["__external"] = external
     payload = json.dumps(payload_obj, ensure_ascii=False, separators=(",", ":"))
     payload = payload.replace("<", "\\u003c")  # 数据里若出现 </script> 不会截断脚本
@@ -821,8 +819,8 @@ def main(argv=None) -> int:
         rows = data[script]
         flag = sum(1 for r in rows if r["flag"])
         extra = "（有轮廓层）" if outline.get(script) else ""
-        if inverted.get(script):
-            extra += f"（{inverted[script]} 件已反转）"
+        if rubbing.get(script):
+            extra += f"（{rubbing[script]} 件拓片原件在 rubbing/）"
         print(f"  {zh:<4} {len(rows):>5} 个，待复核 {flag} 个 {extra}")
     return 0
 
