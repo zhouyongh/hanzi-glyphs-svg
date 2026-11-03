@@ -645,6 +645,15 @@ def main(argv: list[str] | None = None) -> int:
             if idrec:
                 xxt_char = idrec["modern_char"]
                 stats["identity_resolved"] = stats.get("identity_resolved", 0) + 1
+        elif (zi is not None and sel is not None
+                and str(sel.get("identity_confidence") or "") == "reverse-lookup"):
+            # 选取记录里的身份是**计划阶段反查补回**的（identity → plan 的顺序下，
+            # plan 已把反查得的真汉字直接写进 identity 字段）。这里把反查记录接回来——
+            # 不接的话这批会混进「站点直接给出真汉字」（identity_confidence=""），
+            # 「身份不是站点给的」这个来路就丢了。身份值两边已核对一致
+            # （fetch-selection 的 identity ↔ identity_map 的 unicode，逐条相等），
+            # 这里只取它的 confidence 与槽位旁证，不改 xxt_char。
+            idrec = identity_map.get(zi)
 
         zrows = z_by_shape.get(shape_key, [])
         zchars = {z["modern_char"] for z in zrows}

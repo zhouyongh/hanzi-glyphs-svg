@@ -1,6 +1,6 @@
 # hanzi-glyphs-svg
 
-汉字字形 **SVG** 库：收录甲骨文、金文、篆书、隶书、楚文字、傳抄古文、秦系简牘，以及楷书、行书、草书、宋体、黑体等现代书体，
+汉字字形 **SVG** 库：收录甲骨文、金文、篆书（漢典系 + 小學堂批）、隶书、楚文字、傳抄古文、秦系简牘，以及楷书、行书、草书、宋体、黑体等现代书体，
 并保证**每个字形都能追溯到出处**。
 供上层项目（字典、教学、排版）直接引用；本仓库只做字形，不做应用。
 
@@ -14,6 +14,7 @@
 | 甲骨文 Oracle bone script | `glyphs/oracle/` | **14,458** 个字形 | **CC0 1.0** + **CC BY 4.0** |
 | 金文 Bronze script | `glyphs/bronze/` | **11,691** 个字形 | **CC0 1.0** |
 | 篆书 Seal script | `glyphs/seal/` | **10,591** 个字形 | **CC0 1.0** |
+| 小篆（小學堂批）Small seal, Xiaoxuetang | `glyphs/xiaozhuan/` | **7,284** 个字形 | **CC0 1.0** |
 | 隶书 Clerical script | `glyphs/clerical/` | **12,597** 个字形 | **CC0 1.0** |
 | 楚文字 Chu script | `glyphs/chu/` | **12,894** 个字形 | **CC0 1.0** |
 | 傳抄古文字 Chuanchao | `glyphs/chuanchao/` | **20,444** 个字形 | **CC0 1.0** |
@@ -28,7 +29,7 @@
 | 楚文献出处对照 | `glyphs/chu/books.csv`、`glyphs/chu/books_xxt.csv` | 文献代号 → 全称、归属、收录与否 | **CC0 1.0** |
 | 拓片件的标准字形 | `glyphs/<层>/`（层根；原件在 `rubbing/`） | **2,339** 个字形（由拓片反转提升；旧 `inverted/` 已清空） | 随源层 |
 
-合计 **187,273** 条字形记录（含 1,203 个派生轮廓与 2,339 个拓片反转提升件）。
+合计 **194,557** 条字形记录（含 1,203 个派生轮廓与 2,339 个拓片反转提升件）。
 
 ### 甲骨文（JGW 批 CC BY 4.0 + 汉典摹本 CC0 1.0）
 
@@ -111,6 +112,23 @@
 [glyphs/chuanchao/README.md](glyphs/chuanchao/README.md) 与
 [glyphs/qinwenzi/README.md](glyphs/qinwenzi/README.md)。
 
+### 小篆·小学堂（CC0 1.0）
+
+来自中研院「小學堂」小篆資料庫的位图描摹件，共 **7,284** 条，覆盖 **6,305** 个现代字
+（正篆 + 古文 293 / 或體 350 / 籀文 148 / 篆文 21 / 俗字 7 / 奇字 1 等重文）。
+与「篆书」层（`glyphs/seal/`，漢典《說文》系）**不是同一批材料**：那边是漢典绘制的
+矢量字形、键为篆书区块码位；这边是小學堂「北師大說文小篆」字体的位图、
+键为本仓库条目号。两层不混用、不互相补位。
+
+小學堂小篆庫**没有出處表页**，文献标识取字头自己的「說文」栏
+（部別「說文‧人部」384 个 + 重文類別 6 个），登记在 `glyphs/xiaozhuan/books.csv`。
+现代字身份靠**說文小篆槽位**反查（与 `seal/` 的槽位同构，1,599 条由此补回真身份，
+逐条与 seal 层 index 核对一致）；152 条补不回的走**临时身份**（`identity_confidence="pua-slot"`，
+`modern_char` 与 `unicode` 留空，**私用區码位不得当汉字引用**）。
+上游位图尺寸上限 300px（2026-11-03 实测），描摹 eps 按分辨率等比缩放（0.525），
+7,284 件 IoU 全部合格（最低 0.9744 / p05 0.9840）。
+键规则、出处链条与复跑命令见 [glyphs/xiaozhuan/README.md](glyphs/xiaozhuan/README.md)。
+
 ### 现代书体六层（OFL 1.1）
 
 六层都是**从 OFL 开源字体提取轮廓**的派生件，用 `src/extract_font_glyphs.py` 生成：
@@ -140,11 +158,11 @@
 - **本地预览**：直接双击 `viewer/index.html`（零依赖、无需服务器；索引数据已内联进页面，
   字形文件按需去取）
 
-页面按书体分 Tab：甲骨文 Tab 可预览全部 13,956 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
+页面按书体分 Tab：甲骨文 Tab 可预览全部 14,458 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
 可在「骨架」与「轮廓」两层之间切换，身份存疑的条目有黄框标记；
-金文、篆书、隶书、楚文字、傳抄古文、秦系简牘六个 Tab 各预览该层全部字形，
+金文、篆书、隶书、楚文字、傳抄古文、秦系简牘、小篆·小学堂七个 Tab 各预览该层全部字形，
 悬停可看到出处作品、编号与时代（金文与隶书另有时代筛选，楚文字可按出土文献筛选，
-傳抄古文可按源书筛选，秦系简牘可按出处筛选）；
+傳抄古文可按源书筛选，秦系简牘与小篆·小学堂可按出处筛选）；
 楷/行/草/宋简/宋繁/黑港六个 Tab 各预览该层全部字形，悬停可看到字体家族与版本。
 
 有拓片件的层里，工具条上还有一个「拓片原样」开关，可以在**标准字形**（层根，默认可着色）与
@@ -300,7 +318,7 @@ python src/build_viewer.py
 |------|------|
 | `glyphs/oracle/` 的 JGW 批（骨架与派生轮廓） | **CC BY 4.0**（全文见根 `LICENSE`） |
 | `glyphs/oracle/` 的汉典批（拓片摹本）与 `glyphs/bronze/`、`glyphs/seal/`、`glyphs/clerical/`、`glyphs/chu/`、`glyphs/chuanchao/`、`glyphs/qinwenzi/` 的漢典矢量件 | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
-| `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/`、`glyphs/chu/` 的小學堂位图描摹件、`glyphs/chu/books_xxt.csv`（中研院「小學堂」楚系簡帛庫出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.*` | **CC0 1.0**（全文见 `LICENSE-DOCS`；声明原文见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
+| `glyphs/qinwenzi/`、`glyphs/xiaozhuan/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/`、`glyphs/chu/` 的小學堂位图描摹件、`glyphs/chu/books_xxt.csv`（中研院「小學堂」楚系簡帛庫出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.*` | **CC0 1.0**（全文见 `LICENSE-DOCS`；声明原文见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/` | **SIL OFL 1.1**（各层目录的 `OFL.txt`） |
 | `glyphs/seal/external.csv` 中派生于 Unicode `SealSources.txt` 的列 | **Unicode License v3**（声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列 | **不适用**：只是指向外部仓库的指针 |
@@ -345,6 +363,7 @@ hanzi-glyphs-svg/
     chu/                     楚文字形 + index.csv + books.csv（文献代号对照表）+ books_xxt.csv（小學堂出處表对照）+ staged.csv（未发布登记）+ README.md
     chuanchao/               傳抄古文字字形 + index.csv + books.csv / books_xxt.csv（文献代号对照）+ README.md
     qinwenzi/                秦系简牘字形 + index.csv + books.csv（文献代号对照）+ README.md
+    xiaozhuan/               小篆字形（小學堂「小篆」庫描摹件）+ index.csv + books.csv（說文部別/重文類別）+ README.md
     <层>/rubbing/            拓片原件备份（黑底白字；旧 inverted/ 已清空，层根为标准字形）
     <层>/rubbing-invert.csv   拓片反转的逐件报告（判定 + 质检指标）
     kaishu/ xingshu/ caoshu/ 现代书体（OFL）：字形 + index.csv + OFL.txt + SOURCE.md

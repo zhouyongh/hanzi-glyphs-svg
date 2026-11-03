@@ -45,7 +45,9 @@ DBS = {
                   "字形的出處簡稱。"),
     "xiaozhuan": ("xiaozhuan", "xiaozhuan",
                   "摹本底本為《說文解字》；**小學堂小篆庫沒有出處表頁**（實測首頁無該鏈接），"
-                  "故本表只能靠 ZiOrder 枚舉 + 字頭信息建立，須另行設計歸屬依據。"),
+                  "本表靠 ZiOrder 枚舉 + 字頭信息建立：文獻標識直接取字頭自己的"
+                  "「說文」欄（部別標識「說文‧人部」與重文類別「說文古文」等），"
+                  "照抄上游原文，corpus_full 不另編全稱。"),
 }
 
 FIELDS = ["code", "corpus_full", "script_belong", "include", "reason", "evidence"]
@@ -73,13 +75,62 @@ EXTRA_BOOKS: dict[str, list[tuple[str, str]]] = {
 }
 
 
+def rows_from_xiaozhuan_index(base_note: str) -> list[dict]:
+    """小篆庫的文獻對照表：**從抓取索引的 source_short 建**，不走出處表 CSV。
+
+    為什麼走索引：小篆庫沒有出處表頁（實測首頁無該鏈接，`reference_pages`
+    對 /xiaozhuan 返回 404），上游自己給的文獻信息就是字頭行裡的「說文」欄——
+    部別標識（「說文‧一部」…「說文‧亥部」以外的全部 384 個部別）
+    與重文類別（說文古文 / 說文籀文 / 說文或體 / 說文篆文 / 說文俗字 / 說文奇字）。
+    這些標識同時是 `build_xxt_manifest.py` 分桶的桶鍵（`LAYER_RULES["xiaozhuan"]
+    = ("book", 5)`），**缺一個收錄閘門就會把整桶誤擋**，所以取索引裡出現過的
+    **全部**標識（不只是選中批次的 390 個——重選時那 8 個桶還會回來）。
+
+    corpus_full 照抄上游標識，不代它編全稱（與「全稱查不到就不編」同一條規矩）。
+    evidence 記枚舉入口（索引記錄裡的 page_url）與索引快照時刻。
+    """
+    import json
+    from datetime import datetime, timezone
+
+    idx = ROOT / "tmp" / "xxt" / "xiaozhuan" / "index.jsonl"
+    if not idx.is_file():
+        raise SystemExit(f"找不到小篆庫索引（{idx}）；先跑 "
+                         f"fetch_xiaoxuetang_glyphs.py --mode glyphs --stage pages --db xiaozhuan")
+    counts: dict[str, int] = {}
+    page_url = ""
+    with idx.open("r", encoding="utf-8") as fh:
+        for line in fh:
+            if not line.strip():
+                continue
+            rec = json.loads(line)
+            short = str(rec.get("source_short") or "").strip()
+            if short:
+                counts[short] = counts.get(short, 0) + 1
+            if not page_url:
+                page_url = str(rec.get("page_url") or "").strip()
+    at = datetime.fromtimestamp(idx.stat().st_mtime, timezone.utc).strftime("%Y-%m-%d")
+    evidence = f"{page_url}（ZiOrder 枚舉索引快照，{at} 取回）" if page_url else ""
+    rows = []
+    for code in sorted(counts):
+        rows.append({
+            "code": code,
+            "corpus_full": code,
+            "script_belong": "xiaozhuan",
+            "include": "yes",
+            "reason": base_note + f"（索引中 {counts[code]} 个实例）",
+            "evidence": evidence,
+        })
+    return rows
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="按小學堂出處表生成层的文献对照表")
     ap.add_argument("--db", required=True, choices=sorted(DBS))
     ap.add_argument("--from-csv", type=Path, action="append", default=None,
                     help="出處表 CSV（列：code,corpus_full,source_publication,"
                          "source_url,retrieved_at）。可给多次。"
-                         "默认读抓取阶段落在 tmp/xxt/references/<库>/ 下的全部快照。")
+                         "默认读抓取阶段落在 tmp/xxt/references/<库>/ 下的全部快照。"
+                         "xiaozhuan 没有出處表，走索引（见 rows_from_xiaozhuan_index）。")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args(argv)
 
@@ -89,12 +140,16 @@ def main(argv: list[str] | None = None) -> int:
     else:
         base = ROOT / "tmp" / "xxt" / "references" / db
         srcs = sorted(base.glob("*.csv")) if base.is_dir() else []
-        if not srcs:
+        if not srcs and db != "xiaozhuan":
             raise SystemExit(f"找不到出處表快照（{base}）；用 --from-csv 指定")
     out = args.out or (ROOT / "glyphs" / layer / "books.csv")
 
     rows: list[dict] = []
     by_code: dict[str, dict] = {}
+    if db == "xiaozhuan" and not args.from_csv:
+        # 小篆庫没有出處表：文献标识从抓取索引建（见 rows_from_xiaozhuan_index）。
+        rows = rows_from_xiaozhuan_index(base_note)
+        by_code = {r["code"]: r for r in rows}
     for src in srcs:
         with src.open("r", encoding="utf-8-sig", newline="") as fh:
             for row in csv.DictReader(fh):
