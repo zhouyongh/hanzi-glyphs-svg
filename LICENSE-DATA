@@ -6,6 +6,9 @@
 | 甲骨文（汉典拓片摹本） | `glyphs/oracle/*.svg`（其余 10,213 条） | **CC0 1.0** | `LICENSE-DOCS` |
 | 金文 | `glyphs/bronze/**` | **CC0 1.0** | `LICENSE-DOCS` |
 | 隶书 | `glyphs/clerical/**` | **CC0 1.0** | `LICENSE-DOCS` |
+| 楚文字 | `glyphs/chu/**` | **CC0 1.0** | `LICENSE-DOCS` |
+| 傳抄古文字 | `glyphs/chuanchao/**` | **CC0 1.0** | `LICENSE-DOCS` |
+| 秦系简牘 | `glyphs/qinwenzi/**` | **CC0 1.0** | `LICENSE-DOCS` |
 | 篆书 | `glyphs/seal/**` 的字形与 `index.csv` | **CC0 1.0**（公有领域奉献） | `LICENSE-DOCS` |
 | 现代书体六层（楷/行/草/宋简/宋繁/黑港） | `glyphs/kaishu/` `xingshu/` `caoshu/` `songti/` `songti-tc/` `heiti-hk/` 的字形与 `index.csv` | **SIL OFL 1.1**（从 OFL 开源字体提取的轮廓） | 各层目录的 `OFL.txt` |
 | 篆书全量码位登记表 | `glyphs/seal/external.csv` | 本仓库整理的部分 **CC0 1.0**；派生于 Unicode `SealSources.txt` 的列 Unicode License v3；`upstream_*` 列只是指针 | `LICENSE-DOCS` / `THIRD_PARTY_NOTICES.md` |
@@ -19,7 +22,7 @@ CC BY 4.0 那一层使用这些数据时须遵守 CC BY 4.0：署名（作者、
 保留指向本协议的链接。署名文字与协议全文见 `THIRD_PARTY_NOTICES.md` 与根 `LICENSE`，
 协议主页：https://creativecommons.org/licenses/by/4.0/
 
-篆书层依汉典《服务条款》第四条以 **CC0 1.0** 释出。CC0 是**公有领域奉献**：不设任何义务，
+篆书、楚文字、傳抄古文字、秦系简牘等漢典矢量层依汉典《服务条款》第四条以 **CC0 1.0** 释出；小學堂位图描摹件另依中研院声明亦为 **CC0 1.0**（见 `THIRD_PARTY_NOTICES.md`）。其中 `glyphs/xiaozhuan/` **尚未发布**，不列入本表。CC0 是**公有领域奉献**：不设任何义务，
 不署名、不注明改动也可以使用。本仓库**没有**对其附加任何限制，下游也不得附加
 （CC0 是放弃权利，不是许可别人加条件）。汉典的归公宣告原文与逐件出处见 `THIRD_PARTY_NOTICES.md`。
 
