@@ -10,8 +10,11 @@
 
 **规则全文见 AGENTS.md「统一字形编号（unified_id）」**。要点：
 
-- ID = `<根码>-<书体码>-<序号>`，根码 = 现代字 Unicode 码位（6 位大写 hex）；
-- 书体码 = 层键（A..M，按序冻结），序号 =（根码, 书体）桶内 4 位流水号；
+- ID = `<根码>-<书体码>-<序号>`，如 `004E00-0E-000001` = 「一」的小篆第 1 件；
+- 根码 = 现代字 Unicode 码位（6 位大写 hex）；
+- 书体码 = **2 位**层键（当前 0A..0M，按序冻结；0 段用完后 10、11… 顺延，
+  共 1,296 个位置），0E = 小篆；
+- 序号 =（根码, 书体）桶内 **6 位**十进制流水（000001 起）；
 - 根码域断言：unicode 非空 ⇒ 码位必须落在 CJK 统一表意区块；
   unicode 为空（临时身份）⇒ 根码必须落在**私用区**——
   「私用区根码 ≠ 汉字码位」由这条断言钉死，登记表不冒充汉字身份；
@@ -121,7 +124,7 @@ def build_rows() -> tuple[list[dict], dict]:
 
         for root, recs_in in sorted(buckets.items()):
             for i, rec in enumerate(sorted(recs_in, key=sort_key), start=1):
-                gid = f"{root}-{letter}-{i:04d}"
+                gid = f"{root}-0{letter}-{i:06d}"
                 rows.append({
                     "unified_id": gid,
                     "layer": dirname,
@@ -157,7 +160,9 @@ def assert_domains(rows: list[dict]) -> None:
         # 桶内序号无洞（重建过程天然保证，这里是对落盘文件的独立校验路径）
     for r in rows:
         parts = r["unified_id"].split("-")
-        if len(parts) != 3 or len(parts[0]) != 6 or len(parts[2]) != 4:
+        # 根码 6 位 hex + 书体码 2 位（数字开头，当前 0 段）+ 序号 6 位十进制。
+        if (len(parts) != 3 or len(parts[0]) != 6 or len(parts[1]) != 2
+                or len(parts[2]) != 6 or not parts[1][0].isdigit()):
             raise SystemExit(f"unified_id 语法错误：{r['unified_id']}")
 
 
