@@ -389,16 +389,23 @@ def iou_matrix(refs: np.ndarray, ref_counts: np.ndarray,
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="字形形状比对（判重）")
-    ap.add_argument("--refs", nargs="+", type=Path, required=True, help="参照字形（重复写多组）")
+    ap.add_argument("--refs", nargs="+", type=Path, default=None, help="参照字形（重复写多组）")
     ap.add_argument("--ref-list", type=Path, default=None, help="参照字形清单（每行一个路径）")
     ap.add_argument("--queries", nargs="+", type=Path, default=None, help="待查字形")
     ap.add_argument("--query-list", type=Path, default=None, help="待查字形清单")
+    ap.add_argument("--pairs", type=Path, default=None,
+                    help="成对比对模式：TSV 每行「槽位<TAB>参照<TAB>待查」，逐对算 IoU"
+                         "（不是「每组取最优」）。合并判重用：同槽位两边的件一一对应，"
+                         "要的是每一对的分数，不是最优匹配。与 --refs/--queries 互斥。")
     ap.add_argument("--out", type=Path, default=None, help="匹配结果（JSONL）")
     ap.add_argument("--threshold", type=float, default=0.70, help="判定为同一个字形的 IoU 门槛")
     ap.add_argument("--grid", type=int, default=GRID)
     args = ap.parse_args(argv)
 
-    ref_paths: list[Path] = list(args.refs)
+    if args.pairs:
+        return main_pairs(args)
+
+    ref_paths: list[Path] = list(args.refs or [])
     if args.ref_list:
         ref_paths += [Path(l.strip()) for l in args.ref_list.read_text(encoding="utf-8").splitlines()
                       if l.strip()]
@@ -449,6 +456,83 @@ def main(argv: list[str] | None = None) -> int:
     if out_fh:
         out_fh.close()
     print(f"待查 {len(query_paths)} 件，命中（IoU ≥ {args.threshold}）{hits} 件")
+    return 0
+
+
+def main_pairs(args) -> int:
+    """成对比对：每行「槽位<TAB>参照<TAB>待查」，逐对算 IoU。
+
+    为什么不复用上面的「每组取最优」：合并判重时两边的件**本来就一一配对**
+    （同一个說文槽位，漢典一件、小學堂一件），要的是每一对的分数——
+    「取最优」会在一方形状异常时悄悄匹配到别的件上，把问题盖住。
+    全部位图先光栅化，再对齐成两条矩阵取对角线，一次向量算完。
+    """
+    pairs: list[tuple[str, Path, Path]] = []
+    for line in args.pairs.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) != 3:
+            raise SystemExit(f"--pairs 行格式应为「槽位\\t参照\\t待查」：{line[:80]}")
+        pairs.append((parts[0].strip(), Path(parts[1].strip()), Path(parts[2].strip())))
+    if not pairs:
+        raise SystemExit("--pairs 文件为空")
+
+    def rasterize(paths: list[Path]) -> tuple[np.ndarray, np.ndarray, list[bool]]:
+        packed: list[np.ndarray] = []
+        counts: list[int] = []
+        ok: list[bool] = []
+        for p in paths:
+            m = mask_of(p, args.grid) if p.is_file() else None
+            if m is None or not m.any():
+                packed.append(np.zeros(packed[0].shape if packed else (args.grid * args.grid // 8,),
+                                       dtype=np.uint8))
+                counts.append(0)
+                ok.append(False)
+                continue
+            packed.append(pack(m))
+            counts.append(int(m.sum()))
+            ok.append(True)
+        return np.array(packed, dtype=np.uint8), np.array(counts, dtype=np.int64), ok
+
+    ref_mat, ref_cnt, ref_ok = rasterize([p for _, p, _ in pairs])
+    qry_mat, qry_cnt, qry_ok = rasterize([p for _, _, p in pairs])
+    inter = np.bitwise_count(np.bitwise_and(ref_mat, qry_mat)).sum(axis=1)
+    union = ref_cnt + qry_cnt - inter
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ious = np.where(union > 0, inter / np.maximum(union, 1), 0.0)
+
+    out_fh = args.out.open("w", encoding="utf-8", newline="\n") if args.out else None
+    vals: list[float] = []
+    skipped = 0
+    hits = 0
+    for (slot, ref, qry), iou, rok, qok in zip(pairs, ious, ref_ok, qry_ok):
+        if not (rok and qok):
+            skipped += 1
+            rec = {"slot": slot, "ref": str(ref), "query": str(qry), "iou": None,
+                   "same_shape": None, "note": "skipped（空墨迹或文件缺失）"}
+        else:
+            v = float(iou)
+            vals.append(v)
+            hit = v >= args.threshold
+            hits += hit
+            rec = {"slot": slot, "ref": str(ref), "query": str(qry),
+                   "iou": round(v, 4), "same_shape": hit}
+        if out_fh:
+            out_fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        else:
+            print(json.dumps(rec, ensure_ascii=False))
+    if out_fh:
+        out_fh.close()
+    if vals:
+        sv = sorted(vals)
+        p05 = sv[max(0, int(len(sv) * 0.05) - 1)]
+        print(f"成对 {len(pairs)} 对：有效 {len(vals)} / 跳过 {skipped}；"
+              f"IoU 最低 {sv[0]:.4f} / p05 {p05:.4f} / 中位 {sv[len(sv) // 2]:.4f} / 最高 {sv[-1]:.4f}")
+        print(f"  命中（IoU ≥ {args.threshold}）{hits} 对；低分（< 0.40）"
+              f"{sum(1 for v in vals if v < 0.40)} 对")
+    else:
+        print(f"成对 {len(pairs)} 对：全部跳过")
     return 0
 
 

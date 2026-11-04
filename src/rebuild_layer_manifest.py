@@ -154,15 +154,27 @@ def main(argv: list[str] | None = None) -> int:
     missing = 0
     derived_only = 0
     skipped_by_font: dict[str, int] = {}
+    # **seal 层键不同**：index.csv 没有 glyph_id 列（文件名 = 篆书区块码位），
+    # provenance 的 glyph_id 记的是 int(码位,16)。其余层按条目号查 provenance。
+    is_seal = args.layer == "seal"
     with index_path.open("r", encoding="utf-8-sig", newline="") as fh:
         for row in csv.DictReader(fh):
-            gid = int(row["glyph_id"])
-            p = prov.get(gid, {})
-            if not p:
-                # **只有派生件记录的行**：上一轮并进来的小學堂批次，不是漢典侧的东西。
-                # 重建清单是合并时的漢典侧基线，放进去会被判成自己的重复。
-                derived_only += 1
-                continue
+            if is_seal:
+                cp = (row.get("codepoint") or "").strip()
+                if not cp:
+                    raise SystemExit("seal index.csv 出现空 codepoint 行")
+                p = prov.get(int(cp, 16), {})
+                if not p:
+                    derived_only += 1
+                    continue
+            else:
+                gid = int(row["glyph_id"])
+                p = prov.get(gid, {})
+                if not p:
+                    # **只有派生件记录的行**：上一轮并进来的小學堂批次，不是漢典侧的东西。
+                    # 重建清单是合并时的漢典侧基线，放进去会被判成自己的重复。
+                    derived_only += 1
+                    continue
             # 字形文件：清单所在目录 → 层目录的相对路径
             rel = Path("../../..") / "glyphs" / args.layer / row["file"]
             short = row.get("source_book", "")
@@ -186,8 +198,10 @@ def main(argv: list[str] | None = None) -> int:
 
             item = {
                 "file": str(rel).replace("\\", "/"),
-                "modern_char": row.get("modern_char", ""),
-                # 现代字码位一律 **6 位大写十六进制**（AGENTS.md 的口径）。
+                # seal 层：item 带码位（import --key-mode seal_codepoint 从这里取键）。
+                # 其余层没有这个字段（键是条目号，由入库脚本自己编）。
+                "codepoint": (row.get("codepoint") or "").strip() if is_seal else "",
+                "modern_char": row.get("modern_char", ""),                # 现代字码位一律 **6 位大写十六进制**（AGENTS.md 的口径）。
                 # 甲骨层的 JGW 批当年写的是 4 位（"4E00"）——重建时补齐，
                 # 合并器重排后写回的 index.csv 就是统一口径了。
                 #
@@ -267,6 +281,12 @@ def main(argv: list[str] | None = None) -> int:
                         "rendering"):
                 val = str(p.get(col) or "").strip()
                 if val:
+                    item[col] = val
+            # seal 层专有列：正篆/重文候选与注记（external.csv 登记表的口径），
+            # 重建清单丢了它们，重导入的 index.csv 就少这两列。
+            if is_seal:
+                for col in ("seal_candidates", "seal_note"):
+                    val = (row.get(col) or "").strip() or str(p.get(col) or "").strip()
                     item[col] = val
             if exclude_fonts:
                 fid = font_of(str(item.get("source_id") or ""))

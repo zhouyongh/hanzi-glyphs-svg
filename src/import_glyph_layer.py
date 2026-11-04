@@ -711,6 +711,12 @@ def main(argv: list[str] | None = None) -> int:
         index_path = out_dir / "index.csv"
         if args.key_mode == "seal_codepoint":
             header = list(SEAL_KEY_COLUMNS)
+            # 小學堂批并入的记录带身份可信度标记（identity_confidence /
+            # modern_char_slot，反查补回身份的那几件）：有值就加列，
+            # 与通用分支同一条规则——码位与出处都留了痕，身份来路也要留。
+            for col in ("identity_confidence", "modern_char_slot"):
+                if any(str(row.get(col) or "").strip() for row in index_rows):
+                    header.insert(header.index("source_book") + 1, col)
         elif args.key_mode == "unicode_codepoint":
             header = list(FONT_KEY_COLUMNS)
         else:
