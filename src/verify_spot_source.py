@@ -101,11 +101,29 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"找不到出处记录：{prov_path}")
 
     rows = list(csv.DictReader(index_path.open(encoding="utf-8-sig", newline="")))
-    prov = {}
+    # 混合层（漢典 + 小學堂描摹件）只抽**漢典侧**：小學堂件的上游是 xiaoxue 位图，
+    # 这套「漢典 SVG 回源 + 水印对账」流程对它不适用——硬跑会把 400 误报成「不符」
+    # （实测 bronze 抽 4 件里 3 件是小學堂件全误报）。漢典记录的判据：
+    # source_dataset 含「汉典」且有 source_id（JGW 批 source_id 为空，同样跳过）。
+    # 且**按文件取记录**：拓片反转提升件的层根文件是 layer=inverted 的派生记录
+    # （内容=反转后的标准字形），同名 source_id 的骨架记录指向 rubbing/ 原件——
+    # 「本地 == 洗掉水印的上游」只对**骨架件**成立，所以只抽有漢典骨架记录的行。
+    prov_by_path = {}
     for line in prov_path.open(encoding="utf-8"):
         if line.strip():
             rec = json.loads(line)
-            prov[rec["source_id"]] = rec
+            sid = (rec.get("source_id") or "").strip()
+            if not sid or "汉典" not in (rec.get("source_dataset") or ""):
+                continue
+            prov_by_path.setdefault(rec.get("path", ""), rec)
+
+    rows = [r for r in rows
+            if (lambda rec: rec is not None
+                and rec.get("layer", "skeleton") in (None, "", "skeleton")
+                and (rec.get("source_url") or "").startswith("http"))
+            (prov_by_path.get(f"glyphs/{args.layer}/{r.get('file', '')}"))]
+    if not rows:
+        raise SystemExit("这一层没有漢典侧骨架记录可抽（全层都是别源或派生件？）")
 
     rng = random.Random(args.seed)
     sample = stratified_sample(rows, min(args.count, len(rows)), rng)
@@ -114,9 +132,9 @@ def main(argv: list[str] | None = None) -> int:
     bad: list[str] = []
     for row in sample:
         sid = row["source_id"]
-        rec = prov.get(sid, {})
+        rec = prov_by_path[f"glyphs/{args.layer}/{row['file']}"]
         try:
-            raw = get(row["source_url"])
+            raw = get(rec["source_url"])
         except Exception as exc:  # noqa: BLE001
             bad.append(f"{sid}: 上游下载失败 {exc!r}")
             time.sleep(args.delay)
@@ -130,10 +148,13 @@ def main(argv: list[str] | None = None) -> int:
         cleaned, count, _ = strip_watermark(text)
         out_bytes = cleaned.encode("utf-8") if count else raw
         local = (layer_dir / row["file"]).read_bytes()
-        if out_bytes == local:
+        # 本地件两种合法形态都收：① 去水印版（clean_zdic 清洗过）；
+        # ② **无修改逐字节副本**（modifications 如实记「none (byte-identical copy)」，
+        # 近白水印层保留——渲染无害）。两种都不是才是不符。
+        if out_bytes == local or raw == local:
             ok["local"] += 1
         else:
-            bad.append(f"{sid}: 本地字形与「洗掉水印的上游」不一致")
+            bad.append(f"{sid}: 本地字形与上游（原件与去水印版皆）不一致")
         try:
             page = get(f"https://www.zdic.net/hans/"
                        f"{urllib.parse.quote(row['modern_char'])}/{kind}").decode("utf-8", "replace")
@@ -143,7 +164,9 @@ def main(argv: list[str] | None = None) -> int:
             continue
         caps = [re.sub(r"<[^>]+>", "", m.group(1)).strip()
                 for m in CAPTION_RE.finditer(page)]
-        if row["variant"] in caps:
+        # 页面题记带字头前缀与时代后缀（「街睡.封21 秦」），行里记的是裸题记
+        # （「睡.封21」）——用**包含**判断，别用列表成员（实测 qinwenzi 3/3 误报）。
+        if row.get("variant") and any(row["variant"] in cap for cap in caps):
             ok["caption"] += 1
         else:
             bad.append(f"{sid}: 题记「{row['variant']}」不在字页面的实例列表里")
