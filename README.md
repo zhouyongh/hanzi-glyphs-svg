@@ -7,6 +7,16 @@
 本仓库**自有的内容**（文档、索引、代码、浏览页）以 **CC0 1.0** 释出。
 `glyphs/` 下的字形逐层不同：甲骨 JGW 层 **CC BY 4.0**、六个字体层 **OFL 1.1**、其余 **CC0 1.0**。
 
+> **引用字形请一律用统一编号 `unified_id`**（形如 `004E00-0E-000001`；总账
+> `glyphs/glyph-ids.csv`，ID 铸发后冻结、退役保留、新增只取桶内 max+1）。
+> ❌ **不要**拿层内文件名或篆书码位当跨层引用——`0386.svg` 只在甲骨层内有意义、
+> `3D000` 只是小篆层的键，跨层拼接必然出错。
+> 按字查全部书体：`python src/build_glyph_ids.py --char 一`；
+> 浏览页深链：`viewer/index.html#id=004E00-0E-000001`；
+> 数据库对接用宽表导出 `glyphs/export/<层>.csv`（字段词典
+> [glyphs/export/FIELDS.md](glyphs/export/FIELDS.md)，schema 钉在
+> `glyphs/glyph-ids.meta.json`）。
+
 ## 现在有什么
 
 | 书体 | 目录 | 数量 | 许可 |
@@ -28,16 +38,19 @@
 | 楚文献出处对照 | `glyphs/chu/books.csv`、`glyphs/chu/books_xxt.csv` | 文献代号 → 全称、归属、收录与否 | **CC0 1.0** |
 | 拓片件的标准字形 | `glyphs/<层>/`（层根；原件在 `rubbing/`） | **2,339** 个字形（由拓片反转提升；旧 `inverted/` 已清空） | 随源层 |
 
-合计 **187,292** 条字形记录（含 1,203 个派生轮廓与 2,339 个拓片反转提升件）。
+合计 **187,293** 条出处记录 = **183,751** 个 index 字形（每件一个 `unified_id`，
+账本 `glyphs/glyph-ids.csv` 现有 **183,749** 个 active——差的 2 件是甲骨 JGW
+无根码例外，逐件见 `glyphs/glyph-ids-excluded.csv`）+ **1,203** 个甲骨派生轮廓
++ **2,339** 个拓片原件（1:1 派生件按派生规则定位，不占编号）。
 
 全仓字形另有**跨层统一编号** `glyphs/glyph-ids.csv`（一行一个字形，账本式：
 ID 形如 `004E00-0E-000001` = 「一」的小篆第 1 件——根码 = 现代字 Unicode 码位（6 位），
 书体码两位 0A–0M 按时代序（0E=小篆，首位进制位留扩展），序号六位按（字，书体）桶内流水；
 **桶内初始序是学术序**（小篆=说文序、金文/隶书=时代序、楚=出土文献年代序，
 见 `src/era_sequence.py`），且 **ID 铸发后冻结**：新增字形只取桶内 max+1，
-退役 ID 保留不复用——引用不会断链）。按字查所有书体的字形：
-`python src/build_glyph_ids.py --char 一`；浏览页深链
-`viewer/index.html#id=004E00-0E-000001` 直接定位到那一件。
+退役 ID 保留不复用——引用不会断链）。每行另有 `release` 列（`draft` = 铸发未对外 /
+`stable` = 已随发布对外），与生命周期正交。临时身份件日后补回正式码位时，
+`python src/build_glyph_ids.py --redirects` 导出 old→new 重定向表。
 规则见 `AGENTS.md`「统一字形编号」。
 
 ### 甲骨文（JGW 批 CC BY 4.0 + 汉典摹本 CC0 1.0）

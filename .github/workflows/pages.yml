@@ -35,10 +35,12 @@ jobs:
         run: |
           mkdir -p _site
           cp viewer/index.html _site/index.html
-          # 统一编号登记表（~13 MB，跨层检索的总账）：world 可从
-          # https://<pages>/glyph-ids.csv 直接取；viewer 的 #id= 深链按层内联副本定位。
-          cp glyphs/glyph-ids.csv _site/glyph-ids.csv
-          # 只放浏览页与编号登记表。**不要** cp -r glyphs _site/glyphs——那是 1.1 GB、
+          # 统一编号产物族（总账 + 排除清单 + schema 元数据 + 宽表导出 + 字段词典）：
+          # world 可从 https://<pages>/... 直接取；viewer 的 #id= 深链按层内联副本定位。
+          cp glyphs/glyph-ids.csv glyphs/glyph-ids-excluded.csv glyphs/glyph-ids.meta.json _site/
+          mkdir -p _site/export
+          cp glyphs/export/*.csv glyphs/export/FIELDS.md _site/export/
+          # 只放浏览页与编号产物。**不要** cp -r glyphs _site/glyphs——那是 1.1 GB、
           # 会把 Pages 构建拖垮。字形从 CDN 取。
       - uses: actions/upload-pages-artifact@v3
         with:

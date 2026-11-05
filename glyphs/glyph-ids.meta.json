@@ -1,0 +1,25 @@
+{
+ "artifacts": [
+  "export/bronze.csv",
+  "export/caoshu.csv",
+  "export/chu.csv",
+  "export/chuanchao.csv",
+  "export/clerical.csv",
+  "export/heiti-hk.csv",
+  "export/kaishu.csv",
+  "export/oracle.csv",
+  "export/qinwenzi.csv",
+  "export/seal.csv",
+  "export/songti-tc.csv",
+  "export/songti.csv",
+  "export/xingshu.csv",
+  "glyph-ids-excluded.csv",
+  "glyph-ids.csv"
+ ],
+ "counts": {
+  "active": 183749,
+  "excluded_no_root": 2,
+  "retired": 0
+ },
+ "schema_version": 1
+}

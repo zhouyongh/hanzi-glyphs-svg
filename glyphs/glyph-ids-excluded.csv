@@ -1,0 +1,3 @@
+layer,file,source_id,modern_char_slot,reason
+oracle,14457.svg,0380,JGW_0380,no-root（unicode 与槽位码位皆缺，见 AGENTS.md 扩展矩阵）
+oracle,14458.svg,0916,JGW_0916,no-root（unicode 与槽位码位皆缺，见 AGENTS.md 扩展矩阵）
