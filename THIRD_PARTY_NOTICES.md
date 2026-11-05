@@ -13,7 +13,7 @@
 | `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/`、`glyphs/chu/` 的小學堂位图描摹件（秦系 2,114 + 傳抄 7,469 + 甲骨 3,042 + 金文 3,401 + 隸書 2,373 + 楚系 1,855） | **CC0 1.0**（中研院「小學堂」《版權聲明》） | `LICENSE-DOCS`；声明原文见本文件 |
 | `glyphs/chu/books_xxt.csv`（小學堂出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.{md,html}` | **CC0 1.0**（中研院「小學堂」《版權聲明》） | `LICENSE-DOCS`；声明原文见本文件 |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/`（现代书体六层 97,349 个字形、索引、出处记录） | **SIL OFL 1.1** | 各层目录的 `OFL.txt`（上游逐字节副本） |
-| `glyphs/<层>/inverted/`（拓片件的标准字形，2,337 个） | **随源层**：逐条记录按其 `license` 字段 | 本文件 + 根 `LICENSE` |
+| `glyphs/<层>/` 层根（拓片件的标准字形，2,339 个；原件在 `rubbing/`） | **随源层**：逐条记录按其 `license` 字段 | 本文件 + 根 `LICENSE` |
 | `glyphs/provenance/*.jsonl` | **逐条记录**：每条按其 `license` 字段（CC BY 4.0 / CC0 1.0 / OFL-1.1） | 本文件 + 根 `LICENSE` |
 | `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC0 1.0 | `LICENSE-DOCS` |
 | `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
@@ -110,7 +110,7 @@
 | 实例页 | `https://www.zdic.net/hans/<字>/xiaozhuan` |
 | 字形文件直链 | `https://img.zdic.net/zy/xiaozhuan/<id>.svg` |
 | 许可 | **CC0 1.0**（汉典《服务条款》第四条「归公宣告」） |
-| 规模 | `glyphs/seal/` 10,591 个字形，覆盖篆书区块 11,328 个码位中的 93.5% |
+| 规模 | `glyphs/seal/` 10,610 个字形（漢典 10,591 + 小學堂补缺 19），覆盖篆书区块 11,328 个码位中的 93.7% |
 
 ### 许可原文（照录，勿改写）
 
@@ -132,7 +132,7 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
    因此 `3F32F`、`3F41A` 两个码位空缺。
 3. **留痕。** 逐字形记录了 `source_sha256`（上游原件）与本地 `sha256`，可与汉典原件逐一比对。
 
-本层的字形出处是**题记里的「說文‧X部」**（10,591 条全部如此，无例外），
+本层的字形出处是**题记里的「說文‧X部」**（漢典批 10,591 条全部如此，无例外；本层合计 10,610），
 对应《说文》刻本系统；`index.csv` 与 `provenance/seal.jsonl` 里逐条记着部次与形制
 （正篆 / 說文古文 / 說文籀文 / 說文或體）。本仓库**不对字形及其底本主张任何权利**；
 若相关权利人认为某条内容侵犯权利，请通过 Issue 或 <https://github.com/zhouyongh/hanzi-glyphs-svg/issues> 联系，核实后移除。
@@ -333,7 +333,7 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 ### 拓片件的标准字形（反转变体）
 
 拓片的形态是「石面黑、刻痕白」。本库对这类字形另备一份**标准字形**
-（`glyphs/<层>/inverted/`，黑笔画、透明底）：笔画取自原件里被石面包住的白刻轮廓，
+（`glyphs/<层>/` 层根，黑笔画、透明底；原件在 `rubbing/`）：笔画取自原件里被石面包住的白刻轮廓，
 不是重新描摹；石面麻点按面积与相对显著性两条规则剔除。
 
 这些是**派生件**，许可**随源层不变**（源件是 CC0 1.0，反转件也是 CC0 1.0）——

@@ -1,4 +1,4 @@
-﻿glyph_id_xz,slot,modern_char,unicode,source_book,kind,reason,target_codepoint,iou_same_slot,note
+glyph_id_xz,slot,modern_char,unicode,source_book,kind,reason,target_codepoint,iou_same_slot,note
 1,27_F3AB,㐺,00343A,說文‧㐺部,duplicate,target_occupied,3E79E,0.9699,目标码位 3E79E 已有漢典矢量件（同字），重复取漢典；同槽位 IoU=0.9699
 2,27_E6CB,㑗,003457,說文‧人部,duplicate,target_occupied,3E768,0.9765,目标码位 3E768 已有漢典矢量件（同字），重复取漢典；同槽位 IoU=0.9765
 3,27_F07F,㑞,00345E,說文‧人部,duplicate,target_occupied,3E717,0.9668,目标码位 3E717 已有漢典矢量件（同字），重复取漢典；同槽位 IoU=0.9668

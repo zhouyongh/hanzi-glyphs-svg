@@ -170,15 +170,6 @@ jobs:
         run: python -m pip install --quiet --disable-pip-version-check numpy Pillow
       - name: 复核反转变体层
         run: python src/invert_rubbing_glyphs.py --repo-root . --mode check --recheck
-      # 反转变体也是**矢量字形**，跟主层一样要过体检（XML 合法、viewBox、
-      # 路径 bbox、退化检测）——它只是派生层，不该豁免。
-      # check_glyphs.py 逐目录取 *.svg（不递归），所以这里直接点目录。
-      - name: 反转变体层体检
-        run: |
-          for d in glyphs/*/inverted/; do
-            [ -d "$d" ] || continue
-            python src/check_glyphs.py "$d"
-          done
 
   xxtpending:
     name: 小學堂批次待补清单体检

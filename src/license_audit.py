@@ -416,6 +416,13 @@ def build_markdown(layers: dict, ofl: dict) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows 默认 gbk 控制台打不出 ⚠️/✅ 等符号会 UnicodeEncodeError——
+    # README 让用户直接跑这条命令，工具得自己把 stdout 钉成 UTF-8。
+    # 与 src/build_glyph_ids.py 的同类处理保持一致。
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
     ap = argparse.ArgumentParser(description="发布安全审计：逐层统计能不能安全发布")
     ap.add_argument("--json-only", action="store_true", help="只出机读结果")
     ap.add_argument("--check", action="store_true", help="只机检；有未履行的义务时退出码非 0")

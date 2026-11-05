@@ -325,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     pub_fields = ["glyph_id_xz", "slot", "modern_char", "unicode", "source_book",
                   "kind", "reason", "target_codepoint", "iou_same_slot", "note"]
     args.published_csv.parent.mkdir(parents=True, exist_ok=True)
-    with args.published_csv.open("w", encoding="utf-8-sig", newline="") as fh:
+    with args.published_csv.open("w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=pub_fields, lineterminator="\n")
         w.writeheader()
         for rec in crosswalk:
