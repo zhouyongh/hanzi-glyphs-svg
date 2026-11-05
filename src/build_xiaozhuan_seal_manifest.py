@@ -9,6 +9,17 @@
         --pairs-iou tmp/seal-merge-pairs-iou.jsonl \
         --out tmp/zdic/xiaozhuan-seal-fills/manifest.json
 
+**注意（2026-11-05 并入完成后）**：glyphs/xiaozhuan/ 层已撤销，本脚本成为
+**历史工具**——全部输入取 `tmp/xxt/xiaozhuan/dissolved/` 下的**合并前快照**
+（撤销层 index + provenance、**合并前的 seal index**、同槽位 IoU 佐证；
+从 git 历史恢复，例如
+``git show 3a06ce4a3^:glyphs/xiaozhuan/index.csv > tmp/xxt/xiaozhuan/dissolved/index.csv``
+，tmp/ 不进仓）。**为什么必须用合并前快照**：四道闸的占位闸读的是 seal 层
+现状——19 件补缺件并入后自己占了位，重跑会把它们判成「重文位无空码位」而
+**把自己 un-merge 掉**（实测 22 行漂移）。判定一律对合并前状态做；重跑的产物
+必须与已发布的 `glyphs/seal/xiaozhuan-merge-crosswalk.csv` **逐字节一致**
+（crosswalk 是冻结的发布记录，重跑只是复算验证，不是重新判定）。
+
 **解决什么问题。** glyphs/xiaozhuan/（小學堂「小篆」庫描摹件，条目号键）要并入
 glyphs/seal/（漢典《說文》系小篆，键 = Unicode 篆书区块码位）。两层材料不同
 （同一說文槽位两边各自绘制），合并按「(现代字, 槽位)」判重，**重复取漢典矢量件**
@@ -92,14 +103,18 @@ def load_zheng(path: Path) -> dict[str, dict]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="小學堂小篆批并入 seal 层的合并清单")
-    ap.add_argument("--xz-index", type=Path, default=ROOT / "glyphs/xiaozhuan/index.csv")
+    # 撤销层快照（tmp/，gitignore）：从 git 历史恢复的撤销前输入，见模块 docstring。
+    ap.add_argument("--xz-index", type=Path,
+                    default=ROOT / "tmp/xxt/xiaozhuan/dissolved/index.csv")
     ap.add_argument("--xz-provenance", type=Path,
-                    default=ROOT / "glyphs/provenance/xiaozhuan.jsonl")
-    ap.add_argument("--seal-index", type=Path, default=ROOT / "glyphs/seal/index.csv")
+                    default=ROOT / "tmp/xxt/xiaozhuan/dissolved/provenance.jsonl")
+    ap.add_argument("--seal-index", type=Path,
+                    default=ROOT / "tmp/xxt/xiaozhuan/dissolved/seal-index-pre-merge.csv")
     ap.add_argument("--registry", type=Path, default=ROOT / "glyphs/seal/external.csv")
     ap.add_argument("--zheng-table", type=Path,
                     default=ROOT / "tmp/research/seal-modern-to-zheng.txt")
-    ap.add_argument("--pairs-iou", type=Path, default=ROOT / "tmp/seal-merge-pairs-iou.jsonl",
+    ap.add_argument("--pairs-iou", type=Path,
+                    default=ROOT / "tmp/xxt/xiaozhuan/dissolved/pairs-iou.jsonl",
                     help="compare_glyph_shapes.py --pairs 的输出（同槽位 IoU 佐证）")
     ap.add_argument("--out", type=Path, default=ROOT / "tmp/zdic/xiaozhuan-seal-fills/manifest.json")
     ap.add_argument("--crosswalk", type=Path,
