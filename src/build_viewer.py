@@ -28,6 +28,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_glyph_ids import SCRIPT_TABLE  # noqa: E402  统一编号书体码（单一事实源）
+
 SCRIPTS = [
     ("oracle", "甲骨文", "Oracle bone script",
      "已收录 {n} 个字形（JGW 参数化矢量骨架 CC BY 4.0 + 汉典拓片摹本 CC0 1.0 "
@@ -268,6 +271,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 (function () {
   var DATA = JSON.parse(document.getElementById('glyph-data').textContent);
   var SCRIPTS = __SCRIPTS__;
+  var SCRIPT_CODES = __SCRIPT_CODES__;
   var tabs = document.getElementById('tabs');
   var panels = document.getElementById('panels');
   var LAYER_LABEL = { skeleton: '骨架', outline: '轮廓（可填充）',
@@ -586,7 +590,7 @@ TEMPLATE = r"""<!DOCTYPE html>
         if (onlyFlag.checked && !r.flag) { return false; }
         if (era && r[filterKey] !== era) { return false; }
         if (!q) { return true; }
-        return (r.i + ' ' + r.c + ' ' + r.u + ' ' + r.p + ' ' + r.t).toLowerCase().indexOf(q) >= 0;
+        return (r.i + ' ' + (r.id || '') + ' ' + r.c + ' ' + r.u + ' ' + r.p + ' ' + r.t).toLowerCase().indexOf(q) >= 0;
       });
       grid.innerHTML = '';
       cursor = 0;
@@ -655,6 +659,25 @@ TEMPLATE = r"""<!DOCTYPE html>
   detectBase().then(function (base) {
     glyphBase = base;
     buildTabs();
+    // **统一编号深链**：viewer/index.html#id=004E00-0E-000001 → 跳到该层、
+    // 搜索框填入完整 ID、过滤出那一件。跨层检索的总账在
+    // glyphs/glyph-ids.csv（站点同路径发布）；页面内按层内联副本定位。
+    var m = (location.hash || '').match(/^#id=([0-9A-F]{6}-[0-9A-Z]{2}-[0-9]{6})$/i);
+    if (m) {
+      var code = m[1].split('-')[1].toUpperCase();
+      var layer = Object.keys(SCRIPT_CODES).filter(function (k) {
+        return SCRIPT_CODES[k] === code;
+      })[0];
+      var btn = layer && tabs.querySelector('[aria-controls="panel-' + layer + '"]');
+      if (btn) {
+        btn.click();
+        var search = document.getElementById('panel-' + layer).querySelector('input[type=search]');
+        if (search) {
+          search.value = m[1];
+          search.dispatchEvent(new Event('input'));
+        }
+      }
+    }
   });
 })();
 </script>
@@ -663,11 +686,21 @@ TEMPLATE = r"""<!DOCTYPE html>
 """
 
 
-def load_rows(index_path: Path) -> list[dict]:
+# 统一编号的书体码：**单一事实源** = build_glyph_ids.SCRIPT_TABLE，
+# 这里派生（深链 #id= 的书体码 → 层 反查用）。
+SCRIPT_CODES = {dirname: f"0{tail}" for tail, _zh, dirname, _km in SCRIPT_TABLE}
+
+
+def load_rows(index_path: Path, script: str = "",
+               ids: dict[tuple[str, str], str] | None = None) -> tuple[list[dict], bool]:
     """把一处 index.csv 压成浏览页要用的紧凑记录。
 
     **篆书层的键不是 glyph_id，而是篆书区块码位**（``codepoint`` 列），
     所以这里的标识符与排序方式要跟着层走。
+
+    ``ids`` = 统一编号登记表（(层, 文件名) → unified_id）：有的话每条记录带上
+    ``id`` 字段——搜索框输入一个 unified_id 就能定位到那一件（跨层的总键在
+    ``glyphs/glyph-ids.csv``，浏览页里按层内联副本用于搜索与深链）。
     """
     with index_path.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -684,6 +717,7 @@ def load_rows(index_path: Path) -> list[dict]:
                  else row.get("codepoint") or "").strip()
         rows.append({
             "i": ident,
+            "id": (ids or {}).get((script, row.get("file", "")), ""),
             "c": (row.get("modern_char") or "").strip(),
             "u": (row.get("unicode") or "").strip(),
             "p": (row.get("pinyin") or "").strip(),
@@ -739,6 +773,16 @@ def main(argv=None) -> int:
     external: dict[str, dict] = {}
     total = 0
 
+    # 统一编号登记表：(层, 文件名) → unified_id——每条记录内联一个 id 字段
+    # （搜索框可按完整 ID 定位，#id= 深链也靠它）。
+    ids_map: dict[tuple[str, str], str] = {}
+    ids_path = glyphs_root / "glyph-ids.csv"
+    if ids_path.is_file():
+        with ids_path.open("r", encoding="utf-8-sig", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if (r.get("status") or "active") == "active":
+                    ids_map[(r.get("layer", ""), r.get("file", ""))] = r.get("unified_id", "")
+
     # 只给「真的有这一层」的书体出标签页：没发布/没入库的层连 index.csv 都没有，
     # 画一个空标签页等于让读者以为库里有这一层。
     active = [s for s in SCRIPTS if (glyphs_root / s[0] / "index.csv").is_file()]
@@ -752,7 +796,7 @@ def main(argv=None) -> int:
             meta["registry"] = f"glyphs/{script}/external.csv"
             meta["readme"] = f"glyphs/{script}/README.md"
             external[script] = meta
-        rows, keyed_by_codepoint = load_rows(index_path)
+        rows, keyed_by_codepoint = load_rows(index_path, script, ids_map)
         if not keyed_by_codepoint:
             expected = [str(n) for n in range(1, len(rows) + 1)]
             if [r["i"] for r in rows] != expected:
@@ -791,6 +835,7 @@ def main(argv=None) -> int:
                   s[3].format(n=len(data.get(s[0], []))) + extra_note(glyphs_root, s[0])
                   + pending_note(glyphs_root, s[0])]
                  for s in active], ensure_ascii=False))
+            .replace("__SCRIPT_CODES__", json.dumps(SCRIPT_CODES, ensure_ascii=False))
             .replace("__GENERATED__",
                      datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")))
 

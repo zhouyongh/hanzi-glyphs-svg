@@ -144,6 +144,13 @@ jobs:
       # 免得把子集数、分批数、合计数误判成层规模。
       - name: 文档层件数对账
         run: python src/check_doc_numbers.py --repo-root .
+      # 统一编号账本：① 账本合并复算与仓内文件逐字节一致——ID 铸发后冻结，
+      # index 改动只允许走「新增 max+1 / 退役」，任何重排在这里红；
+      # ② 冻结政策自检（插入 max+1 / 退役保留 / 退役号不复用 / 同键复活）。
+      - name: 统一编号账本校验
+        run: |
+          python src/build_glyph_ids.py --selftest
+          python src/build_glyph_ids.py --check
 
   rubbing:
     name: 拓片反转变体核验
