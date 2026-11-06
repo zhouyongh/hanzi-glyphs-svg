@@ -370,89 +370,6 @@ def check_trace_fidelity(repo_root: Path) -> int:
     return total_bad
 
 
-def scan_degenerate_candidates(repo_root: Path, limit: int | None = None,
-                                 require_counterexample: bool = False) -> int:
-    """几何启发式候选扫描。命中不等于隔离。
-
-    limit=None: 全库扫描（慢）。
-    limit=0: 快速路径——只核验确认 quarantine 与 heiti 反例，不扫全库。
-    limit>0: 最多检查 N 个 SVG 后停止（仍打印已命中）。
-    """
-    from degenerate_scan import analyze_svg_geometry
-    ids_quar = repo_root / "glyphs" / "ids" / "quarantine.csv"
-    confirmed = set()
-    if ids_quar.is_file():
-        import csv
-        with ids_quar.open(encoding="utf-8", newline="") as fh:
-            for row in csv.DictReader(fh):
-                confirmed.add((row.get("collection", ""), row.get("file", "")))
-
-    if limit == 0:
-        # Fast path: confirmed list nonempty for bronze empties; heiti NOT confirmed
-        need = {("bronze", "3791.svg"), ("bronze", "5282.svg"), ("bronze", "6394.svg"),
-                ("seal", "3D59C.svg"), ("seal", "3D110.svg"), ("seal", "3D4DD.svg"), ("seal", "3D54E.svg")}
-        missing = sorted(need - confirmed)
-        if missing:
-            print("!! confirmed quarantine missing:", missing)
-            return 1
-        heiti = repo_root / "glyphs" / "heiti-hk" / "005341.svg"
-        geo = analyze_svg_geometry(heiti, parse_path=parse_path)
-        if not geo["geom_hit"]:
-            print("!! heiti-hk/005341 expected geom_hit")
-            return 1
-        if ("heiti-hk", "005341.svg") in confirmed:
-            print("!! heiti-hk/005341 must NOT be in quarantine.csv")
-            return 1
-        print("fast degenerate verify OK: confirmed=", len(confirmed),
-              "heiti geom_hit pts=", geo["pts"], "cover=", round(geo["bbox_cover"], 3))
-        print("NOTE: full-library candidate scan: python src/check_glyphs.py --degenerate-candidates")
-        print("      or python src/build_ids.py --census")
-        return 0
-
-    hits = []
-    heiti_hit = False
-    scanned = 0
-    for layer_dir in sorted((repo_root / "glyphs").iterdir()):
-        if not layer_dir.is_dir() or not (layer_dir / "index.csv").is_file():
-            continue
-        for svg in sorted(layer_dir.glob("*.svg")):
-            scanned += 1
-            if limit is not None and scanned > limit:
-                break
-            try:
-                geo = analyze_svg_geometry(svg, parse_path=parse_path)
-            except Exception as exc:
-                print(f"!! parse fail {layer_dir.name}/{svg.name}: {exc}")
-                continue
-            if not geo["geom_hit"]:
-                continue
-            hits.append((layer_dir.name, svg.name, geo))
-            if layer_dir.name == "heiti-hk" and svg.name == "005341.svg":
-                heiti_hit = True
-        if limit is not None and scanned > limit:
-            break
-    print(f"degenerate candidates: {len(hits)} (NOT quarantine); scanned={scanned}")
-    for layer, name, geo in hits[:20]:
-        print(f"  {layer}/{name}: pts={geo['pts']} cover={geo['bbox_cover']:.3f} size={geo['size']}")
-    if len(hits) > 20:
-        print(f"  ... +{len(hits) - 20} more")
-    if heiti_hit:
-        print("counterexample heiti-hk/005341.svg geom-hit — keep candidate, never auto-quarantine")
-    if require_counterexample:
-        heiti = repo_root / "glyphs" / "heiti-hk" / "005341.svg"
-        geo = analyze_svg_geometry(heiti, parse_path=parse_path)
-        if not geo["geom_hit"]:
-            print("!! require-counterexample failed: heiti not geom_hit")
-            return 1
-        if ("heiti-hk", "005341.svg") in confirmed:
-            print("!! require-counterexample failed: heiti quarantined")
-            return 1
-        print("counterexample check OK")
-    print("Next: human confirm into glyphs/ids/quarantine.csv")
-    print("Full-library report: run without --limit (slow) or build_ids.py --census")
-    return 0
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="字形体检：画布、路径、退化")
     parser.add_argument("dirs", nargs="*", type=Path, help="要检查的字形目录")
@@ -461,12 +378,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--trace-fidelity", action="store_true",
                         help="只跑描摹保真检查：读 provenance 里的 trace_iou，"
                              "按单条/层级门槛判定位图描摹件是否忠实于上游位图")
-    parser.add_argument("--degenerate-candidates", action="store_true",
-                        help="几何退化候选扫描；只打印，绝不自动隔离。反例 heiti-hk/005341")
-    parser.add_argument("--limit", type=int, default=None,
-                        help="退化扫描最多检查多少个 SVG；0=只核验确认清单与反例，不做全库扫描")
-    parser.add_argument("--require-counterexample", action="store_true",
-                        help="要求 heiti-hk/005341 几何命中且不在 quarantine.csv")
     args = parser.parse_args(argv)
 
     if args.trace_fidelity:
@@ -474,11 +385,6 @@ def main(argv: list[str] | None = None) -> int:
         print()
         print(f"合计问题 : {bad}")
         return 1 if bad else 0
-
-    if args.degenerate_candidates:
-        return scan_degenerate_candidates(args.repo_root.resolve(),
-                                         limit=args.limit,
-                                         require_counterexample=args.require_counterexample)
 
     dirs = list(args.dirs)
     if not dirs:

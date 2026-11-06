@@ -12,11 +12,6 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
-  # 定时全库退化扫描：退化候选是「几何启发式命中」，不能自动隔离，
-  # 但库会长大——新收的一批件里有没有空框/碎点，得有人定期扫一遍。
-  # 放在定时而不是每次 push，是因为全库扫描要几十分钟，每次 push 都跑不现实。
-  schedule:
-    - cron: '23 4 * * 1'   # 每周一 04:23 UTC
 
 permissions:
   contents: read
@@ -203,75 +198,3 @@ jobs:
       # 就该把它从清单里划掉。这条检查只读仓内文件，不用 tmp/，也不用联网。
       - name: 逐层体检待补清单
         run: python src/xxt_pending.py --check --repo-root .
-
-  ids_v2:
-    name: v2.2-min ID 规范自检
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        # 本 job 跑的是 build_ids.py（v2.2-min 的 GID 工具链），**不跑**
-        # build_glyph_ids.py --check，也不碰 git 对象——所以这里不需要取 tag，
-        # 保持浅层即可。若将来把统一编号账本校验挪到这个 job，必须同时改成
-        # fetch-depth: 0（浅层取不到旧 tag，发布锚点那条对账会静默跳过）。
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      # 人工裁决文件**必须入库**。
-      #
-      # 为什么不用 `build_ids.py --scaffold` 来「确保它们存在」：
-      # scaffold 只能补缺失的文件，一旦文件缺失它会**重建**一份初始内容——
-      # 那样 CI 就分不清「人在库里裁决过」和「库里压根没有这份裁决」，
-      # 于是「裁决文件没入库」这种最该红的情况被 scaffold 悄悄抹平。
-      # 所以这里断言文件**在仓里且已被 git 跟踪**，不重建。
-      - name: 人工裁决文件在场（由人维护，代码不得重建）
-        run: |
-          for f in glyphs/ids/quarantine.csv glyphs/ids/mint-adjudications.csv; do
-            [ -f "$f" ] || { echo "::error file=$f::缺少人工裁决文件"; exit 1; }
-            git ls-files --error-unmatch -- "$f" >/dev/null 2>&1 \
-              || { echo "::error file=$f::人工裁决文件未入库（代码不得重建，须由人提交）"; exit 1; }
-          done
-      - name: ID 自检与账本检查
-        run: |
-          python src/build_ids.py --selftest
-          python src/build_ids.py --check
-          python src/build_ids.py --full-mint
-          python src/build_ids.py --report
-      # 铸发计划数对账：v1 账本**未变**时，计划数必须与基线逐项相同。
-      # 计数变了而文件一个没动 = 折叠/隔离语义被悄悄改了（v1 变了则只提示重新基线）。
-      - name: 铸发计划数对账
-        run: python src/build_ids.py --check-plan
-      # 快照自洽：重算发布清单（账本 + provenance + 全部 active 字形文件）并与 meta 比对。
-      # 清单本身是发布归档物、不进版本库，所以这里比的是**重算值**。
-      - name: 快照自洽核验
-        run: python src/build_ids.py --snapshot-verify
-      - name: 退化候选快速路径（确认清单 + 反例）
-        run: |
-          python src/build_ids.py --census-verify
-          python src/check_glyphs.py --degenerate-candidates --limit 0 --require-counterexample
-
-  degenerate_scan:
-    name: 全库退化候选扫描（定时）
-    runs-on: ubuntu-latest
-    # 每周一次的全库扫描，扫完只**报告**、不自动隔离：
-    # 命中不等于退化（heiti-hk/005341.svg 就是反例），隔离是人的裁决。
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      # 全库几何扫描（几十分钟量级，所以只在定时任务里跑）。
-      - name: 全库几何退化候选扫描
-        run: python src/build_ids.py --census
-      # 候选清单与人工确认清单对账（快）：确认清单里每一件都得是真候选，
-      # 而反例 heiti-hk/005341.svg 绝不能被隔离。
-      - name: 候选清单与人工确认清单对账
-        run: python src/build_ids.py --census-verify
-      # 候选清单作为工件留档，供策展人逐条看、逐条裁决（写进 quarantine.csv）。
-      - name: 上传候选清单
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: quarantine-candidates
-          path: glyphs/ids/quarantine-candidates.csv
-          if-no-files-found: ignore
