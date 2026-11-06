@@ -1,7 +1,7 @@
 # viewer
 
-`index.html` 由 `python src/build_viewer.py` 生成，**不入库**（见 `.gitignore`）。
+`index.html` 是**提交进仓库的静态预览**（由 `python src/build_viewer.py` 生成，勿手改）。
 
-- 本地预览：先运行 `python src/build_viewer.py`，再打开 `viewer/index.html`。
-- 线上：`.github/workflows/pages.yml` 在部署时生成到站点根 `_site/index.html`。
-- 不要手改 `index.html`；改模板请改 `src/build_viewer.py` 后重新生成。
+- 本地预览：直接打开 `viewer/index.html`。
+- 数据变化后运行 `python src/build_viewer.py` 重新生成，并提交更新。
+- 线上：`.github/workflows/pages.yml` 直接发布这份文件。

@@ -21,6 +21,5 @@ __pycache__/
 # 本地内部工作稿（不进发布面）
 notes/
 
-# 构建产物（由脚本生成，不入库）
-viewer/index.html
+# 宽表导出（由脚本生成，不入库；viewer/index.html 是提交进仓库的预览）
 glyphs/export/*.csv

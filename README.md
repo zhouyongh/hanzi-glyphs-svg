@@ -12,8 +12,7 @@
 > ❌ **不要**拿层内文件名或篆书码位当跨层引用——`0386.svg` 只在甲骨层内有意义、
 > `3D000` 只是小篆层的键，跨层拼接必然出错。
 > 按字查全部书体：`python src/build_glyph_ids.py --char 一`；
-> 浏览页深链：`viewer/index.html#id=004E00-0E00-000001`（先运行
-> `python src/build_viewer.py` 生成）；
+> 浏览页深链：`viewer/index.html#id=004E00-0E00-000001`；
 > 数据库对接用宽表导出 `glyphs/export/<层>.csv`（先运行
 > `python src/build_glyph_ids.py --write-exports` 生成；字段词典
 > [glyphs/export/FIELDS.md](glyphs/export/FIELDS.md)，schema 钉在
@@ -194,8 +193,7 @@
 ## 浏览
 
 - **在线预览**：https://zhouyongh.github.io/hanzi-glyphs-svg/
-- **本地预览**：先运行 `python src/build_viewer.py`，再打开 `viewer/index.html`
-  （零依赖、无需服务器；索引数据已内联进页面，
+- **本地预览**：直接打开 `viewer/index.html`（零依赖、无需服务器；索引数据已内联进页面，
   字形文件按需去取）
 
 页面按书体分 Tab：甲骨文 Tab 可预览全部 14,458 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
@@ -386,7 +384,7 @@ python src/verify_font_licenses.py --license-dir glyphs/kaishu --font <字体.tt
 python src/build_font_license_evidence.py --font-dir <本地字体目录>
 python src/license_audit.py
 
-# 6) 浏览页与宽表导出（数据变了才需要；生成物不入库）
+# 6) 浏览页与宽表导出（数据变了才需要；浏览页提交，宽表导出不入库）
 python src/build_viewer.py
 python src/build_glyph_ids.py --write-exports
 ```
@@ -451,7 +449,8 @@ hanzi-glyphs-svg/
     songti/ songti-tc/ heiti-hk/
   src/                       脚本：导入 / 抽取 / 派生 / 校验 / 生成浏览页
     licenses/                第三方许可原文（供逐条款比对）
-  viewer/README.md           浏览页说明；index.html 由脚本生成，不入库
+  viewer/index.html          静态浏览页（生成的，勿手改；提交进仓库供预览）
+  viewer/README.md           浏览页说明
 ```
 
 ## 致谢
