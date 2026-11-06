@@ -394,7 +394,7 @@ python src/build_viewer.py
 
 | 范围 | 许可 |
 |------|------|
-| `glyphs/oracle/` 的 JGW 批（骨架与派生轮廓） | **CC BY 4.0**（全文见根 `LICENSE`） |
+| `glyphs/oracle/` 的 JGW 批（骨架与派生轮廓） | **CC BY 4.0**（全文见 `glyphs/oracle/LICENSE`） |
 | `glyphs/oracle/` 的汉典批（拓片摹本）与 `glyphs/bronze/`、`glyphs/seal/`、`glyphs/clerical/`、`glyphs/chu/`、`glyphs/chuanchao/`、`glyphs/qinwenzi/` 的漢典矢量件 | **CC0 1.0**（全文见 `LICENSE-DOCS`） |
 | `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/`、`glyphs/chu/` 的小學堂位图描摹件、`glyphs/seal/` 的小學堂补缺描摹件、`glyphs/chu/books_xxt.csv`（中研院「小學堂」楚系簡帛庫出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.*` | **CC0 1.0**（全文见 `LICENSE-DOCS`；声明原文见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/` | **SIL OFL 1.1**（各层目录的 `OFL.txt`） |
@@ -403,7 +403,7 @@ python src/build_viewer.py
 | `README.md`、`AGENTS.md`、`THIRD_PARTY_NOTICES.md`、各层 `index.csv` | **CC0 1.0** |
 | `src/**`、`viewer/**` | **CC0 1.0** |
 
-根 `LICENSE`（CC BY 4.0）只覆盖甲骨 JGW 那一层（骨架与派生轮廓）：用它须署名并注明改动，
+CC BY 4.0 全文在 `glyphs/oracle/LICENSE`，只覆盖甲骨 JGW 那一层（骨架与派生轮廓）：用它须署名并注明改动，
 署名文字见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；其余各层按上表标注的许可使用。
 
 六个字体层按 **SIL OFL 1.1** 分发，每层目录随附上游的 `OFL.txt` 与版权声明；
@@ -414,7 +414,7 @@ python src/build_viewer.py
 三千年前的甲骨文与《说文》篆形本身不产生著作权；现代书体的字形轮廓来自 OFL 字体，
 其权利已由字体版权人按 OFL 授予。本仓库只对自己新增的部分（轮廓派生、索引、脚本、
 浏览页、文档）主张权利，**不对字形本身及其来源摹本主张任何权利**。
-若你是相关权利人并认为本仓库内容侵犯了你的权利，请通过 Issue 或 <https://github.com/zhouyongh/hanzi-glyphs-svg/issues>
+若你是相关权利人并认为本仓库内容侵犯了你的权利，请通过 Issue（https://github.com/zhouyongh/hanzi-glyphs-svg/issues）
 联系我们，我们会在核实后移除相应条目——`glyphs/provenance/` 一层一个文件、一个文件一条记录，
 单条字形可以独立移除而不影响其余内容。
 
@@ -427,7 +427,7 @@ hanzi-glyphs-svg/
   AGENTS.md                  本仓库的约定（改结构先改它）
   README.md                  本文件
   THIRD_PARTY_NOTICES.md     第三方署名、改动声明、权利保留
-  LICENSE                    CC BY 4.0 全文（只覆盖 CC BY 那一层数据）
+  LICENSE                    许可范围说明（CC BY 4.0 全文在 glyphs/oracle/LICENSE）
   LICENSE-CODE               CC0 1.0 说明（代码与页面）
   LICENSE-DOCS               CC0 1.0 全文（文档；篆书层的 CC0 也引这一份）
   LICENSE-DATA               逐层数据/文档/代码许可说明

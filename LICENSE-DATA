@@ -2,7 +2,7 @@
 
 | 层 | 目录 | 许可 | 全文位置 |
 |---|---|---|---|
-| 甲骨文（JGW 骨架 + 派生轮廓） | `glyphs/oracle/*.svg`（`char_form` 有值的 1,203 条）、`glyphs/oracle/outline/**` | **CC BY 4.0** | 根 `LICENSE` |
+| 甲骨文（JGW 骨架 + 派生轮廓） | `glyphs/oracle/*.svg`（`char_form` 有值的 1,203 条）、`glyphs/oracle/outline/**` | **CC BY 4.0** | `glyphs/oracle/LICENSE` |
 | 甲骨文（汉典拓片摹本） | `glyphs/oracle/*.svg`（其余 10,213 条） | **CC0 1.0** | `LICENSE-DOCS` |
 | 金文 | `glyphs/bronze/**` | **CC0 1.0** | `LICENSE-DOCS` |
 | 隶书 | `glyphs/clerical/**` | **CC0 1.0** | `LICENSE-DOCS` |
@@ -15,11 +15,11 @@
 | 出处记录 | `glyphs/provenance/*.jsonl` | **逐条记录**，按各条的 `license` 字段 | `THIRD_PARTY_NOTICES.md` |
 | 索引 | 各层 `index.csv` | **CC0 1.0**（本仓库整理的部分；字形本身的许可见上） | `LICENSE-DOCS` |
 
-**根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 骨架与派生轮廓），
+**CC BY 4.0 全文在 `glyphs/oracle/LICENSE`，只覆盖那一层**（甲骨 JGW 骨架与派生轮廓），
 **不覆盖** CC0、OFL 与 Unicode 授权的材料；下游须按各层许可分别使用。
 
 CC BY 4.0 那一层使用这些数据时须遵守 CC BY 4.0：署名（作者、来源、协议）、注明是否做过修改、
-保留指向本协议的链接。署名文字与协议全文见 `THIRD_PARTY_NOTICES.md` 与根 `LICENSE`，
+保留指向本协议的链接。署名文字与协议全文见 `THIRD_PARTY_NOTICES.md` 与 `glyphs/oracle/LICENSE`，
 协议主页：https://creativecommons.org/licenses/by/4.0/
 
 漢典矢量件（篆书层主体；以及甲骨/金文/隶书/楚文字/傳抄古文字/秦系简牘中的漢典批）依汉典《服务条款》第四条以 **CC0 1.0** 释出；小學堂位图描摹件（甲骨/金文/隶书/楚文字/傳抄古文字/秦系简牘中的描摹批，**以及篆书层的小學堂补缺描摹件 19 件**）另依中研院声明亦为 **CC0 1.0**（见 `THIRD_PARTY_NOTICES.md`）。其中秦系简牘、楚文字、傳抄古文字等是**混合层**（漢典矢量件与小学堂描摹件并列），不得整层称为「漢典矢量层」。

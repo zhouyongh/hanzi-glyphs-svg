@@ -8,20 +8,20 @@
 
 | 范围 | 许可 | 全文 |
 |------|------|------|
-| `glyphs/oracle/` 的 JGW 批（骨架 1,203 + 派生轮廓 1,203） | **CC BY 4.0** | 根 `LICENSE` |
+| `glyphs/oracle/` 的 JGW 批（骨架 1,203 + 派生轮廓 1,203） | **CC BY 4.0** | `glyphs/oracle/LICENSE` |
 | `glyphs/oracle/` 的汉典批（拓片摹本 10,213）、`glyphs/bronze/`（金文 8,290）、`glyphs/clerical/`（隶书 10,224）、`glyphs/seal/`（篆书 10,591）、`glyphs/chu/`（楚文字 11,039）、`glyphs/chuanchao/`（傳抄古文字 12,975）、`glyphs/qinwenzi/` 的漢典秦系矢量件（1,594） | **CC0 1.0** | `LICENSE-DOCS`；汉典的归公宣告原文见本文件 |
 | `glyphs/qinwenzi/`、`glyphs/chuanchao/`、`glyphs/oracle/`、`glyphs/bronze/`、`glyphs/clerical/`、`glyphs/chu/` 的小學堂位图描摹件（秦系 2,114 + 傳抄 7,469 + 甲骨 3,042 + 金文 3,401 + 隸書 2,373 + 楚系 1,855） | **CC0 1.0**（中研院「小學堂」《版權聲明》） | `LICENSE-DOCS`；声明原文见本文件 |
 | `glyphs/chu/books_xxt.csv`（小學堂出處表对照）、`src/licenses/xiaoxuetang-CC0-1.0-statement.{md,html}` | **CC0 1.0**（中研院「小學堂」《版權聲明》） | `LICENSE-DOCS`；声明原文见本文件 |
 | `glyphs/kaishu/` `glyphs/xingshu/` `glyphs/caoshu/` `glyphs/songti/` `glyphs/songti-tc/` `glyphs/heiti-hk/`（现代书体六层 97,349 个字形、索引、出处记录） | **SIL OFL 1.1** | 各层目录的 `OFL.txt`（上游逐字节副本） |
-| `glyphs/<层>/` 层根（拓片件的标准字形，2,339 个；原件在 `rubbing/`） | **随源层**：逐条记录按其 `license` 字段 | 本文件 + 根 `LICENSE` |
-| `glyphs/provenance/*.jsonl` | **逐条记录**：每条按其 `license` 字段（CC BY 4.0 / CC0 1.0 / OFL-1.1） | 本文件 + 根 `LICENSE` |
+| `glyphs/<层>/` 层根（拓片件的标准字形，2,339 个；原件在 `rubbing/`） | **随源层**：逐条记录按其 `license` 字段 | 本文件 + `glyphs/oracle/LICENSE` |
+| `glyphs/provenance/*.jsonl` | **逐条记录**：每条按其 `license` 字段（CC BY 4.0 / CC0 1.0 / OFL-1.1） | 本文件 + `glyphs/oracle/LICENSE` |
 | `glyphs/seal/external.csv` —— 本仓库整理的部分 | CC0 1.0 | `LICENSE-DOCS` |
 | `glyphs/seal/external.csv` —— 派生于 Unicode `SealSources.txt` 的列 | Unicode License v3（声明见下） | 本文件 |
 | `glyphs/seal/external.csv` 的 `upstream_*` 列（指向上游） | **不适用**：本仓库未复制上游内容，只登记指针 | — |
 | `README.md`、`AGENTS.md`、本文件、各层 `index.csv` | CC0 1.0 | `LICENSE-DOCS` |
 | `src/**`、`viewer/**` | CC0 1.0 | `LICENSE-CODE` |
 
-**根 `LICENSE`（CC BY 4.0）只覆盖 CC BY 4.0 那一层**（甲骨 JGW 骨架与派生轮廓），
+**CC BY 4.0 全文在 `glyphs/oracle/LICENSE`，只覆盖那一层**（甲骨 JGW 骨架与派生轮廓），
 **不覆盖** CC0、OFL 与 Unicode 授权的材料。下游须按各层许可分别使用。
 
 ---
@@ -135,7 +135,7 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 本层的字形出处是**题记里的「說文‧X部」**（漢典批 10,591 条全部如此，无例外；本层合计 10,610），
 对应《说文》刻本系统；`index.csv` 与 `provenance/seal.jsonl` 里逐条记着部次与形制
 （正篆 / 說文古文 / 說文籀文 / 說文或體）。本仓库**不对字形及其底本主张任何权利**；
-若相关权利人认为某条内容侵犯权利，请通过 Issue 或 <https://github.com/zhouyongh/hanzi-glyphs-svg/issues> 联系，核实后移除。
+若相关权利人认为某条内容侵犯权利，请通过 Issue（https://github.com/zhouyongh/hanzi-glyphs-svg/issues） 联系，核实后移除。
 
 ---
 
@@ -158,7 +158,7 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 `glyphs/provenance/<层>.jsonl` 的 `modifications` 字段，`source_sha256` 仍指上游原件。
 
 **立场**：本仓库不对字形及其底本主张任何权利。若相关权利人认为某条内容侵犯权利，
-请通过 Issue 或 <https://github.com/zhouyongh/hanzi-glyphs-svg/issues> 联系，核实后按 `source_id` 整份移除。
+请通过 Issue（https://github.com/zhouyongh/hanzi-glyphs-svg/issues） 联系，核实后按 `source_id` 整份移除。
 
 ---
 
@@ -195,7 +195,7 @@ CC0 1.0 是**公有领域奉献**：不设任何条件，不署名、不注明�
 
 漢典的 CC0 放弃的是**漢典自己**的权利，**不消灭**上述摹本底本的著作权。
 本仓库对每一层都如实标注，不主张任何权利；若相关权利人认为某条内容侵犯权利，
-请通过 Issue 或 <https://github.com/zhouyongh/hanzi-glyphs-svg/issues> 联系，核实后按 `source_id` 整份移除。
+请通过 Issue（https://github.com/zhouyongh/hanzi-glyphs-svg/issues） 联系，核实后按 `source_id` 整份移除。
 
 **这一层只收楚系材料**：漢典「楚系簡帛」栏目里同时有秦系简帛
 （《睡虎地秦簡文字編》《秦簡牘文字編》《秦簡墨書集成字形表》等底本）与
@@ -495,7 +495,7 @@ authorization of the copyright holder.
 源数据库里的私用区码位 U+E83B），**上游并未披露该第三方来源的名称与许可状态**，本仓库无法核实。
 
 - 若你是相关权利人，并认为本仓库内容侵犯了你的权利，请通过 GitHub Issue 或
-  <https://github.com/zhouyongh/hanzi-glyphs-svg/issues> 联系我们；我们会在核实后移除相应条目。
+  通过 Issue（https://github.com/zhouyongh/hanzi-glyphs-svg/issues）联系我们；我们会在核实后移除相应条目。
 - 由于 `glyphs/provenance/` 一个文件一条，**单条字形可以独立移除而不影响其余内容**。
 - 本仓库保留与上游逐字节一致的 sha256 记录，作为善意使用的证据。
 

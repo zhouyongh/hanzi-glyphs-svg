@@ -146,10 +146,10 @@ DEFAULT_REPO_SLUG = "zhouyongh/hanzi-glyphs-svg"
 # jsDelivr 有三个独立的主机名（cdn / fastly / gcore），分属不同网络：
 # 某个边缘节点缓存了坏响应时，换一个节点就能拿到。三个都留着，再加 raw 兜底。
 DEFAULT_CDN_BASES = (
-    "https://cdn.jsdelivr.net/gh/{slug}@main/glyphs/",
-    "https://fastly.jsdelivr.net/gh/{slug}@main/glyphs/",
-    "https://gcore.jsdelivr.net/gh/{slug}@main/glyphs/",
-    "https://raw.githubusercontent.com/{slug}/main/glyphs/",
+    "https://cdn.jsdelivr.net/gh/{slug}@v1.0.0/glyphs/",
+    "https://fastly.jsdelivr.net/gh/{slug}@v1.0.0/glyphs/",
+    "https://gcore.jsdelivr.net/gh/{slug}@v1.0.0/glyphs/",
+    "https://raw.githubusercontent.com/{slug}/v1.0.0/glyphs/",
 )
 
 TEMPLATE = r"""<!DOCTYPE html>
@@ -769,7 +769,7 @@ def main(argv=None) -> int:
             glyph_bases.extend(args.cdn_base)
         else:
             glyph_bases.extend(b.format(slug=args.repo_slug) for b in DEFAULT_CDN_BASES)
-    repo_blob = f"https://github.com/{args.repo_slug}/blob/main/"
+    repo_blob = f"https://github.com/{args.repo_slug}/blob/v1.0.0/"
 
     data: dict[str, list[dict]] = {}
     outline: dict[str, bool] = {}

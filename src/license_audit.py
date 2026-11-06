@@ -332,11 +332,11 @@ def build_markdown(layers: dict, ofl: dict) -> str:
             attr_col = "是"
         else:
             attr_col = "否（非强制）"
-        # 随附的许可全文在哪：OFL 层在层目录；CC BY 4.0 是根 LICENSE；CC0 见 LICENSE-DATA
+        # 随附的许可全文在哪：OFL 层在层目录；CC BY 4.0 在 glyphs/oracle/LICENSE；CC0 见 LICENSE-DATA
         if any(k.startswith("OFL") for k in i["licenses"]):
             lic_copy = "层内 `OFL.txt`" if i["has_license_copy"] else "**缺**"
         elif "CC-BY-4.0" in i["licenses"]:
-            lic_copy = "根 `LICENSE`"
+            lic_copy = "`glyphs/oracle/LICENSE`"
         else:
             lic_copy = "`LICENSE-DATA`"
         # 署名已备：每条记录都有 attribution，且 THIRD_PARTY_NOTICES 里有该层署名段
