@@ -131,6 +131,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 发布锚点要跟 **git tag 下那份账本**对账（ledger_sha256），所以必须拿得到
+          # tag。checkout 默认只拉浅层且不带 tag，这里显式取 tag。
+          fetch-tags: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -151,7 +155,8 @@ jobs:
         run: python src/check_doc_numbers.py --repo-root .
       # 统一编号账本：① 账本合并复算与仓内文件逐字节一致——ID 铸发后冻结，
       # index 改动只允许走「新增 max+1 / 退役」，任何重排在这里红；
-      # ② 冻结政策自检（插入 max+1 / 退役保留 / 退役号不复用 / 同键复活）。
+      # ② 冻结政策自检（插入 max+1 / 退役保留 / 退役号不复用 / 同键复活）；
+      # ③ 发布锚点对账——已发布号集合指纹 + 该 release 的 tag 下账本哈希。
       - name: 统一编号账本校验
         run: |
           python src/build_glyph_ids.py --selftest

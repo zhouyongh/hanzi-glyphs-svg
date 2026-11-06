@@ -314,8 +314,16 @@ python src/verify_font_licenses.py --license-dir glyphs/kaishu --font <字体>
 
 **编号一经发布永不重排**：退役保留号与序号（永不复用），新增件取桶内 max+1，
 合并重排只更新 file 列、号纹丝不动。这条承诺**有机检**：`build_glyph_ids.py --check`
-拿发布锚点里的 `stable_sha256` 与当前账本的**已发布号集合**对账——改了任何一个已发布的
-号就红；新增字形是 `release=draft`，不进集合、不影响锚点，等下一次发布再登记一行。
+拿发布锚点里的 `stable_sha256` 与当前账本的**已发布号集合**对账，并拿每一行的
+`ledger_sha256` 与**该发布号 git tag 下那份账本**对账——改了任何一个已发布的号、
+或锚点里写错一个字符，就红；新增字形是 `release=draft`，不进集合、不影响锚点，
+等下一次发布再登记一行。
+
+**怎么发布下一次**：流程见 `AGENTS.md`「发布锚点」。关键是
+`python src/build_glyph_ids.py --release stable --dry-run` —— 只算不写，
+打印翻转行数与**新的锚点行**（两个哈希它替你算）；确认无误再去掉 `--dry-run`，
+把打印出来的那行**追加**到 `glyphs/glyph-ids-release.csv`，然后提交并打**同名**
+git tag。`--release draft` 是 fail-closed 的：锚点已存在时直接拒绝。
 
 **旧 6-2-6 形不接受**：那一版**从未公开**（无 tag、无 DOI、远端没有账本），
 所以没有兼容对象。输入旧形一律 404，不回落、不误判。

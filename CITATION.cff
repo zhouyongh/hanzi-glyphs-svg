@@ -1,8 +1,10 @@
 cff-version: 1.2.0
 title: "汉字字形 SVG 库（hanzi-glyphs-svg）"
 message: >-
-  字形逐层授权：甲骨 JGW 层为 CC BY 4.0，现代书体六层为 SIL OFL 1.1，其余层与
-  本仓库自有内容为 CC0 1.0。逐层许可见 LICENSE-DATA 与 THIRD_PARTY_NOTICES.md，
+  本仓库是**分层许可**的数据集，顶层不给单一 SPDX 标识（故 license 记 other）：
+  甲骨 JGW 骨架与派生轮廓为 CC BY 4.0（需署名）；现代书体六层（楷/行/草/宋简/宋繁/
+  黑体·港）为 SIL OFL 1.1；其余各层与本仓库自有内容（文档、索引、代码、浏览页）为
+  CC0 1.0。逐层许可见 license-url 指向的 LICENSE-DATA 与 THIRD_PARTY_NOTICES.md，
   每条出处记录的 license 字段见 glyphs/provenance/<书体>.jsonl。
 type: dataset
 authors:
@@ -10,7 +12,8 @@ authors:
     given-names: 永恒
 version: 1.0.0
 date-released: 2026-11-06
-license: CC0-1.0
+license: other
+license-url: "https://github.com/zhouyongh/hanzi-glyphs-svg/blob/main/LICENSE-DATA"
 repository-code: "https://github.com/zhouyongh/hanzi-glyphs-svg"
 url: "https://zhouyongh.github.io/hanzi-glyphs-svg/"
 keywords:

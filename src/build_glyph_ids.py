@@ -5,10 +5,11 @@
 用法::
 
     python src/build_glyph_ids.py                # 生成（账本合并：冻结已发布 ID）
-    python src/build_glyph_ids.py --check        # CI：对账 + 逐字节复算
+    python src/build_glyph_ids.py --check        # CI：对账 + 逐字节复算 + 发布锚点体检
     python src/build_glyph_ids.py --char 一      # 查询一个字在所有书体的字形
     python src/build_glyph_ids.py --selftest     # 冻结政策自检（CI）
     python src/build_glyph_ids.py --redirects    # 身份迁移的 old→new 重定向表
+    python src/build_glyph_ids.py --release stable --dry-run   # 发布预览（只算不写）
 
 **规则全文见 AGENTS.md「统一字形编号（unified_id）」**。要点：
 
@@ -51,6 +52,8 @@ import csv
 import hashlib
 import io
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -76,6 +79,7 @@ SCRIPT_RESERVED = "00"          # 默认分区：每层第一批、也是绝大�
 SUBCODE_FIELDS = ("layer", "subcode", "meaning", "owner", "date")
 RELEASE_FIELDS = ("release", "released_at", "stable_sha256", "ledger_sha256",
                   "id_format", "note")
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 # 书体字母表（**按序冻结，只增不改**）——全文见 AGENTS.md「统一字形编号」。
 # (书体码尾字, 层中文名, 目录, 键形态)；书体码 = "0" + 尾字 + 扩展位("00")。
@@ -184,6 +188,20 @@ def check_subcode_registry() -> list[str]:
     return problems
 
 
+def _git_blob_sha256(rev_path: str) -> str | None:
+    """`git cat-file blob <rev>:<path>` 的内容 sha256。
+
+    拿不到（git 不可用 / 对象不存在，如本地还没有那个 tag）返回 None——
+    调用方据此**跳过**该项校验，而不是把「没 tag」当成「对不上」。
+    """
+    try:
+        r = subprocess.run(["git", "cat-file", "blob", rev_path],
+                           cwd=ROOT, capture_output=True, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return hashlib.sha256(r.stdout).hexdigest()
+
+
 def stable_fingerprint(rows: list[dict]) -> str:
     """**已发布**那部分号的集合指纹（sha256）。
 
@@ -211,9 +229,18 @@ def check_release_record(rows: list[dict], path=None) -> list[str]:
       那说明有人把已发布的号翻回了 draft，是对冻结的破坏，不是「还没发布」）；
     - 锚点文件不在 → 账本必须**一个 stable 行都没有**（= 还没发布过，
       铸发态不需要锚点）。
+
+    **逐行体检**（每一行都查，不只最新一行）：
+    - `release` 必填、**不重复**（它同时是 git tag 名）；
+    - `released_at` 必须是 `YYYY-MM-DD`，且**不倒序**（后面的行不得早于前面的）；
+    - `stable_sha256` / `ledger_sha256` 必须是 64 位十六进制，且**不得为空**；
+    - `id_format` 不得与现行格式不符；
+    - `ledger_sha256` 与 **git tag 下那份账本**逐字节对账——本地没有该 tag 时
+      **跳过**（发布流程是「先提交、后打 tag」，CI 上 tag 可能还没推），不判失败。
     """
     problems: list[str] = []
     anchor = Path(path) if path is not None else RELEASES_PATH
+    real = path is None          # 只有真锚点才打提示（selftest 用临时文件）
     n_stable = sum(1 for r in rows if (r.get("release") or "") == "stable")
     if not anchor.is_file():
         if n_stable:
@@ -225,20 +252,47 @@ def check_release_record(rows: list[dict], path=None) -> list[str]:
     if not recs:
         problems.append(f"{anchor.name}: 空（至少要有一次发布的锚点行）")
         return problems
+    seen_rel: dict[str, int] = {}
+    prev_date = ""
     for i, row in enumerate(recs, start=2):
         rel = (row.get("release") or "").strip()
+        when = (row.get("released_at") or "").strip()
         sha = (row.get("stable_sha256") or "").strip().lower()
         lsha = (row.get("ledger_sha256") or "").strip().lower()
         fmt = (row.get("id_format") or "").strip()
         if not rel:
             problems.append(f"{anchor.name}:{i} 缺 release")
+        elif rel in seen_rel:
+            problems.append(f"{anchor.name}:{i} release {rel!r} 与第 {seen_rel[rel]} 行重复")
+        else:
+            seen_rel[rel] = i
+        if not when:
+            problems.append(f"{anchor.name}:{i} 缺 released_at")
+        elif not DATE_RE.match(when):
+            problems.append(f"{anchor.name}:{i} released_at 必须是 YYYY-MM-DD：{when!r}")
+        elif prev_date and when < prev_date:
+            problems.append(f"{anchor.name}:{i} released_at {when} 早于上一行 {prev_date}"
+                            "（发布号不得倒序）")
+        else:
+            prev_date = when
         if len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha):
             problems.append(f"{anchor.name}:{i} stable_sha256 必须是 64 位十六进制")
-        # ledger_sha256 是**发布那一刻整份账本**的哈希（point-in-time 历史事实，
-        # 用 `git show <tag>:glyphs/glyph-ids.csv` 验证）——库往后会长，
-        # 所以它**不**与工作区比对，只校验格式。
-        if lsha and (len(lsha) != 64 or any(c not in "0123456789abcdef" for c in lsha)):
+        # ledger_sha256 = 发布那一刻整份账本的哈希（point-in-time 历史事实）。
+        # 库往后会长，所以它**不**与工作区比对，而是与**该 release 的 git tag**
+        # 下那份账本对账——本地没有那个 tag 时跳过（tag 可能还没推）。
+        if not lsha:
+            problems.append(f"{anchor.name}:{i} ledger_sha256 不得为空")
+        elif len(lsha) != 64 or any(c not in "0123456789abcdef" for c in lsha):
             problems.append(f"{anchor.name}:{i} ledger_sha256 必须是 64 位十六进制")
+        elif rel:
+            blob = _git_blob_sha256(f"{rel}:glyphs/glyph-ids.csv")
+            if blob is None:
+                if real:
+                    print(f"  ℹ {anchor.name}:{i} 本地没有 tag {rel!r}，跳过 ledger_sha256 对账")
+            elif blob != lsha:
+                problems.append(
+                    f"{anchor.name}:{i} ledger_sha256 {lsha[:12]}… 与 tag {rel!r} "
+                    f"下的账本 {blob[:12]}… 不符")
         if fmt and fmt != ID_FORMAT:
             problems.append(f"{anchor.name}:{i} id_format {fmt!r} 与现行 {ID_FORMAT} 不符")
     last = recs[-1]
@@ -673,17 +727,23 @@ def selftest() -> int:
     #    锚点不在 → 账本必须一个已发布号都没有（= 还没发布过）
     import tempfile
     with tempfile.TemporaryDirectory() as td:
-        good_anchor = Path(td) / "release.csv"
         zeros = "0" * 64
-        good_anchor.write_text(
-            "release,released_at,stable_sha256,ledger_sha256,id_format,note\n"
-            f"v1.0.0,2026-11-06,{fp},{zeros},6-4-6,test\n", encoding="utf-8")
+        # 用一个**不存在的 tag 名**：ledger_sha256 的 tag 对账在本地没 tag 时跳过，
+        # 这样 selftest 不依赖仓库里恰好有哪个 tag。
+        fake = "v0.0.0-selftest"
+        head = "release,released_at,stable_sha256,ledger_sha256,id_format,note\n"
+
+        def write_anchor(name, body):
+            p = Path(td) / name
+            p.write_text(head + body, encoding="utf-8")
+            return p
+
+        good_anchor = write_anchor("good.csv",
+                                   f"{fake},2026-11-06,{fp},{zeros},6-4-6,test\n")
         assert check_release_record(f_rows, good_anchor) == [], \
             check_release_record(f_rows, good_anchor)
-        bad_anchor = Path(td) / "bad.csv"
-        bad_anchor.write_text(
-            "release,released_at,stable_sha256,ledger_sha256,id_format,note\n"
-            f"v1.0.0,2026-11-06,{zeros},{zeros},6-4-6,test\n", encoding="utf-8")
+        bad_anchor = write_anchor("bad.csv",
+                                  f"{fake},2026-11-06,{zeros},{zeros},6-4-6,test\n")
         assert check_release_record(f_rows, bad_anchor), "指纹不符必须报错"
         missing_anchor = Path(td) / "nope.csv"
         assert check_release_record(f_rows, missing_anchor), \
@@ -693,6 +753,22 @@ def selftest() -> int:
             "一个已发布号都没有 → 铸发态不需要锚点"
         assert check_release_record(all_draft, good_anchor), \
             "把已发布的号翻回 draft 是破坏冻结 → 必须报错"
+        # 10. 逐行体检：ledger_sha256 不得为空 / released_at 必须是 YYYY-MM-DD /
+        #     release 不得重复 / 日期不得倒序
+        empty_lsha = write_anchor("empty_lsha.csv",
+                                  f"{fake},2026-11-06,{fp},,6-4-6,test\n")
+        assert check_release_record(f_rows, empty_lsha), "ledger_sha256 不得为空"
+        bad_date = write_anchor("bad_date.csv",
+                                f"{fake},2026/11/06,{fp},{zeros},6-4-6,test\n")
+        assert check_release_record(f_rows, bad_date), "released_at 格式错必须报错"
+        dup = write_anchor("dup.csv",
+                           f"{fake},2026-11-06,{fp},{zeros},6-4-6,t\n"
+                           f"{fake},2026-11-07,{fp},{zeros},6-4-6,t\n")
+        assert check_release_record(f_rows, dup), "release 重复必须报错"
+        back = write_anchor("back.csv",
+                            f"{fake},2026-11-07,{fp},{zeros},6-4-6,t\n"
+                            f"{fake}-b,2026-01-01,{fp},{zeros},6-4-6,t\n")
+        assert check_release_record(f_rows, back), "released_at 倒序必须报错"
     print("selftest 通过：冻结 / 插入 max+1 / 退役保留 / 退役号不复用 / 同键复活 / "
           "迁移重定向 / 形状重铸幂等 / 扩展位不进桶 / 发布锚点指纹")
     return 0
@@ -717,13 +793,54 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--release", choices=("draft", "stable"), default=None,
                     help="批量翻转发布态（发布流程用）：把账本每一行的 release 列"
                          "改成该值。默认不动，沿用账本里已有的发布态")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="只算不写：打印将要发生什么（翻转多少行、新的发布锚点行），"
+                         "不落盘")
+    ap.add_argument("--force", action="store_true",
+                    help="配合 --release draft：发布锚点已存在时仍强行把已发布的号"
+                         "翻回 draft（危险：必须同步更新发布锚点，否则 --check 会红）")
     args = ap.parse_args(argv)
 
     if args.selftest:
         return selftest()
 
+    # **fail-closed**：发布锚点已存在 = 已经发布过一次。已发布的号是**单向**的，
+    # 翻回 draft 会与锚点矛盾——发布工具不该有「一键撤销」这条路。
+    if args.release == "draft" and RELEASES_PATH.is_file() and not args.force:
+        raise SystemExit(
+            f"拒绝执行：发布锚点 {RELEASES_PATH.name} 已存在（已发布过），"
+            "把已发布的号翻回 draft 会与锚点矛盾。\n"
+            "  发布是**单向**的：已发布的号永不翻回。\n"
+            "  若确需撤销发布，请显式加 --force，并**同步更新** "
+            f"{RELEASES_PATH.name}（否则 --check 会红）。")
+
+    before = None
+    if OUT_PATH.is_file():
+        before = list(csv.DictReader(io.StringIO(OUT_PATH.read_text(encoding="utf-8"))))
+
     texts, stats = build_artifacts(release_override=args.release or "")
     rows = list(csv.DictReader(io.StringIO(texts[OUT_PATH])))
+
+    if args.release:
+        n_before = sum(1 for r in before or [] if (r.get("release") or "") == args.release)
+        n_after = sum(1 for r in rows if (r.get("release") or "") == args.release)
+        print(f"发布态 → {args.release}：{n_after} 行"
+              f"（原 {n_before} 行；本轮 kept {stats['kept']} / minted {stats['minted']}）")
+        if args.release == "draft" and args.force:
+            print("  ⚠️ --force：这是破坏冻结的操作。必须同步更新发布锚点，否则 --check 会红。")
+        if args.release == "stable":
+            print(f"  已发布号集合指纹 stable_sha256 = {stable_fingerprint(rows)}")
+            print(f"  账本文件哈希     ledger_sha256 = "
+                  f"{hashlib.sha256(texts[OUT_PATH].encode('utf-8')).hexdigest()}")
+            print(f"  → 追加这一行到 {RELEASES_PATH.name}（人工维护，代码不代写）：")
+            print(f"     {','.join(RELEASE_FIELDS)}")
+            print(f"     <发布号>,<YYYY-MM-DD>,{stable_fingerprint(rows)},"
+                  f"{hashlib.sha256(texts[OUT_PATH].encode('utf-8')).hexdigest()},"
+                  f"{ID_FORMAT},<说明>")
+
+    if args.dry_run:
+        print(f"[dry-run] 未写盘。将会写 {len(texts)} 个产物，账本 {len(rows)} 行。")
+        return 0
 
     if args.char:
         ch = args.char.strip()
