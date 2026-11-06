@@ -6,8 +6,8 @@
 
 - 收录汉字 SVG 字形（甲骨文、金文、篆书、隶书、楷书、行书、草书、宋体、黑体）
 - 供上层项目引用；本仓库不做游戏、不做业务应用
-- 附一个**零构建的只读浏览页** `viewer/index.html`（由 `src/build_viewer.py` 生成，不是应用、
-  不引入依赖、不复制字形文件），用于人工核验字形
+- 附一个**零构建的只读浏览页** `viewer/index.html`（生成物，不入库；由 `src/build_viewer.py`
+  生成，不是应用、不引入依赖、不复制字形文件），用于人工核验字形
 - 浏览页的字形**按需从 CDN 取**（部署到 Pages 时 `glyphs/` 不随站点发布）。
   **取字必须有兜底链**：单一 CDN 的一次失败就会留一个空白格，兜底链见
   `src/build_viewer.py` 的 `retryPlan()`；全试完还不行就把格子标成「取不到」，
@@ -29,7 +29,7 @@ hanzi-glyphs-svg/
     glyph-ids-subcodes.csv  # 扩展位（书体码后 2 位）登记表——**人工维护**（见「扩展位」）
     glyph-ids-excluded.csv  # 无根码排除清单（「每件一号」表述必须与此并列）
     glyph-ids.meta.json     # schema_version 与计数（确定性生成）
-    export/          # 宽表导出 export/<层>.csv（账本⋈index⋈provenance）+ FIELDS.md 字段词典
+    export/          # 宽表导出 export/<层>.csv（生成物，*.csv 不入库；--write-exports）+ FIELDS.md
     oracle/          # JGW 骨架 + 汉典拓片摹本 + 小学堂描摹件 + index.csv + outline/（派生层）
     bronze/          # 金文字形（汉典矢量件 + 小学堂描摹件）+ index.csv
     seal/            # 篆书字形（漢典矢量件 + 小學堂补缺描摹件）+ index.csv + external.csv（全量码位登记表）+ xiaozhuan-merge-crosswalk.csv + README.md
@@ -45,7 +45,7 @@ hanzi-glyphs-svg/
                      # 现代书体（OFL）：字形 + index.csv + OFL.txt + SOURCE.md
   src/               # 脚本（导入/抽取/派生/校验/生成浏览页）
     licenses/        # 第三方许可原文（供逐条款比对）
-  viewer/            # 静态浏览页（生成的，勿手改）
+  viewer/            # 浏览页说明；index.html 由 build_viewer.py 生成，不入库
   .github/workflows/ # GitHub Pages 部署 + CI 校验
 ```
 

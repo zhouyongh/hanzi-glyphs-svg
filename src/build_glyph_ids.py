@@ -864,6 +864,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="跨层统一字形编号账本")
     ap.add_argument("--check", action="store_true",
                     help="CI：全部产物（账本/排除清单/元数据/宽表导出）逐字节复算")
+    ap.add_argument("--write-exports", action="store_true",
+                    help="只写宽表导出 glyphs/export/*.csv（构建产物，不入库；CI/Pages 用）")
     ap.add_argument("--selftest", action="store_true",
                     help="冻结政策自检：插入 max+1 / 退役保留 / 退役号不复用 / 同键复活 / 迁移重定向")
     ap.add_argument("--redirects", action="store_true",
@@ -900,6 +902,12 @@ def main(argv: list[str] | None = None) -> int:
 
     texts, stats = build_artifacts(release_override=args.release or "")
     rows = list(csv.DictReader(io.StringIO(texts[OUT_PATH])))
+
+    if args.write_exports:
+        exports = {p: t for p, t in texts.items() if p.parent == EXPORT_DIR}
+        write_all(exports)
+        print(f"写出 {len(exports)} 个宽表导出到 {EXPORT_DIR.relative_to(ROOT)}")
+        return 0
 
     if args.release:
         n_before = sum(1 for r in before or [] if (r.get("release") or "") == args.release)

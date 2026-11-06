@@ -12,8 +12,10 @@
 > ❌ **不要**拿层内文件名或篆书码位当跨层引用——`0386.svg` 只在甲骨层内有意义、
 > `3D000` 只是小篆层的键，跨层拼接必然出错。
 > 按字查全部书体：`python src/build_glyph_ids.py --char 一`；
-> 浏览页深链：`viewer/index.html#id=004E00-0E00-000001`；
-> 数据库对接用宽表导出 `glyphs/export/<层>.csv`（字段词典
+> 浏览页深链：`viewer/index.html#id=004E00-0E00-000001`（先运行
+> `python src/build_viewer.py` 生成）；
+> 数据库对接用宽表导出 `glyphs/export/<层>.csv`（先运行
+> `python src/build_glyph_ids.py --write-exports` 生成；字段词典
 > [glyphs/export/FIELDS.md](glyphs/export/FIELDS.md)，schema 钉在
 > `glyphs/glyph-ids.meta.json`）。
 
@@ -192,7 +194,8 @@
 ## 浏览
 
 - **在线预览**：https://zhouyongh.github.io/hanzi-glyphs-svg/
-- **本地预览**：直接双击 `viewer/index.html`（零依赖、无需服务器；索引数据已内联进页面，
+- **本地预览**：先运行 `python src/build_viewer.py`，再打开 `viewer/index.html`
+  （零依赖、无需服务器；索引数据已内联进页面，
   字形文件按需去取）
 
 页面按书体分 Tab：甲骨文 Tab 可预览全部 14,458 个字形，支持按编号 / 现代字 / 码位 / 拼音搜索，
@@ -332,7 +335,7 @@ python src/verify_font_licenses.py --license-dir glyphs/kaishu --font <字体>
 | 账本 | `glyphs/glyph-ids.csv`，183,749 行（active 183,749 / retired 0） |
 | 发布锚点 | `glyphs/glyph-ids-release.csv`（一行一次发布，人工维护） |
 | 已发布号集合指纹 | `b03c1519…`（**durable**：库往后长大也不变） |
-| 宽表导出 | `glyphs/export/<层>.csv`（字段词典 `glyphs/export/FIELDS.md`） |
+| 宽表导出 | `glyphs/export/<层>.csv`（生成物；`python src/build_glyph_ids.py --write-exports`；字段词典 `glyphs/export/FIELDS.md`） |
 | 引用 | `CITATION.cff`（GitHub「Cite this repository」自动生成） |
 
 **编号一经发布永不重排**：退役保留号与序号（永不复用），新增件取桶内 max+1，
@@ -383,8 +386,9 @@ python src/verify_font_licenses.py --license-dir glyphs/kaishu --font <字体.tt
 python src/build_font_license_evidence.py --font-dir <本地字体目录>
 python src/license_audit.py
 
-# 6) 浏览页（数据变了才需要）
+# 6) 浏览页与宽表导出（数据变了才需要；生成物不入库）
 python src/build_viewer.py
+python src/build_glyph_ids.py --write-exports
 ```
 
 导入只替换自己那一层（`layer="skeleton"`）的记录，不会动派生层；
@@ -447,7 +451,7 @@ hanzi-glyphs-svg/
     songti/ songti-tc/ heiti-hk/
   src/                       脚本：导入 / 抽取 / 派生 / 校验 / 生成浏览页
     licenses/                第三方许可原文（供逐条款比对）
-  viewer/index.html          静态浏览页（生成的，勿手改）
+  viewer/README.md           浏览页说明；index.html 由脚本生成，不入库
 ```
 
 ## 致谢

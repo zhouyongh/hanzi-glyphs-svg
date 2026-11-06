@@ -164,6 +164,8 @@ jobs:
       - name: 统一编号账本校验
         run: |
           python src/build_glyph_ids.py --selftest
+          # 宽表导出是构建产物（不入库），先按当前账本生成，再逐字节复算其余产物。
+          python src/build_glyph_ids.py --write-exports
           python src/build_glyph_ids.py --check
 
   rubbing:

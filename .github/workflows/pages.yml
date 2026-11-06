@@ -7,7 +7,8 @@ name: Deploy viewer to GitHub Pages
 # 都装不下；而且 GitHub 对单仓库也有 100 MB 单文件、1 GB 建议值的限制。
 # 浏览页因此改从 **jsDelivr 的 gh 通道**按需取字形（见 src/build_viewer.py 的
 # GLYPH_BASES：jsDelivr 优先，raw.githubusercontent 兜底）。
-# 代价是线上浏览要联网；本地双击 viewer/index.html 仍走 ../glyphs/，离线可用。
+# 代价是线上浏览要联网；本地先跑 `python src/build_viewer.py` 生成
+# viewer/index.html，再打开仍走 ../glyphs/，离线可用。
 #
 # **注意**：CDN 取的是**已推送**的仓库内容。工作区里还没 push 的字形，
 # 只有本地预览看得到——这是「先本地提交、不上传」的必然结果。
@@ -31,10 +32,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: 组装站点
         run: |
           mkdir -p _site
-          cp viewer/index.html _site/index.html
+          # 浏览页与宽表导出都是生成物，不入库；在 CI 里构建。
+          python src/build_glyph_ids.py --write-exports
+          python src/build_viewer.py --out _site/index.html
           # 统一编号产物族（总账 + 排除清单 + schema 元数据 + 宽表导出 + 字段词典）：
           # world 可从 https://<pages>/... 直接取；viewer 的 #id= 深链按层内联副本定位。
           cp glyphs/glyph-ids.csv glyphs/glyph-ids-excluded.csv glyphs/glyph-ids.meta.json _site/
