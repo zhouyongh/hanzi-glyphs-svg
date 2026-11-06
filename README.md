@@ -351,8 +351,8 @@ git tag。`--release draft` 是 fail-closed 的：锚点已存在时直接拒绝
 所以没有兼容对象。输入旧形一律 404，不回落、不误判。
 
 **本次发布范围**：字形库 + 统一编号 + 出处 + 许可 + 浏览页。
-`glyphs/ids/` 下的 `GID` 体系（`ID-SPEC-v2.2-min.md`）是**下一代规划稿、未实施**，
-不在发布范围。DOI（Zenodo）待 GitHub Release 建好后另做一步。
+`glyphs/ids/` 下的 `GID` 体系是**下一代规划稿、未实施**，不在发布范围。
+DOI（Zenodo）待 GitHub Release 建好后另做一步。
 
 ## 重新生成
 

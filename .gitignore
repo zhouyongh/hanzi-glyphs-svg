@@ -24,3 +24,9 @@ __pycache__/
 glyphs/ids/snapshot-manifest.tsv
 # 退化候选清单：机器扫出来的**候选**，不是裁决；裁决在 quarantine.csv（人工维护）。
 glyphs/ids/quarantine-candidates.csv
+
+# 内部工作文档（过程稿，不进发布面）
+# 编号方案的内部规格稿与外部评审稿（含模型署名稿）——是工作材料，不是发布物。
+# 文件保留在本地磁盘，只是不随仓库发布。
+ID-*.md
+glyphs/ids/final-review-decisions.md
