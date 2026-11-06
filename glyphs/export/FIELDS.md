@@ -1,6 +1,12 @@
 # Field dictionary (English)
 
-Schema version: **1** (pinned in `glyphs/glyph-ids.meta.json`).
+Field dictionary version: **1** (this file's own revision).
+
+Ledger schema version: **2** — pinned in `glyphs/glyph-ids.meta.json`
+(`schema_version`), alongside `id_format` = `6-4-6` (the `unified_id` syntax
+below). The two numbers are independent: this dictionary describes the
+**columns** of the wide exports; the ledger schema describes the **ledger's
+own fields**. Do not read the ledger schema version off this file.
 
 All artifacts in this directory plus the sibling files `glyph-ids.csv`,
 `glyph-ids-excluded.csv` and `glyph-ids.meta.json` are **deterministic build
@@ -13,41 +19,52 @@ products** (`python src/build_glyph_ids.py`; verified byte-identical in CI by
 |---|---|
 | `../glyph-ids.csv` | The ledger. One row per glyph. Append-only: published IDs are frozen forever; deleted glyphs become `retired` and their serials are never reused. |
 | `../glyph-ids-excluded.csv` | Index rows that intentionally carry **no** `unified_id` (no modern-char codepoint and no PUA slot). Currently 2 oracle rows (JGW `0380`/`0916`). |
-| `../glyph-ids.meta.json` | `schema_version` + row counts + artifact list. |
-| `export/<layer>.csv` | Wide join `ledger ⋈ index ⋈ provenance`, one file per layer — downstream code does not need to join three tables. |
+| `../glyph-ids.meta.json` | `schema_version` + `id_format` + row counts + artifact list. |
+| `../glyph-ids-subcodes.csv` | Extension-slot registry (layer, subcode, meaning, owner, date) — **human-maintained**, append-only, never redefined. Empty = only the default partition `00` exists. It lives beside the ledger, not in this directory: it is registry, not a build product. |
+| `../glyph-ids-release.csv` | Release anchor — one row per published release (release, released_at, stable_sha256, ledger_sha256, id_format, note). **Human-maintained**, append-only. `stable_sha256` is the fingerprint of the released `unified_id` set (durable: it does not change as the library grows); `ledger_sha256` is the whole-file hash at that release (point-in-time). CI re-checks `stable_sha256` against the current ledger, so a changed published ID turns the build red. |
+| `<layer>.csv` | Wide join `ledger ⋈ index ⋈ provenance`, one file per layer — downstream code does not need to join three tables. |
 | `export/FIELDS.md` | This dictionary. |
 
 ## `unified_id` syntax
 
-`<root>-<script>-<seq>`, e.g. `004E00-0E-000001` = 「一」(U+4E00), small-seal
-script, instance 1.
+`<root>-<script>-<seq>`, e.g. `004E00-0E00-000001` = 「一」(U+4E00), small-seal
+script, instance 1. Regex: `^[0-9A-F]{6}-[0-9A-Z]{4}-[0-9]{6}$`.
 
 - **root** — the modern character's Unicode codepoint, 6 uppercase hex digits.
   For provisional entries (`identity_confidence="pua-slot"`) the root is a
   **Private Use Area** codepoint carried over from `modern_char_slot`; these
   rows are machine-checked to never collide with real Han codepoints.
-- **script** — 2-digit layer key, frozen, append-only:
+- **script** — **4-digit** layer key = *base digit* (1) + *layer key* (1) +
+  *extension slot* (2), frozen, append-only. Base36 alphabet `0-9A-Z`;
+  **no `I`/`L`/`O`/`U` normalisation** (the frozen layer keys include `0I` and
+  `0L`; Crockford folding belongs to the `GID` space only):
 
   | code | layer | directory | era anchor |
   |---|---|---|---|
-  | 0A | Oracle bone script | oracle | late Shang |
-  | 0B | Bronze script | bronze | Shang–Zhou |
-  | 0C | Chu script | chu | Warring States (Chu) |
-  | 0D | Qin bamboo/wooden slips | qinwenzi | late Warring States–Qin |
-  | 0E | Small seal script | seal | Qin (incl. Xiaoxuetang fills) |
-  | 0F | Clerical script | clerical | late Qin–Han |
-  | 0G | Cursive script | caoshu | Han |
-  | 0H | Regular script | kaishu | late Han– |
-  | 0I | Running script | xingshu | late Han–Wei/Jin– |
-  | 0J | Transmitted ancient script | chuanchao | pre-Qin forms, Song–modern copies (appendix slot) |
-  | 0K | Song/Ming, Simplified | songti | Song–present (mainland standard) |
-  | 0L | Song/Ming, Traditional | songti-tc | Song–present (TW/HK standard) |
-  | 0M | Sans, Hong Kong | heiti-hk | 20th century |
+  | 0A00 | Oracle bone script | oracle | late Shang |
+  | 0B00 | Bronze script | bronze | Shang–Zhou |
+  | 0C00 | Chu script | chu | Warring States (Chu) |
+  | 0D00 | Qin bamboo/wooden slips | qinwenzi | late Warring States–Qin |
+  | 0E00 | Small seal script | seal | Qin (incl. Xiaoxuetang fills) |
+  | 0F00 | Clerical script | clerical | late Qin–Han |
+  | 0G00 | Cursive script | caoshu | Han |
+  | 0H00 | Regular script | kaishu | late Han– |
+  | 0I00 | Running script | xingshu | late Han–Wei/Jin– |
+  | 0J00 | Transmitted ancient script | chuanchao | pre-Qin forms, Song–modern copies (appendix slot) |
+  | 0K00 | Song/Ming, Simplified | songti | Song–present (mainland standard) |
+  | 0L00 | Song/Ming, Traditional | songti-tc | Song–present (TW/HK standard) |
+  | 0M00 | Sans, Hong Kong | heiti-hk | 20th century |
 
-- **seq** — 6-digit instance number within a (root, script) bucket. Initial
+  The **base digit** is 1 char wide and fixed (segments `0`–`Z` × 36 layer keys
+  = 1,296 layer slots; 13 used). The **extension slot** (last 2 chars) is an
+  **opaque per-layer partition handle**: `00` is each layer's default
+  partition. Its meaning is defined in `../glyph-ids-subcodes.csv`
+  (human-maintained, append-only, never redefined). The extension slot does
+  **not** enter the serial bucket.
+- **seq** — 6-digit instance number within a (root, layer-key) bucket. Initial
   assignment used a per-layer scholarly order (small seal = Shuowen sequence;
   bronze/clerical = chronological; Chu = excavation-date order); **after the
-  v1 mint, IDs are frozen**: new glyphs take max+1, retired serials are never
+  first mint, IDs are frozen**: new glyphs take max+1, retired serials are never
   reused.
 
 ## Ledger columns (`glyph-ids.csv`)
@@ -72,7 +89,7 @@ Superset of the ledger columns plus:
 | column | description |
 |---|---|
 | `layer_zh` | Layer's Chinese name (e.g. 小篆). |
-| `script_code` | The 2-digit script code (0A…0M). |
+| `script_code` | The 4-digit script code (0A00…0M00); last 2 chars are the extension slot (see syntax above). |
 | `sha256` | SHA-256 of the SVG file in the layer directory. |
 | `license` | License of this glyph's record (CC0-1.0 / CC-BY-4.0 / OFL-1.1). Check `THIRD_PARTY_NOTICES.md` for attribution obligations. |
 | `source_dataset` | Upstream batch (漢典 vector, 小學堂 bitmap trace, OFL font outline, JGW parametric, …). |

@@ -7,12 +7,12 @@
 本仓库**自有的内容**（文档、索引、代码、浏览页）以 **CC0 1.0** 释出。
 `glyphs/` 下的字形逐层不同：甲骨 JGW 层 **CC BY 4.0**、六个字体层 **OFL 1.1**、其余 **CC0 1.0**。
 
-> **引用字形请一律用统一编号 `unified_id`**（形如 `004E00-0E-000001`；总账
+> **引用字形请一律用统一编号 `unified_id`**（形如 `004E00-0E00-000001`；总账
 > `glyphs/glyph-ids.csv`，ID 铸发后冻结、退役保留、新增只取桶内 max+1）。
 > ❌ **不要**拿层内文件名或篆书码位当跨层引用——`0386.svg` 只在甲骨层内有意义、
 > `3D000` 只是小篆层的键，跨层拼接必然出错。
 > 按字查全部书体：`python src/build_glyph_ids.py --char 一`；
-> 浏览页深链：`viewer/index.html#id=004E00-0E-000001`；
+> 浏览页深链：`viewer/index.html#id=004E00-0E00-000001`；
 > 数据库对接用宽表导出 `glyphs/export/<层>.csv`（字段词典
 > [glyphs/export/FIELDS.md](glyphs/export/FIELDS.md)，schema 钉在
 > `glyphs/glyph-ids.meta.json`）。
@@ -44,14 +44,15 @@
 + **2,339** 个拓片原件（1:1 派生件按派生规则定位，不占编号）。
 
 全仓字形另有**跨层统一编号** `glyphs/glyph-ids.csv`（一行一个字形，账本式：
-ID 形如 `004E00-0E-000001` = 「一」的小篆第 1 件——根码 = 现代字 Unicode 码位（6 位），
-书体码两位 0A–0M 按时代序（0E=小篆，首位进制位留扩展），序号六位按（字，书体）桶内流水；
+ID 形如 `004E00-0E00-000001` = 「一」的小篆第 1 件——根码 = 现代字 Unicode 码位（6 位），
+书体码 **4 位**（`0`+层键 A–M+扩展位 2 位，扩展位 `00` 是层内默认分区、留给将来扩展），
+序号六位按（字，层键）桶内流水；
 **桶内初始序是学术序**（小篆=说文序、金文/隶书=时代序、楚=出土文献年代序，
 见 `src/era_sequence.py`），且 **ID 铸发后冻结**：新增字形只取桶内 max+1，
 退役 ID 保留不复用——引用不会断链）。每行另有 `release` 列（`draft` = 铸发未对外 /
 `stable` = 已随发布对外），与生命周期正交。临时身份件日后补回正式码位时，
 `python src/build_glyph_ids.py --redirects` 导出 old→new 重定向表。
-规则见 `AGENTS.md`「统一字形编号」。
+规则见 `AGENTS.md`「统一字形编号」与「扩展位」。
 
 ### 甲骨文（JGW 批 CC BY 4.0 + 汉典摹本 CC0 1.0）
 
@@ -295,6 +296,33 @@ python src/verify_font_licenses.py --license-dir glyphs/kaishu --font <字体>
 `verify_provenance.py` 以退出码 1 报告任何不符，可直接用于 CI。它同时复核三件事：
 每条的 `license` 是否在允许名单内（ND / NC / 无许可一律不许在库里）、
 每条记录的书体是否与所在文件名一致、每层 `index.csv` 与出处记录是否三账对得上。
+
+## 发布与引用
+
+本仓库**对外只有一套编号**：6-4-6 形可读编号 `unified_id`（账本 `glyphs/glyph-ids.csv`）。
+「v1 / v2」是**过程用词**，不是两个对外版本——对外只有这一次正式发布。
+
+| 项 | 值 |
+|---|---|
+| 发布号 | `v1.0.0`（git tag；仓库自身版本 1.0.0，**不是**「第一代账本」） |
+| 编号格式 | `6-4-6` · `^[0-9A-F]{6}-[0-9A-Z]{4}-[0-9]{6}$` |
+| 账本 | `glyphs/glyph-ids.csv`，183,749 行（active 183,749 / retired 0） |
+| 发布锚点 | `glyphs/glyph-ids-release.csv`（一行一次发布，人工维护） |
+| 已发布号集合指纹 | `b03c1519…`（**durable**：库往后长大也不变） |
+| 宽表导出 | `glyphs/export/<层>.csv`（字段词典 `glyphs/export/FIELDS.md`） |
+| 引用 | `CITATION.cff`（GitHub「Cite this repository」自动生成） |
+
+**编号一经发布永不重排**：退役保留号与序号（永不复用），新增件取桶内 max+1，
+合并重排只更新 file 列、号纹丝不动。这条承诺**有机检**：`build_glyph_ids.py --check`
+拿发布锚点里的 `stable_sha256` 与当前账本的**已发布号集合**对账——改了任何一个已发布的
+号就红；新增字形是 `release=draft`，不进集合、不影响锚点，等下一次发布再登记一行。
+
+**旧 6-2-6 形不接受**：那一版**从未公开**（无 tag、无 DOI、远端没有账本），
+所以没有兼容对象。输入旧形一律 404，不回落、不误判。
+
+**本次发布范围**：字形库 + 统一编号 + 出处 + 许可 + 浏览页。
+`glyphs/ids/` 下的 `GID` 体系（`ID-SPEC-v2.2-min.md`）是**下一代规划稿、未实施**，
+不在发布范围。DOI（Zenodo）待 GitHub Release 建好后另做一步。
 
 ## 重新生成
 
