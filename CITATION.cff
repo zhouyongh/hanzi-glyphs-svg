@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: "汉字字形 SVG 库（hanzi-glyphs-svg）"
+message: >-
+  字形逐层授权：甲骨 JGW 层为 CC BY 4.0，现代书体六层为 SIL OFL 1.1，其余层与
+  本仓库自有内容为 CC0 1.0。逐层许可见 LICENSE-DATA 与 THIRD_PARTY_NOTICES.md，
+  每条出处记录的 license 字段见 glyphs/provenance/<书体>.jsonl。
+type: dataset
+authors:
+  - family-names: 周
+    given-names: 永恒
+version: 1.0.0
+date-released: 2026-11-06
+license: CC0-1.0
+repository-code: "https://github.com/zhouyongh/hanzi-glyphs-svg"
+url: "https://zhouyongh.github.io/hanzi-glyphs-svg/"
+keywords:
+  - Chinese characters
+  - paleography
+  - oracle bone script
+  - bronze script
+  - seal script
+  - clerical script
+  - SVG
+  - glyph identifiers
+abstract: >-
+  收录甲骨文、金文、篆书、隶书、楚文字、傳抄古文、秦系简牘与楷/行/草/宋体/黑体
+  等现代书体的汉字字形 SVG，共 183,751 件，逐件可追溯出处。每件带一个跨层统一
+  编号 unified_id（6-4-6 形，如 004E00-0E00-000001），编号一经发布永不重排。
+  编号账本见 glyphs/glyph-ids.csv，发布锚点见 glyphs/glyph-ids-release.csv，
+  字段词典见 glyphs/export/FIELDS.md。

@@ -12,9 +12,16 @@
 
 **规则全文见 AGENTS.md「统一字形编号（unified_id）」**。要点：
 
-- ID = `<根码>-<书体码>-<序号>`，如 `004E00-0E-000001` = 「一」的小篆第 1 件；
-- 根码 = 现代字 Unicode 码位（6 位大写 hex）；书体码 = 2 位层键（0A..0M，冻结）；
-  序号 =（根码, 书体）桶内 6 位十进制；
+- ID = `<根码>-<书体码>-<序号>`，如 `004E00-0E00-000001` = 「一」的小篆第 1 件；
+- 根码 = 现代字 Unicode 码位（6 位大写 hex）；
+  书体码 = **4 位 base36**（`0` + 层键 A..M + **扩展位 2 位**，存量一律 `00`）；
+  序号 =（根码, 层键）桶内 6 位十进制；
+- **书体码 = 进制位(1) + 层键(1) + 扩展位(2)**：层键按序冻结、只增不改；
+  扩展位是**层内不透明的分区句柄**，`00` = 默认分区，语义由
+  `glyphs/glyph-ids-subcodes.csv`（**人工维护**）定义，只增不改、永不重定义。
+  扩展位**不进桶**——桶仍是（根码, 层键），所以层内的学术序不被切开；
+- **字母表 base36 `0-9A-Z`，不做 `I/L/O/U` 归一化**（存量层键含 `0I`/`0L`；
+  归一化是 GID 的规则，套到可读编号上会让两个层撞成同一个串）；
 - **冻结政策（2026-11-05）**：ID 一经发布永不重排。账本键 = (层, 读法, source_id)，
   全仓实测 0 碰撞。现行行 status=active；消失行 status=retired（ID 保留、序号
   永不复用）；新增行取桶内最大已用号 + 1。初始分配才用逐层学术序
@@ -25,9 +32,15 @@
   尚未对外」由此表达；
 - 产物族（全部确定性生成，`--check` 逐字节复算）：
   `glyph-ids.csv`（账本）+ `glyph-ids-excluded.csv`（无根码排除清单）
-  + `glyph-ids.meta.json`（schema_version 与计数）+ `export/<层>.csv`
+  + `glyph-ids.meta.json`（schema_version、id_format 与计数）+ `export/<层>.csv`
   （宽表导出：账本 ⋈ index ⋈ provenance，下游免拼表）+ `export/FIELDS.md`
   （英文字段词典，手维护）；
+- `glyph-ids-subcodes.csv` 是**人工维护**的扩展位登记表（**不属于**确定性产物族）：
+  代码只**校验**它，绝不生成或覆盖；
+- `glyph-ids-release.csv` 是**人工维护**的发布锚点（**不属于**确定性产物族）：
+  记「哪一版已对外 + 那一版的已发布号集合指纹」。`--check` 拿它对账——
+  改了任何一个已发布的号就红；新增字形（`release=draft`）不进指纹，
+  等下一次发布再登记一行。这样「ID 铸发后冻结」是**机检**，不只是承诺；
 - 身份迁移（临时身份补回正式 CJK）= 旧行退役 + 新根码铸发，`--redirects`
   按 (层, source_id) 血缘导出 old→new 重定向表，引用链不断。
 """
@@ -35,6 +48,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import io
 import json
 import sys
@@ -50,11 +64,21 @@ OUT_PATH = ROOT / "glyphs" / "glyph-ids.csv"
 EXCLUDED_PATH = ROOT / "glyphs" / "glyph-ids-excluded.csv"
 META_PATH = ROOT / "glyphs" / "glyph-ids.meta.json"
 EXPORT_DIR = ROOT / "glyphs" / "export"
+# 扩展位（分区码）登记表——**人工维护**，代码只校验、绝不生成或覆盖。
+SUBCODES_PATH = ROOT / "glyphs" / "glyph-ids-subcodes.csv"
+# 发布锚点——**人工维护**，代码只校验、绝不生成或覆盖。
+# 记「哪一版已对外 + 那一版的已发布号集合指纹」，把「ID 铸发后冻结」从承诺变成机检。
+RELEASES_PATH = ROOT / "glyphs" / "glyph-ids-release.csv"
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+ID_FORMAT = "6-4-6"
+SCRIPT_RESERVED = "00"          # 默认分区：每层第一批、也是绝大多数件的归属
+SUBCODE_FIELDS = ("layer", "subcode", "meaning", "owner", "date")
+RELEASE_FIELDS = ("release", "released_at", "stable_sha256", "ledger_sha256",
+                  "id_format", "note")
 
 # 书体字母表（**按序冻结，只增不改**）——全文见 AGENTS.md「统一字形编号」。
-# (书体码尾字, 层中文名, 目录, 键形态)；书体码 = "0" + 尾字。
+# (书体码尾字, 层中文名, 目录, 键形态)；书体码 = "0" + 尾字 + 扩展位("00")。
 SCRIPT_TABLE = (
     ("A", "甲骨文", "oracle", "glyph_id"),
     ("B", "金文", "bronze", "glyph_id"),
@@ -72,7 +96,9 @@ SCRIPT_TABLE = (
 )
 
 LAYER_ZH = {dirname: zh for _t, zh, dirname, _k in SCRIPT_TABLE}
-SCRIPT_CODE = {dirname: f"0{tail}" for tail, _z, dirname, _k in SCRIPT_TABLE}
+# 4 位书体码 = 进制位(1) + 层键(1) + 扩展位(2)
+SCRIPT_CODE = {dirname: f"0{tail}{SCRIPT_RESERVED}" for tail, _z, dirname, _k in SCRIPT_TABLE}
+LAYER_KEYS = {dirname: tail for tail, _z, dirname, _k in SCRIPT_TABLE}
 
 FIELDS = ("unified_id", "status", "release", "layer", "modern_char", "unicode",
           "file", "source_id", "identity_confidence", "modern_char_slot")
@@ -99,6 +125,131 @@ def _in_ranges(cp: int, ranges) -> bool:
 def norm6(cp: str) -> str:
     cp = cp.strip().upper().removeprefix("U+")
     return cp.zfill(6) if cp else ""
+
+
+def to_v4(unified_id: str) -> str:
+    """6-2-6 → 6-4-6：**在书体码后插入**扩展位（`00`）。已是 4 位则原样返回。
+
+    幂等：已重铸过的号再过一次不变（`--check` 的逐字节复算靠这条）。
+    """
+    parts = (unified_id or "").split("-")
+    if len(parts) != 3:
+        return unified_id
+    root, script, seq = parts
+    if len(script) == 4:
+        return unified_id
+    if len(script) != 2:
+        return unified_id
+    return f"{root}-{script}{SCRIPT_RESERVED}-{seq}"
+
+
+def load_subcode_registry() -> dict[tuple[str, str], dict]:
+    """读扩展位登记表（**人工维护**）：(层, 分区码) → 行。
+
+    文件不存在 = 还没有任何非默认分区（账本里只允许出现 `00`）。
+    """
+    reg: dict[tuple[str, str], dict] = {}
+    if not SUBCODES_PATH.is_file():
+        return reg
+    with SUBCODES_PATH.open("r", encoding="utf-8-sig", newline="") as fh:
+        for row in csv.DictReader(fh):
+            layer = (row.get("layer") or "").strip()
+            sub = (row.get("subcode") or "").strip()
+            if layer and sub:
+                reg[(layer, sub)] = row
+    return reg
+
+
+def check_subcode_registry() -> list[str]:
+    """扩展位登记表体检：不得重复、meaning 不得为空、`00` 不得被改成别的含义。"""
+    problems: list[str] = []
+    if not SUBCODES_PATH.is_file():
+        return problems
+    seen: set[tuple[str, str]] = set()
+    with SUBCODES_PATH.open("r", encoding="utf-8-sig", newline="") as fh:
+        for i, row in enumerate(csv.DictReader(fh), start=2):
+            layer = (row.get("layer") or "").strip()
+            sub = (row.get("subcode") or "").strip()
+            meaning = (row.get("meaning") or "").strip()
+            if not layer or not sub:
+                problems.append(f"{SUBCODES_PATH.name}:{i} 缺 layer 或 subcode")
+                continue
+            if len(sub) != 2 or not all(c in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" for c in sub):
+                problems.append(f"{SUBCODES_PATH.name}:{i} 分区码必须 2 位 base36：{sub!r}")
+            if (layer, sub) in seen:
+                problems.append(f"{SUBCODES_PATH.name}:{i} 分区码重复：({layer}, {sub})")
+            seen.add((layer, sub))
+            if not meaning:
+                problems.append(f"{SUBCODES_PATH.name}:{i} meaning 不得为空：({layer}, {sub})")
+    return problems
+
+
+def stable_fingerprint(rows: list[dict]) -> str:
+    """**已发布**那部分号的集合指纹（sha256）。
+
+    只吃 `unified_id`：**已发布的号永不改指**是本仓库的核心契约，而
+    `file` / `status` / `source_id` 都允许随层现状变（合并重排只更新 file 列、
+    退役保留 ID 与序号）。指纹若掺进这些字段，正常演进会被误判成破约。
+    """
+    ids = sorted(r["unified_id"] for r in rows if (r.get("release") or "") == "stable")
+    h = hashlib.sha256()
+    for i in ids:
+        h.update(i.encode("utf-8"))
+        h.update(b"\n")
+    return h.hexdigest()
+
+
+def check_release_record(rows: list[dict], path=None) -> list[str]:
+    """发布锚点体检：最新一行的指纹必须等于当前账本的已发布号集合指纹。
+
+    这一条把「ID 铸发后冻结」从**承诺**变成**机检**：改了任何一个已发布的号，
+    指纹就变，CI 红。新增字形不受影响——新号是 `release=draft`，不进指纹；
+    等下一次发布再登记一行锚点。
+
+    **两条规则，堵住绕过的路**：
+    - 锚点文件在 → **一律**要跟账本对账（哪怕账本里一个 stable 行都没有：
+      那说明有人把已发布的号翻回了 draft，是对冻结的破坏，不是「还没发布」）；
+    - 锚点文件不在 → 账本必须**一个 stable 行都没有**（= 还没发布过，
+      铸发态不需要锚点）。
+    """
+    problems: list[str] = []
+    anchor = Path(path) if path is not None else RELEASES_PATH
+    n_stable = sum(1 for r in rows if (r.get("release") or "") == "stable")
+    if not anchor.is_file():
+        if n_stable:
+            problems.append(f"{anchor.name}: 缺失（账本已有 {n_stable} 个已发布号，"
+                            "发布锚点必须入库）")
+        return problems
+    with anchor.open("r", encoding="utf-8-sig", newline="") as fh:
+        recs = list(csv.DictReader(fh))
+    if not recs:
+        problems.append(f"{anchor.name}: 空（至少要有一次发布的锚点行）")
+        return problems
+    for i, row in enumerate(recs, start=2):
+        rel = (row.get("release") or "").strip()
+        sha = (row.get("stable_sha256") or "").strip().lower()
+        lsha = (row.get("ledger_sha256") or "").strip().lower()
+        fmt = (row.get("id_format") or "").strip()
+        if not rel:
+            problems.append(f"{anchor.name}:{i} 缺 release")
+        if len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha):
+            problems.append(f"{anchor.name}:{i} stable_sha256 必须是 64 位十六进制")
+        # ledger_sha256 是**发布那一刻整份账本**的哈希（point-in-time 历史事实，
+        # 用 `git show <tag>:glyphs/glyph-ids.csv` 验证）——库往后会长，
+        # 所以它**不**与工作区比对，只校验格式。
+        if lsha and (len(lsha) != 64 or any(c not in "0123456789abcdef" for c in lsha)):
+            problems.append(f"{anchor.name}:{i} ledger_sha256 必须是 64 位十六进制")
+        if fmt and fmt != ID_FORMAT:
+            problems.append(f"{anchor.name}:{i} id_format {fmt!r} 与现行 {ID_FORMAT} 不符")
+    last = recs[-1]
+    want = stable_fingerprint(rows)
+    got = (last.get("stable_sha256") or "").strip().lower()
+    if got != want:
+        problems.append(
+            f"{anchor.name}: 最新发布 {last.get('release')!r} 的已发布号指纹 "
+            f"{got[:12]}… 与当前账本 {want[:12]}… 不符——已发布的号不得改指；"
+            "新增字形请留 release=draft，等下一次发布再登记锚点")
+    return problems
 
 
 def slot_codepoint(slot: str) -> str:
@@ -185,7 +336,10 @@ def collect_current(stats: dict) -> list[dict]:
         for root, recs_in in sorted(buckets.items()):
             for rec in sorted(recs_in, key=sort_key):
                 current.append({
+                    # **桶 =（根码, 层键）**——扩展位不进桶，所以层内的学术序不被切开
                     "bucket": f"{root}-0{tail}",
+                    # **号前缀 =（根码, 4 位书体码）**——扩展位在号里
+                    "gid_prefix": f"{root}-0{tail}{SCRIPT_RESERVED}",
                     "layer": dirname,
                     "modern_char": (rec.get("modern_char") or "").strip(),
                     "unicode": norm6(rec.get("unicode") or ""),
@@ -202,13 +356,19 @@ def collect_current(stats: dict) -> list[dict]:
 
 
 def merge_ledger(current: list[dict], ledger: dict[tuple, dict],
-                 stats: dict) -> list[dict]:
-    """账本合并：已发布的 ID 原样保留；新增取桶内最大已用号 + 1；消失行退役。"""
-    used: dict[str, int] = {}   # 桶（root-script）→ 最大已用序号（含退役）
+                 stats: dict, release_override: str = "") -> list[dict]:
+    """账本合并：已发布的 ID 原样保留；新增取桶内最大已用号 + 1；消失行退役。
+
+    `release_override` 非空 = 批量翻转发布态（发布流程用）；空 = 沿用账本里
+    已有的发布态，不动。
+    """
+    used: dict[str, int] = {}   # 桶（root + 层键）→ 最大已用序号（含退役）
     for old in ledger.values():
         parts = (old.get("unified_id") or "").split("-")
         if len(parts) == 3 and parts[2].isdigit():
-            bucket = parts[0] + "-" + parts[1]
+            # 桶只用书体码的**前两位**（进制位 + 层键）：扩展位不进桶，
+            # 否则同一层里的学术序会在各分区内从 1 重排，序被切开。
+            bucket = parts[0] + "-" + parts[1][:2]
             used[bucket] = max(used.get(bucket, 0), int(parts[2]))
 
     out: list[dict] = []
@@ -219,15 +379,17 @@ def merge_ledger(current: list[dict], ledger: dict[tuple, dict],
         if old is not None:
             seen_keys.add(key)
             stats["kept"] += 1
-            gid = old["unified_id"]
-            release = old.get("release") or "draft"
+            # 形状重铸：6-2-6 → 6-4-6（**序号与根码逐字不变**，只是扩展位补 "00"）。
+            # 账本尚未发布，这是一次性格式迁移；to_v4 幂等，重跑不再动。
+            gid = to_v4(old["unified_id"])
+            release = release_override or old.get("release") or "draft"
         else:
             bucket = row["bucket"]
             seq = used.get(bucket, 0) + 1
             used[bucket] = seq
             stats["minted"] += 1
-            gid = f"{bucket}-{seq:06d}"
-            release = "draft"
+            gid = f"{row['gid_prefix']}-{seq:06d}"
+            release = release_override or "draft"
         out.append({
             "unified_id": gid,
             "status": "active",
@@ -244,8 +406,9 @@ def merge_ledger(current: list[dict], ledger: dict[tuple, dict],
         if key not in seen_keys:
             stats["retired"] += 1
             r = dict(old)
-            r.setdefault("release", "draft")
+            r["release"] = release_override or r.get("release") or "draft"
             r["status"] = "retired"
+            r["unified_id"] = to_v4(r["unified_id"])   # 形状重铸（与 active 同步）
             out.append(r)
     out.sort(key=lambda r: r["unified_id"])
     return out
@@ -254,15 +417,29 @@ def merge_ledger(current: list[dict], ledger: dict[tuple, dict],
 def assert_domains(rows: list[dict]) -> None:
     """根码域断言 + ID 唯一 + 语法（对 active 与 retired 都跑）。"""
     seen: set[str] = set()
+    registry = load_subcode_registry()
     for r in rows:
         gid = r["unified_id"]
         if gid in seen:
             raise SystemExit(f"unified_id 重复：{gid}")
         seen.add(gid)
         parts = gid.split("-")
-        if (len(parts) != 3 or len(parts[0]) != 6 or len(parts[1]) != 2
-                or len(parts[2]) != 6 or not parts[1][0].isdigit()):
+        # 6-4-6：根码 6 hex + 书体码 4 base36 + 序号 6 十进制
+        if (len(parts) != 3 or len(parts[0]) != 6 or len(parts[1]) != 4
+                or len(parts[2]) != 6
+                or not all(c in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" for c in parts[1])):
             raise SystemExit(f"unified_id 语法错误：{gid}")
+        script = parts[1]
+        layer = r.get("layer") or ""
+        key = LAYER_KEYS.get(layer)
+        if key is None:
+            raise SystemExit(f"{gid}: 未知层 {layer!r}")
+        if script[1] != key:
+            raise SystemExit(f"{gid}: 层键与层不符（{layer} 应为 {key}，号里是 {script[1]}）")
+        sub = script[2:]
+        if sub != SCRIPT_RESERVED and (layer, sub) not in registry:
+            raise SystemExit(
+                f"{gid}: 分区码 {sub!r} 未登记（见 glyphs/glyph-ids-subcodes.csv）")
         cp = int(parts[0], 16)
         if r["unicode"]:
             if not _in_ranges(cp, CJK_RANGES):
@@ -361,13 +538,17 @@ def build_export_texts(ledger_rows: list[dict]) -> dict[Path, str]:
     return texts
 
 
-def build_artifacts() -> tuple[dict[Path, str], dict]:
-    """一次确定性构建全部产物：账本 + 排除清单 + 元数据 + 宽表导出。"""
+def build_artifacts(release_override: str = "") -> tuple[dict[Path, str], dict]:
+    """一次确定性构建全部产物：账本 + 排除清单 + 元数据 + 宽表导出。
+
+    `release_override` 非空时**批量翻转发布态**（发布流程用）：账本里每一行
+    的 `release` 列都改成该值。默认空 = 沿用账本里已有的发布态（不动）。
+    """
     stats: dict = {"index_rows": 0, "current_rows": 0, "pua_root": 0,
                    "excluded_no_root": 0, "kept": 0, "minted": 0, "retired": 0}
     ledger = load_ledger(OUT_PATH)
     current = collect_current(stats)
-    rows = merge_ledger(current, ledger, stats)
+    rows = merge_ledger(current, ledger, stats, release_override=release_override)
     assert_domains(rows)
     texts: dict[Path, str] = {OUT_PATH: _csv_text(FIELDS, rows)}
     texts[EXCLUDED_PATH] = _csv_text(EXCLUDED_FIELDS, stats.get("excluded_rows", []))
@@ -376,6 +557,8 @@ def build_artifacts() -> tuple[dict[Path, str], dict]:
     n_active = sum(1 for r in rows if r["status"] == "active")
     meta = {
         "schema_version": SCHEMA_VERSION,
+        "id_format": ID_FORMAT,
+        "script_reserved": SCRIPT_RESERVED,
         "counts": {"active": n_active, "retired": stats["retired"],
                    "excluded_no_root": stats["excluded_no_root"]},
         "artifacts": sorted(str(p.relative_to(ROOT / "glyphs")).replace("\\", "/")
@@ -400,22 +583,25 @@ def selftest() -> int:
     2. 删行 → status=retired、ID 保留；
     3. 新件加入 → **不复用退役号**（取历史 max+1）；
     4. 同键回归 → 复活原 ID（引用不断链）；
-    5. 身份迁移 → redirects() 导出 old→new 重定向。
+    5. 身份迁移 → redirects() 导出 old→new 重定向；
+    6. 形状重铸 to_v4 幂等（6-2-6 → 6-4-6，序号与根码逐字不变）；
+    7. **扩展位不进桶**：同（根码, 层键）下换了分区位，序号继续排、不从 1 重来。
     """
     def row(gid, key, f, u="004E00"):
         return {"unified_id": gid, "status": "active", "release": "draft",
                 "layer": "o", "modern_char": "一", "unicode": u, "file": f,
                 "source_id": key, "identity_confidence": "", "modern_char_slot": ""}
     ledger = {
-        ("o", "004E00", "s1"): row("004E00-0A-000001", "s1", "f1.svg"),
-        ("o", "004E00", "s2"): row("004E00-0A-000002", "s2", "f2.svg"),
-        ("o", "004E00", "s3"): row("004E00-0A-000003", "s3", "f3.svg"),
-        ("o", "004E01", "s4"): row("004E01-0A-000001", "s4", "f4.svg", u="004E01"),
+        ("o", "004E00", "s1"): row("004E00-0A00-000001", "s1", "f1.svg"),
+        ("o", "004E00", "s2"): row("004E00-0A00-000002", "s2", "f2.svg"),
+        ("o", "004E00", "s3"): row("004E00-0A00-000003", "s3", "f3.svg"),
+        ("o", "004E01", "s4"): row("004E01-0A00-000001", "s4", "f4.svg", u="004E01"),
     }
-    def make_cur(pairs):
+    def make_cur(pairs, prefix="004E00-0A00"):
         out = []
         for key, f in pairs:
-            out.append({"bucket": "004E00-0A", "layer": "o", "modern_char": "一",
+            out.append({"bucket": "004E00-0A", "gid_prefix": prefix, "layer": "o",
+                        "modern_char": "一",
                         "unicode": "004E00", "file": f, "source_id": key,
                         "identity_confidence": "", "modern_char_slot": "",
                         "ledger_key": ("o", "004E00", key)})
@@ -426,35 +612,89 @@ def selftest() -> int:
     cur = make_cur([("s1", "f1.svg"), ("s5", "f5.svg"), ("s2", "f2.svg"), ("s3", "f3.svg")])
     rows = merge_ledger(cur, ledger, stats)
     by = {r["source_id"]: r for r in rows if r["status"] == "active"}
-    assert by["s1"]["unified_id"] == "004E00-0A-000001"
-    assert by["s2"]["unified_id"] == "004E00-0A-000002"
-    assert by["s3"]["unified_id"] == "004E00-0A-000003"
-    assert by["s5"]["unified_id"] == "004E00-0A-000004", by["s5"]
+    assert by["s1"]["unified_id"] == "004E00-0A00-000001"
+    assert by["s2"]["unified_id"] == "004E00-0A00-000002"
+    assert by["s3"]["unified_id"] == "004E00-0A00-000003"
+    assert by["s5"]["unified_id"] == "004E00-0A00-000004", by["s5"]
     # 2+3. 删 s2（退役）→ 新件 s6 不复用 000002
     cur2 = make_cur([("s1", "f1.svg"), ("s3", "f3.svg"), ("s5", "f5.svg"), ("s6", "f6.svg")])
     rows2 = merge_ledger(cur2, ledger, stats)
     by2 = {r["source_id"]: r for r in rows2}
-    assert by2["s2"]["status"] == "retired" and by2["s2"]["unified_id"] == "004E00-0A-000002"
-    assert by2["s6"]["unified_id"] == "004E00-0A-000005", by2["s6"]
-    assert by2["s5"]["unified_id"] == "004E00-0A-000004"
+    assert by2["s2"]["status"] == "retired" and by2["s2"]["unified_id"] == "004E00-0A00-000002"
+    assert by2["s6"]["unified_id"] == "004E00-0A00-000005", by2["s6"]
+    assert by2["s5"]["unified_id"] == "004E00-0A00-000004"
     # 4. 同键回归 → 复活原 ID
     rows3 = merge_ledger(make_cur([("s1", "f1.svg"), ("s2", "f2.svg"), ("s3", "f3.svg")]),
                          ledger, stats)
     by3 = {r["source_id"]: r for r in rows3 if r["status"] == "active"}
-    assert by3["s2"]["unified_id"] == "004E00-0A-000002"
+    assert by3["s2"]["unified_id"] == "004E00-0A00-000002"
     # 5. 身份迁移重定向：s3 的读法变了（004E00 → 004E02），source_id 不变
     led4 = {
-        ("o", "004E00", "s3"): row("004E00-0A-000003", "s3", "f3.svg"),
-        ("o", "004E02", "s3"): row("004E02-0A-000001", "s3", "f3.svg", u="004E02"),
+        ("o", "004E00", "s3"): row("004E00-0A00-000003", "s3", "f3.svg"),
+        ("o", "004E02", "s3"): row("004E02-0A00-000001", "s3", "f3.svg", u="004E02"),
     }
-    cur4 = [{"bucket": "004E02-0A", "layer": "o", "modern_char": "一", "unicode": "004E02",
+    cur4 = [{"bucket": "004E02-0A", "gid_prefix": "004E02-0A00", "layer": "o",
+             "modern_char": "一", "unicode": "004E02",
              "file": "f3.svg", "source_id": "s3", "identity_confidence": "",
              "modern_char_slot": "", "ledger_key": ("o", "004E02", "s3")}]
     stats4 = {"kept": 0, "minted": 0, "retired": 0}
     rows4 = merge_ledger(cur4, led4, stats4)
     red = redirects(rows4)
-    assert red == [("004E00-0A-000003", "004E02-0A-000001")], red
-    print("selftest 通过：冻结 / 插入 max+1 / 退役保留 / 退役号不复用 / 同键复活 / 迁移重定向")
+    assert red == [("004E00-0A00-000003", "004E02-0A00-000001")], red
+    # 6. 形状重铸：6-2-6 → 6-4-6，序号与根码逐字不变；再过一次不变（幂等）
+    assert to_v4("004E00-0E-000001") == "004E00-0E00-000001"
+    assert to_v4("004E00-0E00-000001") == "004E00-0E00-000001"
+    assert to_v4("003401-0I-000001") == "003401-0I00-000001"   # I 原样保留（不归一化）
+    assert to_v4("003401-0L-000001") == "003401-0L00-000001"
+    # 7. 扩展位不进桶：分区位换成 01，序号继续排（不从 1 重来）
+    cur7 = make_cur([("s5", "f5.svg")], prefix="004E00-0A01")
+    rows7 = merge_ledger(cur7, ledger, stats)
+    by7 = {r["source_id"]: r for r in rows7 if r["status"] == "active"}
+    assert by7["s5"]["unified_id"] == "004E00-0A01-000004", by7["s5"]
+    # 8. 发布锚点指纹：只认「已发布的号」。新增 draft、退役都不改指纹；
+    #    改一个已发布的号（或少一个）指纹必变——这就是「冻结」的机检。
+    f_rows = [{"unified_id": "004E00-0A00-000001", "release": "stable"},
+              {"unified_id": "004E00-0A00-000002", "release": "stable"},
+              {"unified_id": "004E00-0A00-000003", "release": "draft"}]
+    fp = stable_fingerprint(f_rows)
+    assert fp == stable_fingerprint(list(reversed(f_rows))), "指纹与行序无关"
+    assert fp == stable_fingerprint(f_rows + [
+        {"unified_id": "004E00-0A00-000004", "release": "draft"}]), "新增 draft 不进指纹"
+    retired_rows = [dict(r) for r in f_rows]
+    retired_rows[1]["status"] = "retired"
+    assert fp == stable_fingerprint(retired_rows), "退役保留号，不改指纹"
+    assert fp != stable_fingerprint([r for r in f_rows
+                                      if r["unified_id"] != "004E00-0A00-000001"]), \
+        "少一个已发布的号 → 指纹必变"
+    tampered = [dict(r) for r in f_rows]
+    tampered[0]["unified_id"] = "004E00-0A00-000009"
+    assert fp != stable_fingerprint(tampered), "改已发布的号 → 指纹必变"
+    # 9. 发布锚点体检的两条规则：锚点在 → 一律对账（翻回 draft 也算破坏冻结）；
+    #    锚点不在 → 账本必须一个已发布号都没有（= 还没发布过）
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        good_anchor = Path(td) / "release.csv"
+        zeros = "0" * 64
+        good_anchor.write_text(
+            "release,released_at,stable_sha256,ledger_sha256,id_format,note\n"
+            f"v1.0.0,2026-11-06,{fp},{zeros},6-4-6,test\n", encoding="utf-8")
+        assert check_release_record(f_rows, good_anchor) == [], \
+            check_release_record(f_rows, good_anchor)
+        bad_anchor = Path(td) / "bad.csv"
+        bad_anchor.write_text(
+            "release,released_at,stable_sha256,ledger_sha256,id_format,note\n"
+            f"v1.0.0,2026-11-06,{zeros},{zeros},6-4-6,test\n", encoding="utf-8")
+        assert check_release_record(f_rows, bad_anchor), "指纹不符必须报错"
+        missing_anchor = Path(td) / "nope.csv"
+        assert check_release_record(f_rows, missing_anchor), \
+            "有已发布号却没锚点 → 必须报错"
+        all_draft = [dict(r, release="draft") for r in f_rows]
+        assert check_release_record(all_draft, missing_anchor) == [], \
+            "一个已发布号都没有 → 铸发态不需要锚点"
+        assert check_release_record(all_draft, good_anchor), \
+            "把已发布的号翻回 draft 是破坏冻结 → 必须报错"
+    print("selftest 通过：冻结 / 插入 max+1 / 退役保留 / 退役号不复用 / 同键复活 / "
+          "迁移重定向 / 形状重铸幂等 / 扩展位不进桶 / 发布锚点指纹")
     return 0
 
 
@@ -474,12 +714,15 @@ def main(argv: list[str] | None = None) -> int:
                     help="打印身份迁移重定向表（retired→active，CSV）")
     ap.add_argument("--char", default=None,
                     help="查询一个字（现代汉字）在所有书体的字形（只列 active）")
+    ap.add_argument("--release", choices=("draft", "stable"), default=None,
+                    help="批量翻转发布态（发布流程用）：把账本每一行的 release 列"
+                         "改成该值。默认不动，沿用账本里已有的发布态")
     args = ap.parse_args(argv)
 
     if args.selftest:
         return selftest()
 
-    texts, stats = build_artifacts()
+    texts, stats = build_artifacts(release_override=args.release or "")
     rows = list(csv.DictReader(io.StringIO(texts[OUT_PATH])))
 
     if args.char:
@@ -507,11 +750,16 @@ def main(argv: list[str] | None = None) -> int:
                 problems.append(f"产物缺失：{p}")
             elif p.read_bytes() != text.encode("utf-8"):
                 problems.append(f"产物与重建结果不一致：{p}")
+        problems.extend(check_subcode_registry())
+        problems.extend(check_release_record(rows))
         if problems:
             raise SystemExit("账本产物校验失败：\n  " + "\n  ".join(problems[:10]))
         n_active = sum(1 for r in rows if r["status"] == "active")
-        print(f"账本校验通过（schema_version={SCHEMA_VERSION}）：{len(rows)} 行"
-              f"（active {n_active} / retired {len(rows) - n_active}）；"
+        n_stable = sum(1 for r in rows if (r.get("release") or "") == "stable")
+        print(f"账本校验通过（schema_version={SCHEMA_VERSION}，id_format={ID_FORMAT}）："
+              f"{len(rows)} 行"
+              f"（active {n_active} / retired {len(rows) - n_active}；"
+              f"已发布 {n_stable}）；"
               f"产物 {len(texts)} 个全部逐字节一致")
         return 0
 

@@ -1,0 +1,2 @@
+release,released_at,stable_sha256,ledger_sha256,id_format,note
+v1.0.0,2026-11-06,b03c15190ebf77e786d882f67bd0e901b0758cff1577b3a66b2bb4f624a3572d,fa638cb17b48ba7f4b146cc53b05887d5c12048da8ffe19160149e32d443e033,6-4-6,本仓库首个正式发布：统一编号账本（6-4-6）对外；旧 6-2-6 形从未公开、不接受（输入即 404）

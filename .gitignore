@@ -17,3 +17,10 @@ __pycache__/
 .env
 .env.*
 .agents/skills/
+
+# v2.2-min ID 账本的**生成物**（不进版本库）
+# 快照清单：约 17 MB / 18 万行，是发布归档物；仓内只留 meta.snapshot_sha256，
+# 校验靠「重算清单并与 meta 比对」，不靠这份文件。
+glyphs/ids/snapshot-manifest.tsv
+# 退化候选清单：机器扫出来的**候选**，不是裁决；裁决在 quarantine.csv（人工维护）。
+glyphs/ids/quarantine-candidates.csv

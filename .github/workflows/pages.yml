@@ -38,6 +38,11 @@ jobs:
           # 统一编号产物族（总账 + 排除清单 + schema 元数据 + 宽表导出 + 字段词典）：
           # world 可从 https://<pages>/... 直接取；viewer 的 #id= 深链按层内联副本定位。
           cp glyphs/glyph-ids.csv glyphs/glyph-ids-excluded.csv glyphs/glyph-ids.meta.json _site/
+          # 扩展位登记表**也要发布**：发布契约里含扩展位，下游解号得靠它对分区码。
+          # 当前为空表（只有默认分区 00），但契约先于使用发布。
+          cp glyphs/glyph-ids-subcodes.csv _site/
+          # 发布锚点**也要发布**：下游据此认「哪一版已对外、已发布的号是哪一批」。
+          cp glyphs/glyph-ids-release.csv _site/
           mkdir -p _site/export
           cp glyphs/export/*.csv glyphs/export/FIELDS.md _site/export/
           # 只放浏览页与编号产物。**不要** cp -r glyphs _site/glyphs——那是 1.1 GB、

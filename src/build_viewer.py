@@ -659,14 +659,17 @@ TEMPLATE = r"""<!DOCTYPE html>
   detectBase().then(function (base) {
     glyphBase = base;
     buildTabs();
-    // **统一编号深链**：viewer/index.html#id=004E00-0E-000001 → 跳到该层、
+    // **统一编号深链**：viewer/index.html#id=004E00-0E00-000001 → 跳到该层、
     // 搜索框填入完整 ID、过滤出那一件。跨层检索的总账在
     // glyphs/glyph-ids.csv（站点同路径发布）；页面内按层内联副本定位。
-    var m = (location.hash || '').match(/^#id=([0-9A-F]{6}-[0-9A-Z]{2}-[0-9]{6})$/i);
+    var m = (location.hash || '').match(/^#id=([0-9A-F]{6}-[0-9A-Z]{4}-[0-9]{6})$/i);
     if (m) {
       var code = m[1].split('-')[1].toUpperCase();
+      // 只比**前两位**（进制位 + 层键）：扩展位是层内不透明的分区句柄，
+      // 不该影响「这一件属于哪一层」的判定——否则非默认分区的号（0A01 等）
+      // 匹配不上 SCRIPT_CODES 的 0A00，深链会静默定位不到。
       var layer = Object.keys(SCRIPT_CODES).filter(function (k) {
-        return SCRIPT_CODES[k] === code;
+        return SCRIPT_CODES[k].slice(0, 2) === code.slice(0, 2);
       })[0];
       var btn = layer && tabs.querySelector('[aria-controls="panel-' + layer + '"]');
       if (btn) {
@@ -688,7 +691,8 @@ TEMPLATE = r"""<!DOCTYPE html>
 
 # 统一编号的书体码：**单一事实源** = build_glyph_ids.SCRIPT_TABLE，
 # 这里派生（深链 #id= 的书体码 → 层 反查用）。
-SCRIPT_CODES = {dirname: f"0{tail}" for tail, _zh, dirname, _km in SCRIPT_TABLE}
+# 书体码是 **4 位**（进制位 1 + 层键 1 + 扩展位 2），与账本里的 unified_id 同形。
+SCRIPT_CODES = {dirname: f"0{tail}00" for tail, _zh, dirname, _km in SCRIPT_TABLE}
 
 
 def load_rows(index_path: Path, script: str = "",
