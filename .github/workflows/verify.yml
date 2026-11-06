@@ -132,9 +132,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # 发布锚点要跟 **git tag 下那份账本**对账（ledger_sha256），所以必须拿得到
-          # tag。checkout 默认只拉浅层且不带 tag，这里显式取 tag。
-          fetch-tags: true
+          # 发布锚点要跟 **git tag 下那份账本**对账（ledger_sha256 + 该 tag 的已发布号
+          # 集合指纹），所以必须拿得到 tag **和它指向的那棵树**。
+          #
+          # 为什么是 fetch-depth: 0 而不是 fetch-tags: true —— 读过 checkout v4 的源码
+          # （git-source-provider.ts / git-command-manager.ts / ref-helper.ts）：
+          # · fetch-depth: 0 走 getRefSpecForAllHistory()，refspec 里含
+          #   '+refs/tags/*:refs/tags/*' → **全部 tag 连同其对象**都取回来；
+          # · fetch-tags: true 只是**不加** '--no-tags'，走 git 默认的「自动跟随」——
+          #   只跟随**指向被取回那段历史**的 tag。浅层（depth=1）下历史只有一个 commit，
+          #   所以 tag 落在更早的 commit 上时就**取不到**，那条对账会静默跳过。
+          # 代价是拉全史（.git 约 480 MB）；工作树本身就有 1.1 GB，比例上可接受。
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -200,6 +209,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        # 本 job 跑的是 build_ids.py（v2.2-min 的 GID 工具链），**不跑**
+        # build_glyph_ids.py --check，也不碰 git 对象——所以这里不需要取 tag，
+        # 保持浅层即可。若将来把统一编号账本校验挪到这个 job，必须同时改成
+        # fetch-depth: 0（浅层取不到旧 tag，发布锚点那条对账会静默跳过）。
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

@@ -188,8 +188,8 @@ def check_subcode_registry() -> list[str]:
     return problems
 
 
-def _git_blob_sha256(rev_path: str) -> str | None:
-    """`git cat-file blob <rev>:<path>` 的内容 sha256。
+def _git_blob_bytes(rev_path: str) -> bytes | None:
+    """`git cat-file blob <rev>:<path>` 的原始字节。
 
     拿不到（git 不可用 / 对象不存在，如本地还没有那个 tag）返回 None——
     调用方据此**跳过**该项校验，而不是把「没 tag」当成「对不上」。
@@ -199,7 +199,7 @@ def _git_blob_sha256(rev_path: str) -> str | None:
                            cwd=ROOT, capture_output=True, check=True)
     except (OSError, subprocess.CalledProcessError):
         return None
-    return hashlib.sha256(r.stdout).hexdigest()
+    return r.stdout
 
 
 def stable_fingerprint(rows: list[dict]) -> str:
@@ -215,6 +215,46 @@ def stable_fingerprint(rows: list[dict]) -> str:
         h.update(i.encode("utf-8"))
         h.update(b"\n")
     return h.hexdigest()
+
+
+def check_snapshot(anchor_name: str, line_no: int, rel: str,
+                   snapshot: bytes, sha: str, lsha: str) -> list[str]:
+    """拿**发布那一次的账本快照**体检一行锚点。
+
+    快照 = 该 release 的 git tag 下那份 `glyphs/glyph-ids.csv` 的字节。两条对账：
+
+    - 快照整份账本的 sha256 == 该行 `ledger_sha256`（发布那一刻的账本原样未动）；
+    - 快照里 `release=stable` 那部分号的**集合指纹** == 该行 `stable_sha256`
+      （这批号在发布那一刻就已定，且至今未改指）。
+
+    **为什么必须是快照而不是当前账本**：当前账本含**后续**发布新增的号，拿它复算
+    历史锚点的 stable_sha256 必然不符。快照是那一次的账本、它的 `release` 列就是
+    当时的发布态，所以这个复算是**精确**的，不是近似。
+
+    纯函数：不吃 git、不碰磁盘——selftest 直接拿合成快照就能验它。
+    """
+    problems: list[str] = []
+    blob_sha = hashlib.sha256(snapshot).hexdigest()
+    if blob_sha != lsha:
+        problems.append(
+            f"{anchor_name}:{line_no} ledger_sha256 {lsha[:12]}… 与 tag {rel!r} "
+            f"下的账本 {blob_sha[:12]}… 不符")
+    try:
+        snap_rows = list(csv.DictReader(io.StringIO(snapshot.decode("utf-8"))))
+    except UnicodeDecodeError:
+        problems.append(f"{anchor_name}:{line_no} tag {rel!r} 下的账本不是 UTF-8")
+        return problems
+    if snap_rows and "unified_id" not in snap_rows[0]:
+        problems.append(
+            f"{anchor_name}:{line_no} tag {rel!r} 下的账本没有 unified_id 列")
+        return problems
+    if snap_rows:
+        snap_fp = stable_fingerprint(snap_rows)
+        if snap_fp != sha:
+            problems.append(
+                f"{anchor_name}:{line_no} stable_sha256 {sha[:12]}… 与 tag {rel!r} "
+                f"下账本的已发布号集合 {snap_fp[:12]}… 不符")
+    return problems
 
 
 def check_release_record(rows: list[dict], path=None) -> list[str]:
@@ -254,6 +294,8 @@ def check_release_record(rows: list[dict], path=None) -> list[str]:
         return problems
     seen_rel: dict[str, int] = {}
     prev_date = ""
+    n_tag_checked = 0
+    n_tag_skipped = 0
     for i, row in enumerate(recs, start=2):
         rel = (row.get("release") or "").strip()
         when = (row.get("released_at") or "").strip()
@@ -285,14 +327,16 @@ def check_release_record(rows: list[dict], path=None) -> list[str]:
         elif len(lsha) != 64 or any(c not in "0123456789abcdef" for c in lsha):
             problems.append(f"{anchor.name}:{i} ledger_sha256 必须是 64 位十六进制")
         elif rel:
-            blob = _git_blob_sha256(f"{rel}:glyphs/glyph-ids.csv")
+            blob = _git_blob_bytes(f"{rel}:glyphs/glyph-ids.csv")
             if blob is None:
+                n_tag_skipped += 1
                 if real:
-                    print(f"  ℹ {anchor.name}:{i} 本地没有 tag {rel!r}，跳过 ledger_sha256 对账")
-            elif blob != lsha:
-                problems.append(
-                    f"{anchor.name}:{i} ledger_sha256 {lsha[:12]}… 与 tag {rel!r} "
-                    f"下的账本 {blob[:12]}… 不符")
+                    print(f"  ⚠ {anchor.name}:{i} 本地没有 tag {rel!r}，**跳过**该行的 tag 对账"
+                          "（发布流程是「先提交、后打 tag」；tag 推上去后才会真的对账）")
+            else:
+                n_tag_checked += 1
+                problems.extend(
+                    check_snapshot(anchor.name, i, rel, blob, sha, lsha))
         if fmt and fmt != ID_FORMAT:
             problems.append(f"{anchor.name}:{i} id_format {fmt!r} 与现行 {ID_FORMAT} 不符")
     last = recs[-1]
@@ -303,6 +347,12 @@ def check_release_record(rows: list[dict], path=None) -> list[str]:
             f"{anchor.name}: 最新发布 {last.get('release')!r} 的已发布号指纹 "
             f"{got[:12]}… 与当前账本 {want[:12]}… 不符——已发布的号不得改指；"
             "新增字形请留 release=draft，等下一次发布再登记锚点")
+    if real:
+        # 把 tag 对账的实际覆盖打进日志：CI 里要能一眼看出「核过了」还是
+        # 「因为本地没有 tag 而跳过」——后者等于这条闸门没生效。
+        print(f"  ✔ 发布锚点 tag 对账：{n_tag_checked} 行已核"
+              + (f"，{n_tag_skipped} 行因本地缺 tag 跳过（该闸门未生效）"
+                 if n_tag_skipped else "，无跳过"))
     return problems
 
 
@@ -769,8 +819,38 @@ def selftest() -> int:
                             f"{fake},2026-11-07,{fp},{zeros},6-4-6,t\n"
                             f"{fake}-b,2026-01-01,{fp},{zeros},6-4-6,t\n")
         assert check_release_record(f_rows, back), "released_at 倒序必须报错"
+    # 11. tag 基复算：拿**发布那一次的账本快照**逐条对账。这是对**历史锚点**
+    #     的精确复核路径（当前账本含后续发布的号，不能用它复算），
+    #     也是本仓发布闸门的关键一环——必须有自检兜住，不能只在 CI 里靠真 tag。
+    snap = ("unified_id,status,release,layer,modern_char,unicode,file,source_id\n"
+            "004E00-0A00-000001,active,stable,oracle,一,004E00,0001.svg,s1\n"
+            "004E01-0A00-000001,active,stable,oracle,丁,4E01,0002.svg,s2\n"
+            "004E02-0A00-000001,active,draft,oracle,丂,4E02,0003.svg,s3\n")
+    snap_b = snap.encode("utf-8")
+    snap_sha = hashlib.sha256(snap_b).hexdigest()
+    snap_fp = stable_fingerprint(list(csv.DictReader(io.StringIO(snap))))
+    # 对得上 → 零问题（draft 行不进指纹，与主路径同规则）
+    assert check_snapshot("a.csv", 2, "v1.0.0", snap_b, snap_fp, snap_sha) == [], \
+        check_snapshot("a.csv", 2, "v1.0.0", snap_b, snap_fp, snap_sha)
+    # 整份账本哈希写错一个字符 → 报错
+    p = check_snapshot("a.csv", 2, "v1.0.0", snap_b, snap_fp, "0" + snap_sha[1:])
+    assert p and any("ledger_sha256" in x for x in p), p
+    # 已发布号集合指纹写错 → 报错
+    p = check_snapshot("a.csv", 2, "v1.0.0", snap_b, "0" + snap_fp[1:], snap_sha)
+    assert p and any("stable_sha256" in x for x in p), p
+    # 快照里某个已发布的号被改指 → 集合指纹变 → 锚点那条必报
+    tampered = snap.replace("004E00-0A00-000001",
+                             "004E00-0A00-000009").encode("utf-8")
+    p = check_snapshot("a.csv", 2, "v1.0.0", tampered, snap_fp, snap_sha)
+    assert p and any("stable_sha256" in x for x in p), p
+    # 快照不是 UTF-8 → 报错而不是崩
+    p = check_snapshot("a.csv", 2, "v1.0.0", b"\xff\xfe\x00", snap_fp, snap_sha)
+    assert p and any("UTF-8" in x for x in p), p
+    # 快照缺 unified_id 列 → 报错而不是崩
+    p = check_snapshot("a.csv", 2, "v1.0.0", b"a,b\n1,2\n", snap_fp, snap_sha)
+    assert p and any("unified_id" in x for x in p), p
     print("selftest 通过：冻结 / 插入 max+1 / 退役保留 / 退役号不复用 / 同键复活 / "
-          "迁移重定向 / 形状重铸幂等 / 扩展位不进桶 / 发布锚点指纹")
+          "迁移重定向 / 形状重铸幂等 / 扩展位不进桶 / 发布锚点指纹 / tag 基复算")
     return 0
 
 
